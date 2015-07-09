@@ -155,32 +155,37 @@ class O1_WP_Fail2ban_MU {
 
     private function enhanced_error_log( $message = '', $level = 'error' ) {
 
-        // NOTE: `log_errors` option does not disable logging
-        //$log_enabled = ( '1' === ini_get( 'log_errors' ) );
-        //if ( ! $log_enabled || empty( $log_destination ) ) {
+        // `log_errors` PHP option does not disable actual logging
+        /*
+        $log_enabled = ( '1' === ini_get( 'log_errors' ) );
+        if ( ! $log_enabled || empty( $log_destination ) ) {
+        */
 
-        // add entry point, true when `auto_prepend_file` is empty
+        // Add entry point, correct when `auto_prepend_file` is empty
         $included_files = get_included_files();
         $error_msg = (string)$message
             . ' <' . reset( $included_files );
 
         /**
-         * Add log data to log message if SAPI does not add client data.
+         * Add client data to log message if SAPI does not add it.
          *
          * level, IP address, port, referer
          */
         $log_destination = function_exists( 'ini_get' ) ? ini_get( 'error_log' ) : '';
         if ( ! empty( $log_destination ) ) {
             if ( array_key_exists( 'HTTP_REFERER', $_SERVER ) ) {
-                $referer = $this->esc_log( $_SERVER['HTTP_REFERER'] );
+                $referer = ', referer:' . $this->esc_log( $_SERVER['HTTP_REFERER'] );
             } else {
-                $referer = false;
+                $referer = '';
             }
 
-            $error_msg = '[' . $level . '] '
-                . '[client ' . @$_SERVER['REMOTE_ADDR'] . ':' . @$_SERVER['REMOTE_PORT'] . '] '
-                . $error_msg
-                . ( $referer ? ', referer:' . $referer : '' );
+            $error_msg = sprintf( '[%s] [client %s:%s] %s%s',
+                $level,
+                @$_SERVER['REMOTE_ADDR'],
+                @$_SERVER['REMOTE_PORT'],
+                $error_msg,
+                $referer
+            );
         }
 
         error_log( $error_msg );
@@ -396,15 +401,15 @@ class O1_WP_Fail2ban_MU {
         if ( ( 'admin_post_' === substr( $tag, 0, 11 )
             || 'wp_ajax_' === substr( $tag, 0, 8 ) )
             && is_array( $wp_filter )
-            && array_key_exists( $tag, $wp_filter )
+            && ! array_key_exists( $tag, $wp_filter )
         ) {
-            $this->trigger( 'wpf2b_admin_action_unknown', $tag );
+            $this->trigger_instant( 'wpf2b_admin_action_unknown', $tag );
         }
     }
 
     public function wpcf7_spam( $text ) {
 
-        $this->trigger( 'wpf2b_wpcf7_spam', $text );
+        $this->trigger_instant( 'wpf2b_wpcf7_spam', $text );
     }
 
     public function wpcf7_spam_mx( $domain ) {
