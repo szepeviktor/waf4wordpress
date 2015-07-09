@@ -1,0 +1,3 @@
+[submodule "non-wp-projects/joomla-plugin-system-fail2ban"]
+	path = non-wp-projects/joomla-plugin-system-fail2ban
+	url = https://bitbucket.org/mediahof/joomla-plugin-system-fail2ban.git
