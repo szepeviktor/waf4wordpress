@@ -1,0 +1,55 @@
+<?php
+/**
+ * @file
+ * fail2ban, a one-function module to trigger fail2ban.
+ * Trigger on HTTP/403 and 404.
+ */
+
+/**
+ * Hook watchdog to get 403/404 requests
+ * @see drupal_deliver_html_page
+ * includes/common.php:2601
+ */
+function fail2ban_404_watchdog( $log_entry ) {
+
+    $prefix = 'Malicious traffic detected: ';
+    $slug = '';
+
+    switch ( $log_entry['type'] ) {
+        case 'page not found':
+            $slug = '404_not_found';
+            break;
+        case 'access denied':
+            $slug = '403_forbidden ';
+            break;
+    }
+
+    if ( empty( $slug ) )
+        return;
+
+    // when error messages are sent to a file (aka. PHP error log)
+    // IP address and referer are not logged
+    $log_destination = ini_get( 'error_log' );
+
+    // SAPI should add client data
+    $error_msg = $prefix
+        . $slug
+        . ' (' . addslashes( $log_entry['request_uri'] ) . ')'
+        . ' <' . reset( get_included_files() );
+
+    // add client data to log message
+    if ( ! empty( $log_destination ) ) {
+        if ( isset( $_SERVER['HTTP_REFERER'] ) ) {
+            $referer = addslashes( $_SERVER['HTTP_REFERER'] );
+        } else {
+            $referer = false;
+        }
+
+        $error_msg = '[error] '
+            . '[client ' . @$_SERVER['REMOTE_ADDR'] . ':' . @$_SERVER['REMOTE_PORT'] . '] '
+            . $error_msg
+            . ( $referer ? ', referer: ' . $referer : '' );
+    }
+
+    error_log( $error_msg );
+}
