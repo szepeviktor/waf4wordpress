@@ -6,7 +6,7 @@ Plugin URI: https://github.com/szepeviktor/wordpress-plugin-construction
 License: The MIT License (MIT)
 Author: Viktor Szépe
 Author URI: http://www.online1.hu/webdesign/
-Version: 2.0.0
+Version: 2.1.0
 Options: O1_BAD_REQUEST_COUNT, O1_BAD_REQUEST_MAX_LOGIN_REQUEST_SIZE,
 Options: O1_BAD_REQUEST_CDN_HEADERS, O1_BAD_REQUEST_ALLOW_REG, O1_BAD_REQUEST_ALLOW_IE8,
 Options: O1_BAD_REQUEST_ALLOW_OLD_PROXIES, O1_BAD_REQUEST_ALLOW_CONNECTION_EMPTY,
@@ -78,7 +78,8 @@ class O1_Bad_Request {
 
         // Experimental traffic analysis
         if ( count( $_FILES ) )
-            error_log( 'wpf2b/upload: ' . serialize( $_FILES ) );
+            error_log( 'bad_request_upload: ' . $this->esc_log( $_FILES )
+                . ', ' . $this->esc_log( $_REQUEST ) );
 
         // Options
         if ( defined( 'O1_BAD_REQUEST_POST_LOGGING' ) && O1_BAD_REQUEST_POST_LOGGING ) {
@@ -321,7 +322,7 @@ class O1_Bad_Request {
             $this->enhanced_error_log( $this->prefix . $this->result );
         } else {
             $this->enhanced_error_log( $this->prefix_instant . $this->result );
-        {
+        }
 
         // Helps learning attack internals
         error_log( 'HTTP REQUEST: ' . $this->esc_log( $_REQUEST ) );
