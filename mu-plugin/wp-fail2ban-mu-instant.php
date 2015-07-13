@@ -11,18 +11,8 @@ GitHub Plugin URI: https://github.com/szepeviktor/wordpress-plugin-construction/
 Options: O1_WP_FAIL2BAN_DISABLE_LOGIN
 */
 
-/**
- * WordPress fail2ban Must-Use version.
- *
- * To disable login completely copy this into your wp-config.php:
- *
- *     define( 'O1_WP_FAIL2BAN_DISABLE_LOGIN', true );
- *
- * @package wordpress-fail2ban
- * @see: README.md
- */
 if ( ! function_exists( 'add_filter' ) ) {
-    error_log( 'Malicious traffic detected: wpf2b_mu_direct_access '
+    error_log( 'Break-in attempt detected: wpf2b_mu_direct_access '
         . addslashes( @$_SERVER['REQUEST_URI'] )
     );
     ob_get_level() && ob_end_clean();
@@ -31,6 +21,16 @@ if ( ! function_exists( 'add_filter' ) ) {
     exit();
 }
 
+/**
+ * WordPress fail2ban Must-Use version.
+ *
+ * To disable login completely copy this into your wp-config.php:
+ *
+ *     define( 'O1_WP_FAIL2BAN_DISABLE_LOGIN', true );
+ *
+ * @package wordpress-fail2ban
+ * @see     README.md
+ */
 class O1_WP_Fail2ban_MU {
 
     private $trigger_count = 6;
