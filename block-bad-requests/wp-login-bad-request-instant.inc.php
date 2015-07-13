@@ -6,7 +6,7 @@ Plugin URI: https://github.com/szepeviktor/wordpress-plugin-construction
 License: The MIT License (MIT)
 Author: Viktor Szépe
 Author URI: http://www.online1.hu/webdesign/
-Version: 2.2.0
+Version: 2.3.0
 Options: O1_BAD_REQUEST_COUNT, O1_BAD_REQUEST_MAX_LOGIN_REQUEST_SIZE,
 Options: O1_BAD_REQUEST_CDN_HEADERS, O1_BAD_REQUEST_ALLOW_REG, O1_BAD_REQUEST_ALLOW_IE8,
 Options: O1_BAD_REQUEST_ALLOW_OLD_PROXIES, O1_BAD_REQUEST_ALLOW_CONNECTION_EMPTY,
@@ -209,10 +209,11 @@ class O1_Bad_Request {
         )
             return 'bad_request_http_post_accept';
 
-        $post_content_types = array( 'application/x-www-form-urlencoded', 'multipart/form-data' );
         // Content-Type HTTP header
         if ( ! isset( $_SERVER['CONTENT_TYPE'] )
-            || ! in_array( $_SERVER['CONTENT_TYPE'], $post_content_types )
+            || ( false === strpos( $_SERVER['CONTENT_TYPE'], 'application/x-www-form-urlencoded' )
+                && false === strpos( $_SERVER['CONTENT_TYPE'], 'multipart/form-data' )
+            )
         )
             return 'bad_request_http_post_content_type';
 

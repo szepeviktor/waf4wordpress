@@ -3,7 +3,6 @@
 Snippet Name: Trigger fail2ban in non-WordPress projects and subdirectory installs.
 Version: 0.4.0
 Snippet URI: https://github.com/szepeviktor/wordpress-fail2ban
-Description: Set the iteration count in the loop and copy into the project's root
 License: The MIT License (MIT)
 Author: Viktor Szépe
 Author URI: http://www.online1.hu/webdesign/
