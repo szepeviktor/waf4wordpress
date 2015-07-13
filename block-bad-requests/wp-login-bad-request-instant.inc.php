@@ -14,22 +14,12 @@ Options: O1_BAD_REQUEST_ALLOW_CONNECTION_CLOSE, O1_BAD_REQUEST_ALLOW_TWO_CAPS,
 Options: O1_BAD_REQUEST_POST_LOGGING
 */
 
-if ( ! function_exists( 'add_filter' ) ) {
-    error_log( 'Break-in attempt detected: wpf2b_bad_request_direct_access '
-        . addslashes( @$_SERVER['REQUEST_URI'] )
-    );
-    ob_get_level() && ob_end_clean();
-    header( 'Status: 403 Forbidden' );
-    header( 'HTTP/1.0 403 Forbidden' );
-    exit();
-}
-
 /**
  * WordPress Block Bad Requests.
  *
  * Require it from the top of your wp-config.php:
  *
- *     require_once( dirname( __FILE__ ) . '/wp-login-bad-request.inc-instant.php' );
+ *     require_once( dirname( __FILE__ ) . '/wp-login-bad-request-instant.inc.php' );
  *
  * @package wordpress-fail2ban
  * @see     README.md
