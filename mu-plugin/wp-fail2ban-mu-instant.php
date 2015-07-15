@@ -3,7 +3,7 @@
 Plugin Name: WordPress fail2ban MU
 Plugin URI: https://github.com/szepeviktor/wordpress-plugin-construction
 Description: Triggers fail2ban on various attacks. <strong>This is a Must Use plugin, must be copied to <code>wp-content/mu-plugins</code>.</strong>
-Version: 4.0.2
+Version: 4.1.0
 License: The MIT License (MIT)
 Author: Viktor Szépe
 Author URI: http://www.online1.hu/webdesign/
@@ -79,12 +79,13 @@ class O1_WP_Fail2ban_MU {
     public function __construct() {
 
         // Exit on local access
-        // Don't run on install / upgrade
+        // Don't run on install and upgrade
         if ( php_sapi_name() === 'cli'
             || $_SERVER['REMOTE_ADDR'] === $_SERVER['SERVER_ADDR']
             || defined( 'WP_INSTALLING' ) && WP_INSTALLING
-        )
+        ) {
             return;
+        }
 
         // Prevent usage as a normal plugin in wp-content/plugins
         if ( did_action( 'muplugins_loaded' ) )
@@ -138,13 +139,15 @@ class O1_WP_Fail2ban_MU {
         ob_get_level() && ob_end_clean();
         header( 'Status: 403 Forbidden' );
         header( 'HTTP/1.0 403 Forbidden' );
+
         exit();
     }
 
     private function trigger( $slug, $message, $level = 'error', $prefix = '' ) {
 
-        if ( empty( $prefix ) )
+        if ( empty( $prefix ) ) {
             $prefix = $this->prefix;
+        }
 
         $error_msg = $prefix
             . $slug
@@ -155,8 +158,8 @@ class O1_WP_Fail2ban_MU {
 
     private function enhanced_error_log( $message = '', $level = 'error' ) {
 
-        // `log_errors` PHP option does not disable actual logging
         /*
+        // `log_errors` PHP option does not actually disable logging
         $log_enabled = ( '1' === ini_get( 'log_errors' ) );
         if ( ! $log_enabled || empty( $log_destination ) ) {
         */
@@ -193,35 +196,43 @@ class O1_WP_Fail2ban_MU {
 
     public function wp_404() {
 
-        if ( ! is_404() )
+        if ( ! is_404() ) {
             return;
+        }
 
         $ua = array_key_exists( 'HTTP_USER_AGENT', $_SERVER ) ? $_SERVER['HTTP_USER_AGENT'] : '';
         $request_uri = $_SERVER['REQUEST_URI'];
 
-        // don't show the 404 page for robots
-        if ( ! is_user_logged_in() && $this->is_robot( $ua ) ) {
+        // Don't show the 404 page for robots
+        if ( $this->is_robot( $ua ) && ! is_user_logged_in() ) {
+
+            $this->trigger( 'wpf2b_robot404', $request_uri, 'info' );
 
             ob_get_level() && ob_end_clean();
-            $this->trigger( 'wpf2b_robot404', $request_uri, 'info' );
             header( 'Status: 404 Not Found' );
             header( 'HTTP/1.0 404 Not Found' );
             exit();
         }
 
-        // humans
+        // Humans
         $this->trigger( 'wpf2b_404', $request_uri, 'info' );
     }
 
     public function url_hack() {
 
         $request_uri = $_SERVER['REQUEST_URI'];
+        $request_query = parse_url( $request_uri, PHP_URL_QUERY );
 
-        if ( substr( $request_uri, 0, 2 ) === '//'
-            || strstr( $request_uri, '../' ) !== false
-            || strstr( $request_uri, '/..' ) !== false
+        // Query contains `../`
+        if ( false !== strstr( $request_query, '../' ) ) {
+            $this->trigger_instant( 'wpf2b_url_hack_query', $request_uri );
+        }
+
+        if ( '//' === substr( $request_uri, 0, 2 )
+            || false !== strstr( $request_uri, '../' )
+            || false !== strstr( $request_uri, '/..' )
         ) {
-            // remember this to prevent double-logging in redirect()
+            // Remember this to prevent double-logging in redirect()
             $this->is_redirect = true;
             $this->trigger( 'wpf2b_url_hack', $request_uri );
         }
@@ -229,16 +240,18 @@ class O1_WP_Fail2ban_MU {
 
     public function redirect( $redirect_url, $requested_url ) {
 
-        if ( false === $this->is_redirect )
+        if ( false === $this->is_redirect ) {
             $this->trigger( 'wpf2b_redirect', $requested_url, 'notice' );
+        }
 
         return $redirect_url;
     }
 
     public function authentication_disabled( $user, $username, $password ) {
 
-        if ( in_array( strtolower( $username ), $this->names2ban ) )
+        if ( in_array( strtolower( $username ), $this->names2ban ) ) {
             $this->trigger_instant( 'wpf2b_login_disabled_banned_username', $username );
+        }
 
         $user = new WP_Error( 'invalidcombo', __( '<strong>NOTICE</strong>: Login is disabled for now.' ) );
         $this->trigger( 'wpf2b_login_disabled', $username );
@@ -258,7 +271,7 @@ class O1_WP_Fail2ban_MU {
     }
 
     /**
-     * Ban blacklisted usernames and authentication through XMLRPC.
+     * Ban blacklisted usernames and authentication through XML-RPC.
      */
     public function before_login( $user, $username, $password ) {
 
@@ -274,7 +287,7 @@ class O1_WP_Fail2ban_MU {
     public function after_login( $username, $user ) {
 
         if ( is_a( $user, 'WP_User' ) ) {
-            $this->trigger( 'authenticated', $username, 'info', 'Wordpress auth: ' );
+            $this->trigger( 'authenticated', $username, 'info', 'WordPress auth: ' );
         }
     }
 
@@ -287,19 +300,20 @@ class O1_WP_Fail2ban_MU {
             $user = '';
         }
 
-        $this->trigger( 'logged_out', $user, 'info', 'Wordpress auth: ' );
+        $this->trigger( 'logged_out', $user, 'info', 'WordPress auth: ' );
     }
 
     public function lostpass( $username ) {
 
-        if ( empty( $username ) )
-            $this->trigger( 'lost_pass', $username, 'warn' );
+        if ( empty( $username ) ) {
+            $this->trigger( 'lost_pass_empty', $username, 'warn' );
+        }
 
-        $this->trigger( 'lost_pass', $username, 'warn', 'Wordpress auth: ' );
+        $this->trigger( 'lost_pass', $username, 'warn', 'WordPress auth: ' );
     }
 
     /**
-     * Non-frontend (not through `/index.php`) requests from robots.
+     * WordPress directory requests from robots.
      */
     public function robot_403() {
 
@@ -311,34 +325,26 @@ class O1_WP_Fail2ban_MU {
         $uploads = basename( $uploads['baseurl'] );
         $cache = basename( WP_CONTENT_DIR ) . '/cache';
 
-        if ( ! is_user_logged_in()
-            // robot or < IE7
-            && $this->is_robot( $ua )
+        // Don't have to handle wp-includes/ms-files.php:12
+        // It does SHORTINIT, no mu-plugins get loaded
+        if ( $this->is_robot( $ua )
 
-            // trigger only in wp-* directories
+            // Request to a WordPress directory
             && 1 === preg_match( '/\/(' . $wp_dirs . ')\//i', $request_path )
 
-            // exclude missing media files and stale cache items but not '.php'
+            // Exclude missing media files
+            //      and stale cache items
+            //  but not `*.pHp*`
             && ( ( false === strstr( $request_path, $uploads )
                     && false === strstr( $request_path, $cache )
                 )
                 || false !== stristr( $request_path, '.php' )
             )
 
-            // exclude XML RPC (xmlrpc.php)
-            && ! ( defined( 'XMLRPC_REQUEST' ) && XMLRPC_REQUEST )
-
-            // exclude trackback
-            //&& 1 !== preg_match( '/\/wp-trackback\.php$/i', $request_path )
-            && ! is_trackback()
+            // Somehow logged in?
+            && ! is_user_logged_in()
         ) {
-
-            // wp-includes/ms-files.php:12 does SHORTINIT, no mu-plugins get loaded
-            ob_get_level() && ob_end_clean();
-            $this->trigger( 'wpf2b_robot403', $request_path );
-            header( 'Status: 403 Forbidden' );
-            header( 'HTTP/1.0 403 Forbidden' );
-            exit();
+            $this->trigger_instant( 'wpf2b_robot403', $request_path );
         }
     }
 
@@ -397,9 +403,15 @@ class O1_WP_Fail2ban_MU {
     public function all_action( $tag ) {
 
        global $wp_filter;
+       global $wp_actions;
 
-        if ( ( 'admin_post_' === substr( $tag, 0, 11 )
-            || 'wp_ajax_' === substr( $tag, 0, 8 ) )
+        // Actions only (not filters)
+        // `admin_post` or `wp_ajax`
+        // Not registered
+        if ( is_array( $wp_actions )
+            && array_key_exists ( $tag, $wp_actions )
+            && ( 'admin_post_' === substr( $tag, 0, 11 )
+                || 'wp_ajax_' === substr( $tag, 0, 8 ) )
             && is_array( $wp_filter )
             && ! array_key_exists( $tag, $wp_filter )
         ) {
@@ -437,7 +449,7 @@ class O1_WP_Fail2ban_MU {
 
         $string = serialize( $string ) ;
         // trim long data
-        $string = mb_substr( $string, 0, 200, 'utf-8' );
+        $string = mb_substr( $string, 0, 500, 'utf-8' );
         // replace non-printables with "¿" - sprintf( '%c%c', 194, 191 )
         $string = preg_replace( '/[^\P{C}]+/u', "\xC2\xBF", $string );
 
@@ -457,6 +469,7 @@ class O1_WP_Fail2ban_MU {
             str_replace( $doc_root, '', __FILE__ ),
             str_replace( $doc_root, '', trailingslashit( WPMU_PLUGIN_DIR ) ) . basename( __FILE__ )
         );
+
         exit( $iframe_msg );
     }
 
@@ -466,6 +479,7 @@ new O1_WP_Fail2ban_MU();
 
 /*
 - write test.sh
+- robot requests not through `/index.php` (exclude: xmlrpc, trackback, see: wp_403())
 - append: http://plugins.svn.wordpress.org/block-bad-queries/trunk/block-bad-queries.php
 - option to immediately ban on non-WP scripts (\.php$ \.aspx?$)
 - update non-mu plugin's code
