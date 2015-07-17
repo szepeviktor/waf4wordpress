@@ -3,7 +3,7 @@
 Plugin Name: WordPress fail2ban MU
 Plugin URI: https://github.com/szepeviktor/wordpress-plugin-construction
 Description: Triggers fail2ban on various attacks. <strong>This is a Must Use plugin, must be copied to <code>wp-content/mu-plugins</code>.</strong>
-Version: 4.1.0
+Version: 4.2.0
 License: The MIT License (MIT)
 Author: Viktor Szépe
 Author URI: http://www.online1.hu/webdesign/
@@ -134,7 +134,11 @@ class O1_WP_Fail2ban_MU {
         $this->trigger( $slug, $message, $level, $this->prefix_instant );
 
         // Helps learning attack internals
-        $this->enhanced_error_log( 'HTTP REQUEST: ' . $this->esc_log( $_REQUEST ), $level );
+        $request_data = $_REQUEST;
+        if ( empty( $request_data ) ) {
+            $request_data = file_get_contents( 'php://input' );
+        }
+        $this->enhanced_error_log( 'HTTP REQUEST: ' . $this->esc_log( $request_data ), $level );
 
         ob_get_level() && ob_end_clean();
         header( 'Status: 403 Forbidden' );
