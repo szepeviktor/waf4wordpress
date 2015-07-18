@@ -6,8 +6,8 @@ Plugin URI: https://github.com/szepeviktor/wordpress-plugin-construction
 License: The MIT License (MIT)
 Author: Viktor Szépe
 Author URI: http://www.online1.hu/webdesign/
-Version: 2.4.0
-Options: O1_BAD_REQUEST_COUNT, O1_BAD_REQUEST_MAX_LOGIN_REQUEST_SIZE,
+Version: 2.5.0
+Options: O1_BAD_REQUEST_INSTANT, O1_BAD_REQUEST_MAX_LOGIN_REQUEST_SIZE,
 Options: O1_BAD_REQUEST_CDN_HEADERS, O1_BAD_REQUEST_ALLOW_REG, O1_BAD_REQUEST_ALLOW_IE8,
 Options: O1_BAD_REQUEST_ALLOW_OLD_PROXIES, O1_BAD_REQUEST_ALLOW_CONNECTION_EMPTY,
 Options: O1_BAD_REQUEST_ALLOW_CONNECTION_CLOSE, O1_BAD_REQUEST_ALLOW_TWO_CAPS,
@@ -28,7 +28,7 @@ class O1_Bad_Request {
 
     private $prefix = 'Malicious traffic detected: ';
     private $prefix_instant = 'Break-in attempt detected: ';
-    private $trigger_count = 6;
+    private $instant_trigger = true;
     private $max_login_request_size = 2000;
     private $names2ban = array(
         'access',
@@ -94,8 +94,8 @@ class O1_Bad_Request {
                 $this->enhanced_error_log( 'HTTP/POST: ' . $this->esc_log( $_POST ), 'notice' );
         }
 
-        if ( defined( 'O1_BAD_REQUEST_COUNT' ) )
-            $this->trigger_count = intval( O1_BAD_REQUEST_COUNT );
+        if ( defined( 'O1_BAD_REQUEST_INSTANT' ) && false === O1_BAD_REQUEST_INSTANT )
+            $this->instant_trigger = false;
 
         if ( defined( 'O1_BAD_REQUEST_MAX_LOGIN_REQUEST_SIZE' ) )
             $this->max_login_request_size = intval( O1_BAD_REQUEST_MAX_LOGIN_REQUEST_SIZE );
@@ -156,6 +156,7 @@ class O1_Bad_Request {
         }
 
         // Don't ban on local access and on install or upgrade
+        // WP_INSTALLING is available even before wp-config.php
         if ( php_sapi_name() === 'cli'
             || $_SERVER['REMOTE_ADDR'] === $_SERVER['SERVER_ADDR']
             || defined( 'WP_INSTALLING' ) && WP_INSTALLING
@@ -174,9 +175,35 @@ class O1_Bad_Request {
                 // Work-around to prevent edge server banning
                 // @TODO Block these by another method
                 $this->prefix = 'Attack through CDN: ';
-                $this->trigger_count = 1;
+                $this->instant_trigger = false;
                 return 'bad_request_cdn_attack';
             }
+        }
+
+        // Too long HTTP request URI
+        // Apache: LimitRequestLine directive
+        if ( strlen( $_SERVER['REQUEST_URI'] ) > 2000 )
+            return 'bad_request_uri_too_long';
+
+        // Unknown HTTP request method
+        $wp_methods = array( 'HEAD', 'GET', 'POST' );
+        if ( false === in_array( strtoupper( $_SERVER['REQUEST_METHOD'] ), $wp_methods ) )
+            return 'bad_request_method_unknown';
+
+        // Request URI encoding
+        // https://tools.ietf.org/html/rfc3986#section-2.2
+        // "#" removed
+        // reserved    = gen-delims / sub-delims
+        // gen-delims  = ":" / "/" / "?" / "#" / "[" / "]" / "@"
+        // sub-delims  = "!" / "$" / "&" / "'" / "(" / ")"
+        //             / "*" / "+" / "," / ";" / "="
+        // unreserved  = ALPHA / DIGIT / "-" / "." / "_" / "~"
+        if ( substr_count( $_SERVER['REQUEST_URI'] , '?' ) > 1
+            || false !== strstr( $_SERVER['REQUEST_URI'], '#' )
+            || 1 === preg_match( "/[^:\/?\[\]@!$&'()*+,;=A-Za-z0-9._~-]/", $_SERVER['REQUEST_URI'] )
+        ) {
+            $this->instant_trigger = false;
+            return 'bad_request_uri_encoding_failure';
         }
 
         // Author sniffing
@@ -198,7 +225,7 @@ class O1_Bad_Request {
         if ( isset( $_SERVER['HTTP_USER_AGENT'] ) ) {
             $user_agent = $_SERVER['HTTP_USER_AGENT'];
         } else {
-            return 'bad_request_http_post_user_agent';
+            return 'bad_request_http_post_user_agent_empty';
         }
 
         // Accept HTTP header
@@ -242,7 +269,7 @@ class O1_Bad_Request {
             }
         }
 
-        // Maximum HTTP request size
+        // Maximum HTTP request size for logins
         $request_size = strlen( http_build_query( apache_request_headers() ) )
             + strlen( $_SERVER['REQUEST_URI'] )
             + strlen( http_build_query( $_POST ) );
@@ -267,7 +294,7 @@ class O1_Bad_Request {
 
         // Referer HTTP header
         if ( ! $this->allow_registration ) {
-            if ( $server_name !== parse_url( $referer, PHP_URL_HOST ) )
+            if ( parse_url( $referer, PHP_URL_HOST ) !== $server_name )
                 return 'bad_request_http_post_referer_host';
         }
 
@@ -349,10 +376,10 @@ class O1_Bad_Request {
     private function trigger() {
 
         // Trigger fail2ban
-        if ( 1 === $this->trigger_count ) {
-            $this->enhanced_error_log( $this->prefix . $this->result );
-        } else {
+        if ( $this->instant_trigger ) {
             $this->enhanced_error_log( $this->prefix_instant . $this->result, 'crit' );
+        } else {
+            $this->enhanced_error_log( $this->prefix . $this->result );
         }
 
         // Helps learning attack internals

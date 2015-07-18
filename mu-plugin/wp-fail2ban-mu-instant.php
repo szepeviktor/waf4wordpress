@@ -3,7 +3,7 @@
 Plugin Name: WordPress fail2ban MU
 Plugin URI: https://github.com/szepeviktor/wordpress-plugin-construction
 Description: Triggers fail2ban on various attacks. <strong>This is a Must Use plugin, must be copied to <code>wp-content/mu-plugins</code>.</strong>
-Version: 4.2.0
+Version: 4.3.0
 License: The MIT License (MIT)
 Author: Viktor Szépe
 Author URI: http://www.online1.hu/webdesign/
@@ -33,7 +33,6 @@ if ( ! function_exists( 'add_filter' ) ) {
  */
 class O1_WP_Fail2ban_MU {
 
-    private $trigger_count = 6;
     private $prefix = 'Malicious traffic detected: ';
     private $prefix_instant = 'Break-in attempt detected: ';
     private $wp_die_ajax_handler;
@@ -202,6 +201,11 @@ class O1_WP_Fail2ban_MU {
 
         if ( ! is_404() ) {
             return;
+        }
+
+        // HEAD probing
+        if ( false !== stripos( $_SERVER['REQUEST_METHOD'], 'HEAD' ) ) {
+            $this->trigger_instant( 'wpf2b_404_head', $request_path );
         }
 
         $ua = array_key_exists( 'HTTP_USER_AGENT', $_SERVER ) ? $_SERVER['HTTP_USER_AGENT'] : '';
@@ -410,7 +414,7 @@ class O1_WP_Fail2ban_MU {
        global $wp_actions;
 
         // Actions only (not filters)
-        // `admin_post` or `wp_ajax`
+        // `admin_post_*` or `wp_ajax_*`
         // Not registered
         if ( is_array( $wp_actions )
             && array_key_exists ( $tag, $wp_actions )
@@ -510,5 +514,4 @@ add_filter( 'login_errors', function ( $em ) {
 - general
     - bad queries https://github.com/wp-plugins/block-bad-queries/
     - bad UAs
-    - strlen( $_SERVER['REQUEST_URI'] ) > 255
 */
