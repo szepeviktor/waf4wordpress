@@ -3,7 +3,7 @@
 Plugin Name: WordPress fail2ban MU
 Plugin URI: https://github.com/szepeviktor/wordpress-plugin-construction
 Description: Triggers fail2ban on various attacks. <strong>This is a Must Use plugin, must be copied to <code>wp-content/mu-plugins</code>.</strong>
-Version: 4.3.0
+Version: 4.4.0
 License: The MIT License (MIT)
 Author: Viktor Szépe
 Author URI: http://www.online1.hu/webdesign/
@@ -228,21 +228,10 @@ class O1_WP_Fail2ban_MU {
 
     public function url_hack() {
 
-        $request_uri = $_SERVER['REQUEST_URI'];
-        $request_query = parse_url( $request_uri, PHP_URL_QUERY );
-
-        // Query contains `../`
-        if ( false !== strstr( $request_query, '../' ) ) {
-            $this->trigger_instant( 'wpf2b_url_hack_query', $request_uri );
-        }
-
-        if ( '//' === substr( $request_uri, 0, 2 )
-            || false !== strstr( $request_uri, '../' )
-            || false !== strstr( $request_uri, '/..' )
-        ) {
+        if ( '//' === substr( $_SERVER['REQUEST_URI'], 0, 2 ) ) {
             // Remember this to prevent double-logging in redirect()
             $this->is_redirect = true;
-            $this->trigger( 'wpf2b_url_hack', $request_uri );
+            $this->trigger( 'wpf2b_url_hack', $_SERVER['REQUEST_URI'] );
         }
     }
 

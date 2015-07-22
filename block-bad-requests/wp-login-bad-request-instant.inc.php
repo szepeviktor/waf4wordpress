@@ -206,7 +206,7 @@ class O1_Bad_Request {
         // "%" added
         if ( substr_count( $_SERVER['REQUEST_URI'] , '?' ) > 1
             || false !== strstr( $_SERVER['REQUEST_URI'], '#' )
-            || 1 === preg_match( "/[%^:\/?\[\]@!$&'()*+,;=A-Za-z0-9._~-]/", $_SERVER['REQUEST_URI'] )
+            || 1 === preg_match( "/[^%:\/?\[\]@!$&'()*+,;=A-Za-z0-9._~-]/", $_SERVER['REQUEST_URI'] )
         ) {
             $this->instant_trigger = false;
             return 'bad_request_uri_encoding_failure';
@@ -220,7 +220,7 @@ class O1_Bad_Request {
         // Request URI:
         //  - does not begin with forward slash (may begin with URL scheme)
         //  - contains path traversal
-        if ( '/' !== substr( $_SERVER['REQUEST_URI'], 1 )
+        if ( '/' !== substr( $_SERVER['REQUEST_URI'], 0, 1 )
             || false !== strstr( $_SERVER['REQUEST_URI'], '../' )
             || false !== strstr( $_SERVER['REQUEST_URI'], '/..' )
         ) {
