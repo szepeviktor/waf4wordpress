@@ -20,7 +20,7 @@ function fail2ban_404_watchdog( $log_entry ) {
             $slug = '404_not_found';
             break;
         case 'access denied':
-            $slug = '403_forbidden ';
+            $slug = '403_forbidden';
             break;
     }
 
@@ -46,7 +46,7 @@ function fail2ban_404_watchdog( $log_entry ) {
         }
 
         $error_msg = '[error] '
-            . '[client ' . @$_SERVER['REMOTE_ADDR'] . ':' . @$_SERVER['REMOTE_PORT'] . '] '
+            . '[client ' . $_SERVER['REMOTE_ADDR'] . ':' . $_SERVER['REMOTE_PORT'] . '] '
             . $error_msg
             . ( $referer ? ', referer: ' . $referer : '' );
     }

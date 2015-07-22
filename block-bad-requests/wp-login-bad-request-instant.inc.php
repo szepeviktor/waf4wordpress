@@ -6,7 +6,7 @@ Plugin URI: https://github.com/szepeviktor/wordpress-plugin-construction
 License: The MIT License (MIT)
 Author: Viktor Szépe
 Author URI: http://www.online1.hu/webdesign/
-Version: 2.5.0
+Version: 2.6.0
 Options: O1_BAD_REQUEST_INSTANT, O1_BAD_REQUEST_MAX_LOGIN_REQUEST_SIZE,
 Options: O1_BAD_REQUEST_CDN_HEADERS, O1_BAD_REQUEST_ALLOW_REG, O1_BAD_REQUEST_ALLOW_IE8,
 Options: O1_BAD_REQUEST_ALLOW_OLD_PROXIES, O1_BAD_REQUEST_ALLOW_CONNECTION_EMPTY,
@@ -164,7 +164,12 @@ class O1_Bad_Request {
             return false;
 
         $request_path = parse_url( $_SERVER['REQUEST_URI'], PHP_URL_PATH );
-        $server_name = isset( $_SERVER['SERVER_NAME'] ) ? $_SERVER['SERVER_NAME'] : $_SERVER['HTTP_HOST'];
+        $request_query = isset( $_SERVER['QUERY_STRING'] )
+            ? $_SERVER['QUERY_STRING']
+            : parse_url( $_SERVER['REQUEST_URI'], PHP_URL_QUERY );
+        $server_name = isset( $_SERVER['SERVER_NAME'] )
+            ? $_SERVER['SERVER_NAME']
+            : $_SERVER['HTTP_HOST'];
 
         // Block non-static requests from CDN but allow robots.txt
         if ( ! empty( $this->cdn_headers ) && '/robots.txt' !== $request_path ) {
@@ -192,18 +197,34 @@ class O1_Bad_Request {
 
         // Request URI encoding
         // https://tools.ietf.org/html/rfc3986#section-2.2
-        // "#" removed
         // reserved    = gen-delims / sub-delims
         // gen-delims  = ":" / "/" / "?" / "#" / "[" / "]" / "@"
         // sub-delims  = "!" / "$" / "&" / "'" / "(" / ")"
         //             / "*" / "+" / "," / ";" / "="
         // unreserved  = ALPHA / DIGIT / "-" / "." / "_" / "~"
+        // "#" removed
+        // "%" added
         if ( substr_count( $_SERVER['REQUEST_URI'] , '?' ) > 1
             || false !== strstr( $_SERVER['REQUEST_URI'], '#' )
-            || 1 === preg_match( "/[^:\/?\[\]@!$&'()*+,;=A-Za-z0-9._~-]/", $_SERVER['REQUEST_URI'] )
+            || 1 === preg_match( "/[%^:\/?\[\]@!$&'()*+,;=A-Za-z0-9._~-]/", $_SERVER['REQUEST_URI'] )
         ) {
             $this->instant_trigger = false;
             return 'bad_request_uri_encoding_failure';
+        }
+
+        // Path traversal in query string
+        if ( false !== strstr( $request_query, '../' ) ) {
+            return 'bad_request_uri_hack_query';
+        }
+
+        // Request URI:
+        //  - does not begin with forward slash (may begin with URL scheme)
+        //  - contains path traversal
+        if ( '/' !== substr( $_SERVER['REQUEST_URI'], 1 )
+            || false !== strstr( $_SERVER['REQUEST_URI'], '../' )
+            || false !== strstr( $_SERVER['REQUEST_URI'], '/..' )
+        ) {
+            return 'bad_request_uri_hack';
         }
 
         // Author sniffing
@@ -298,9 +319,9 @@ class O1_Bad_Request {
                 return 'bad_request_http_post_referer_host';
         }
 
-        // Don't ban post password requests
-        if ( isset( $_SERVER['QUERY_STRING'] ) ) {
-            $queries = $this->parse_query( $_SERVER['QUERY_STRING'] );
+        // Skip following checks on post password
+        if ( ! empty( $request_query ) ) {
+            $queries = $this->parse_query( $request_query );
 
             if ( isset( $queries['action'] )
                 && 'postpass' === $queries['action']
