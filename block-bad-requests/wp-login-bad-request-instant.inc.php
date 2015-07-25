@@ -191,7 +191,8 @@ class O1_Bad_Request {
             return 'bad_request_uri_too_long';
 
         // Unknown HTTP request method
-        $wp_methods = array( 'HEAD', 'GET', 'POST' );
+        // Google Translte make OPTIONS requests
+        $wp_methods = array( 'HEAD', 'GET', 'POST', 'OPTIONS' );
         if ( false === in_array( strtoupper( $_SERVER['REQUEST_METHOD'] ), $wp_methods ) )
             return 'bad_request_method_unknown';
 
