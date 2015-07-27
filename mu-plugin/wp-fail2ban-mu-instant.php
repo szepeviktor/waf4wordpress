@@ -17,7 +17,8 @@ if ( ! function_exists( 'add_filter' ) ) {
     );
     ob_get_level() && ob_end_clean();
     header( 'Status: 403 Forbidden' );
-    header( 'HTTP/1.0 403 Forbidden' );
+    header( 'HTTP/1.1 403 Forbidden', true, 403 );
+    header( 'Connection: Close' );
     exit();
 }
 
@@ -141,8 +142,12 @@ class O1_WP_Fail2ban_MU {
 
         ob_get_level() && ob_end_clean();
         header( 'Status: 403 Forbidden' );
-        header( 'HTTP/1.0 403 Forbidden' );
-
+        header( 'HTTP/1.1 403 Forbidden' );
+        header( 'Connection: Close' );
+        header( 'Cache-Control: max-age=0, private, no-store, no-cache, must-revalidate' );
+        header( 'X-Robots-Tag: noindex, nofollow' );
+        header( 'Content-Type: text/html' );
+        header( 'Content-Length: 0' );
         exit();
     }
 
@@ -218,7 +223,11 @@ class O1_WP_Fail2ban_MU {
 
             ob_get_level() && ob_end_clean();
             header( 'Status: 404 Not Found' );
-            header( 'HTTP/1.0 404 Not Found' );
+            status_header( 404 );
+            header( 'X-Robots-Tag: noindex, nofollow' );
+            //header( 'Connection: Close' );
+            header( 'Content-Length: 0' );
+            nocache_headers();
             exit();
         }
 

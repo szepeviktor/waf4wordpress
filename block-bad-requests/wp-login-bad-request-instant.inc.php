@@ -91,7 +91,7 @@ class O1_Bad_Request {
         // Options
         if ( defined( 'O1_BAD_REQUEST_POST_LOGGING' ) && O1_BAD_REQUEST_POST_LOGGING ) {
             if ( ! empty( $_POST ) )
-                $this->enhanced_error_log( 'HTTP/POST: ' . $this->esc_log( $_POST ), 'notice' );
+                $this->enhanced_error_log( 'HTTP POST: ' . $this->esc_log( $_POST ), 'notice' );
         }
 
         if ( defined( 'O1_BAD_REQUEST_INSTANT' ) && false === O1_BAD_REQUEST_INSTANT )
@@ -391,7 +391,7 @@ class O1_Bad_Request {
     }
 
     /**
-     * Trigger fail2ban and exit with HTTP/403.
+     * Trigger fail2ban and exit with HTTP 403.
      *
      * @return null
      */
@@ -413,7 +413,12 @@ class O1_Bad_Request {
 
         ob_get_level() && ob_end_clean();
         header( 'Status: 403 Forbidden' );
-        header( 'HTTP/1.0 403 Forbidden' );
+        header( 'HTTP/1.1 403 Forbidden', true, 403 );
+        header( 'Connection: Close' );
+        header( 'Cache-Control: max-age=0, private, no-store, no-cache, must-revalidate' );
+        header( 'X-Robots-Tag: noindex, nofollow' );
+        header( 'Content-Type: text/html' );
+        header( 'Content-Length: 0' );
         exit();
     }
 
