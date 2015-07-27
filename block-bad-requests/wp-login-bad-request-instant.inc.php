@@ -6,7 +6,7 @@ Plugin URI: https://github.com/szepeviktor/wordpress-plugin-construction
 License: The MIT License (MIT)
 Author: Viktor Szépe
 Author URI: http://www.online1.hu/webdesign/
-Version: 2.6.0
+Version: 2.6.2
 Options: O1_BAD_REQUEST_INSTANT, O1_BAD_REQUEST_MAX_LOGIN_REQUEST_SIZE,
 Options: O1_BAD_REQUEST_CDN_HEADERS, O1_BAD_REQUEST_ALLOW_REG, O1_BAD_REQUEST_ALLOW_IE8,
 Options: O1_BAD_REQUEST_ALLOW_OLD_PROXIES, O1_BAD_REQUEST_ALLOW_CONNECTION_EMPTY,
@@ -236,7 +236,7 @@ class O1_Bad_Request {
         )
             return 'bad_request_author_sniffing';
 
-        // Check POST HTTP requests only
+        // Check HTTP POST requests only
         // wget sends: User-Agent, Accept, Host, Connection, Content-Type, Content-Length
         // curl sends: User-Agent, Host, Accept, Content-Length, Content-Type
         if ( false === stripos( $_SERVER['REQUEST_METHOD'], 'POST' ) )
@@ -258,10 +258,11 @@ class O1_Bad_Request {
         )
             return 'bad_request_http_post_accept';
 
-        // Content-Type HTTP header
+        // Content-Type HTTP header (for login, AJAX and XML-RPC)
         if ( ! isset( $_SERVER['CONTENT_TYPE'] )
             || ( false === strpos( $_SERVER['CONTENT_TYPE'], 'application/x-www-form-urlencoded' )
                 && false === strpos( $_SERVER['CONTENT_TYPE'], 'multipart/form-data' )
+                && false === strpos( $_SERVER['CONTENT_TYPE'], 'text/xml' )
             )
         )
             return 'bad_request_http_post_content_type';
