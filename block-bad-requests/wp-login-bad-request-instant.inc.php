@@ -6,7 +6,7 @@ Plugin URI: https://github.com/szepeviktor/wordpress-plugin-construction
 License: The MIT License (MIT)
 Author: Viktor Szépe
 Author URI: http://www.online1.hu/webdesign/
-Version: 2.6.2
+Version: 2.6.3
 Options: O1_BAD_REQUEST_INSTANT, O1_BAD_REQUEST_MAX_LOGIN_REQUEST_SIZE,
 Options: O1_BAD_REQUEST_CDN_HEADERS, O1_BAD_REQUEST_ALLOW_REG, O1_BAD_REQUEST_ALLOW_IE8,
 Options: O1_BAD_REQUEST_ALLOW_OLD_PROXIES, O1_BAD_REQUEST_ALLOW_CONNECTION_EMPTY,
@@ -81,12 +81,14 @@ class O1_Bad_Request {
      */
     public function __construct() {
 
+        /* Commented out due to multi-line logging
         // Experimental upload traffic analysis
         if ( count( $_FILES ) )
             $this->enhanced_error_log( sprintf( 'bad_request_upload: %s, %s',
                 $this->esc_log( $_FILES ),
                 $this->esc_log( $_REQUEST )
             ), 'notice' );
+        */
 
         // Options
         if ( defined( 'O1_BAD_REQUEST_POST_LOGGING' ) && O1_BAD_REQUEST_POST_LOGGING ) {
@@ -188,13 +190,13 @@ class O1_Bad_Request {
         // Too long HTTP request URI
         // Apache: LimitRequestLine directive
         if ( strlen( $_SERVER['REQUEST_URI'] ) > 2000 )
-            return 'bad_request_uri_too_long';
+            return 'bad_request_uri_length';
 
         // Unknown HTTP request method
         // Google Translte make OPTIONS requests
         $wp_methods = array( 'HEAD', 'GET', 'POST', 'OPTIONS' );
         if ( false === in_array( strtoupper( $_SERVER['REQUEST_METHOD'] ), $wp_methods ) )
-            return 'bad_request_method_unknown';
+            return 'bad_request_http_method';
 
         // Request URI encoding
         // https://tools.ietf.org/html/rfc3986#section-2.2
@@ -210,12 +212,12 @@ class O1_Bad_Request {
             || 1 === preg_match( "/[^%:\/?\[\]@!$&'()*+,;=A-Za-z0-9._~-]/", $_SERVER['REQUEST_URI'] )
         ) {
             $this->instant_trigger = false;
-            return 'bad_request_uri_encoding_failure';
+            return 'bad_request_uri_encoding';
         }
 
         // Path traversal in query string
         if ( false !== strstr( $request_query, '../' ) ) {
-            return 'bad_request_uri_hack_query';
+            return 'bad_request_uri_query_hack';
         }
 
         // Request URI:
@@ -234,7 +236,7 @@ class O1_Bad_Request {
             && isset( $_REQUEST['author'] )
             && is_numeric( $_REQUEST['author'] )
         )
-            return 'bad_request_author_sniffing';
+            return 'bad_request_wp_author_sniffing';
 
         // Check HTTP POST requests only
         // wget sends: User-Agent, Accept, Host, Connection, Content-Type, Content-Length
@@ -244,34 +246,34 @@ class O1_Bad_Request {
         // --------------------------- >8 ---------------------------
 
         // User agent HTTP header
-        if ( isset( $_SERVER['HTTP_USER_AGENT'] ) ) {
-            $user_agent = $_SERVER['HTTP_USER_AGENT'];
+        if ( empty( $_SERVER['HTTP_USER_AGENT'] ) ) {
+            return 'bad_request_post_user_agent_empty';
         } else {
-            return 'bad_request_http_post_user_agent_empty';
+            $user_agent = $_SERVER['HTTP_USER_AGENT'];
         }
 
         // Accept HTTP header
         // IE9, wget and curl sends only "*/*"
         // || false === strpos( $_SERVER['HTTP_ACCEPT'], 'text/html' )
-        if ( ! isset( $_SERVER['HTTP_ACCEPT'] )
+        if ( empty( $_SERVER['HTTP_ACCEPT'] )
             || false === strpos( $_SERVER['HTTP_ACCEPT'], '/' )
         )
-            return 'bad_request_http_post_accept';
+            return 'bad_request_post_accept';
 
         // Content-Type HTTP header (for login, AJAX and XML-RPC)
-        if ( ! isset( $_SERVER['CONTENT_TYPE'] )
+        if ( empty( $_SERVER['CONTENT_TYPE'] )
             || ( false === strpos( $_SERVER['CONTENT_TYPE'], 'application/x-www-form-urlencoded' )
                 && false === strpos( $_SERVER['CONTENT_TYPE'], 'multipart/form-data' )
                 && false === strpos( $_SERVER['CONTENT_TYPE'], 'text/xml' )
             )
         )
-            return 'bad_request_http_post_content_type';
+            return 'bad_request_post_content_type';
 
         // Content-Length HTTP header
-        if ( ! isset( $_SERVER['CONTENT_LENGTH'] )
+        if ( empty( $_SERVER['CONTENT_LENGTH'] )
             || ! is_numeric( $_SERVER['CONTENT_LENGTH'] )
         )
-            return 'bad_request_http_post_content_length';
+            return 'bad_request_post_content_length';
 
         // Check login requests only
         if ( false === stripos( $request_path, '/wp-login.php' ) )
@@ -283,12 +285,12 @@ class O1_Bad_Request {
 
             // Banned usernames
             if ( in_array( strtolower( $username ), $this->names2ban ) )
-                return 'bad_request_banned_username';
+                return 'bad_request_wplogin_username_banned';
 
             // Attackers try usernames with "TwoCapitals"
             if ( ! $this->allow_two_capitals ) {
                 if ( 1 === preg_match( '/^[A-Z][a-z]+[A-Z][a-z]+$/', $username ) )
-                    return 'bad_request_username_pattern';
+                    return 'bad_request_wplogin_username_twocapitals';
             }
         }
 
@@ -297,28 +299,28 @@ class O1_Bad_Request {
             + strlen( $_SERVER['REQUEST_URI'] )
             + strlen( http_build_query( $_POST ) );
         if ( $request_size > $this->max_login_request_size )
-            return 'bad_request_http_request_too_big';
+            return 'bad_request_wplogin_request_size';
 
         // Content-Type HTTP header (application/x-www-form-urlencoded)
         if ( false === strpos( $_SERVER['CONTENT_TYPE'], 'application/x-www-form-urlencoded' ) )
-            return 'bad_request_http_login_content_type';
+            return 'bad_request_wplogin_content_type';
 
         // Accept-Language HTTP header
-        if ( ! isset( $_SERVER['HTTP_ACCEPT_LANGUAGE'] )
+        if ( empty( $_SERVER['HTTP_ACCEPT_LANGUAGE'] )
             || strlen( $_SERVER['HTTP_ACCEPT_LANGUAGE'] ) < 2
         )
-            return 'bad_request_http_post_accept_language';
+            return 'bad_request_wplogin_accept_language';
 
         // Referer HTTP header
-        if ( ! isset ( $_SERVER['HTTP_REFERER'] ) )
-            return 'bad_request_http_post_referer_empty';
+        if ( empty( $_SERVER['HTTP_REFERER'] ) )
+            return 'bad_request_wplogin_referer_empty';
 
         $referer = $_SERVER['HTTP_REFERER'];
 
         // Referer HTTP header
         if ( ! $this->allow_registration ) {
             if ( parse_url( $referer, PHP_URL_HOST ) !== $server_name )
-                return 'bad_request_http_post_referer_host';
+                return 'bad_request_wplogin_referer_host';
         }
 
         // Skip following checks on post password
@@ -335,57 +337,57 @@ class O1_Bad_Request {
         // Referer HTTP header
         if ( ! $this->allow_registration ) {
             if ( false === strpos( parse_url( $referer, PHP_URL_PATH ), '/wp-login.php' ) )
-                return 'bad_request_http_post_referer_path';
+                return 'bad_request_wplogin_referer_path';
         }
 
         // HTTP protocol version
-        if ( ! isset( $_SERVER['SERVER_PROTOCOL'] ) )
-                return 'bad_request_http_post_protocol_empty';
+        if ( empty( $_SERVER['SERVER_PROTOCOL'] ) )
+                return 'bad_request_wplogin_protocol_empty';
 
         if ( ! $this->allow_old_proxies ) {
             if ( false === strpos( $_SERVER['SERVER_PROTOCOL'], 'HTTP/1.1' ) )
-                return 'bad_request_http_post_1_1';
+                return 'bad_request_wplogin_http11';
         }
 
         // Connection HTTP header (keep alive)
         if ( ! $this->allow_connection_empty ) {
-            if ( ! isset( $_SERVER['HTTP_CONNECTION'] ) )
-                return 'bad_request_http_post_connection_empty';
+            if ( empty( $_SERVER['HTTP_CONNECTION'] ) )
+                return 'bad_request_wplogin_connection_empty';
 
             if ( ! $this->allow_connection_close ) {
                 if ( false === stripos( $_SERVER['HTTP_CONNECTION'], 'keep-alive' ) )
-                    return 'bad_request_http_post_connection';
+                    return 'bad_request_wplogin_connection';
             }
         }
 
         // Accept-Encoding HTTP header
-        if ( ! isset ( $_SERVER['HTTP_ACCEPT_ENCODING'] )
+        if ( empty( $_SERVER['HTTP_ACCEPT_ENCODING'] )
             || false === strpos( $_SERVER['HTTP_ACCEPT_ENCODING'], 'gzip' )
         )
-            return 'bad_request_http_post_accept_encoding';
+            return 'bad_request_wplogin_accept_encoding';
 
         // WordPress test cookie
         if ( ! $this->allow_registration ) {
 
-            if ( ! isset( $_SERVER['HTTP_COOKIE'] )
+            if ( empty( $_SERVER['HTTP_COOKIE'] )
                 || false === strpos( $_SERVER['HTTP_COOKIE'], 'wordpress_test_cookie' )
             )
-                return 'bad_request_http_post_test_cookie';
+                return 'bad_request_wplogin_test_cookie';
         }
 
         // IE8 logins
         if ( $this->allow_ie8_login ) {
-            if ( 1 === preg_match( '/^Mozilla\/4\.0 \(compatible; MSIE 8\.0;/', $user_agent ) )
+            if ( 'Mozilla/4.0 (compatible; MSIE 8.0;' === substr( $user_agent, 0, 34 ) )
                 return false;
         }
 
         // Botnet user agents
         if ( 1 === preg_match('/Firefox\/1|bot|spider|crawl|user-agent|random|"|\\\\/i', $user_agent ) )
-            return 'bad_request_http_post_user_agent_botnet';
+            return 'bad_request_wplogin_user_agent_botnet';
 
         // Modern browser user agents
-        if ( 1 !== preg_match( '/^Mozilla\/5\.0/', $user_agent ) )
-            return 'bad_request_http_post_user_agent_mozilla_5_0';
+        if ( 'Mozilla/5.0' !== substr( $user_agent, 0, 11 ) )
+            return 'bad_request_wplogin_user_agent_mozilla50';
 
         // Allow
         return false;
@@ -410,7 +412,10 @@ class O1_Bad_Request {
         if ( empty( $request_data ) ) {
             $request_data = file_get_contents( 'php://input' );
         }
-        $this->enhanced_error_log( 'HTTP REQUEST: ' . $this->esc_log( $request_data ) );
+        $this->enhanced_error_log( 'HTTP REQUEST: '
+            . $this->esc_log( $_SERVER['REQUEST_METHOD'] ) . '/'
+            . $this->esc_log( $request_data )
+        );
 
         ob_get_level() && ob_end_clean();
         header( 'Status: 403 Forbidden' );
@@ -521,5 +526,5 @@ new O1_Bad_Request();
 check POST: no more, no less variables  a:5:{s:11:"redirect_to";s:28:"http://domain.com/wp-admin/";s:10:"testcookie";s:1:"1";s:3:"log";s:5:"admin";s:3:"pwd";s:6:"123456";s:9:"wp-submit";s:6:"Log In";}
 POST: login, postpass, resetpass, lostpassword, register
 GET:  logout, rp, lostpassword
-non-login POSTs: comments etc.
+non-login POST-s: comment, trackback, pingback, XML-RPC, WP-API...
 */
