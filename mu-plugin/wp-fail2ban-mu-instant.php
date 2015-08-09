@@ -3,7 +3,7 @@
 Plugin Name: WordPress fail2ban MU
 Plugin URI: https://github.com/szepeviktor/wordpress-plugin-construction
 Description: Triggers fail2ban on various attacks. <strong>This is a Must Use plugin, must be copied to <code>wp-content/mu-plugins</code>.</strong>
-Version: 4.4.2
+Version: 4.5.0
 License: The MIT License (MIT)
 Author: Viktor Szépe
 Author URI: http://www.online1.hu/webdesign/
@@ -111,6 +111,8 @@ class O1_WP_Fail2ban_MU {
         // Non-existent URLs
         add_action( 'init', array( $this, 'url_hack' ) );
         add_filter( 'redirect_canonical', array( $this, 'redirect' ), 1, 2 );
+        // Prevent using shortlinks which are redirected to canonical URL-s
+        add_filter( 'pre_get_shortlink', '__return_empty_string' );
 
         // Robot and human 404
         add_action( 'plugins_loaded', array( $this, 'robot_403' ), 0 );
@@ -457,11 +459,13 @@ class O1_WP_Fail2ban_MU {
 
     private function esc_log( $string ) {
 
-        $string = serialize( $string ) ;
-        // trim long data
-        $string = mb_substr( $string, 0, 500, 'utf-8' );
-        // replace non-printables with "¿" - sprintf( '%c%c', 194, 191 )
-        $string = preg_replace( '/[^\P{C}]+/u', "\xC2\xBF", $string );
+        $escaped = serialize( $string ) ;
+        // Limit length
+        $escaped = mb_substr( $escaped, 0, 500, 'utf-8' );
+        // New lines to "|"
+        $escaped = str_replace( "\n", "|", $escaped );
+        // Replace non-printables with "¿"
+        $escaped = preg_replace( '/[^\P{C}]+/u', "\xC2\xBF", $escaped );
 
         return ' (' . $string . ')';
     }
