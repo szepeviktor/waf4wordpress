@@ -6,7 +6,7 @@ Plugin URI: https://github.com/szepeviktor/wordpress-plugin-construction
 License: The MIT License (MIT)
 Author: Viktor Szépe
 Author URI: http://www.online1.hu/webdesign/
-Version: 2.6.4
+Version: 2.6.5
 Options: O1_BAD_REQUEST_INSTANT, O1_BAD_REQUEST_MAX_LOGIN_REQUEST_SIZE,
 Options: O1_BAD_REQUEST_CDN_HEADERS, O1_BAD_REQUEST_ALLOW_REG, O1_BAD_REQUEST_ALLOW_IE8,
 Options: O1_BAD_REQUEST_ALLOW_OLD_PROXIES, O1_BAD_REQUEST_ALLOW_CONNECTION_EMPTY,
@@ -193,10 +193,19 @@ class O1_Bad_Request {
             return 'bad_request_uri_length';
 
         // Unknown HTTP request method
-        // Google Translte make OPTIONS requests
+        $request_method = strtoupper( $_SERVER['REQUEST_METHOD'] );
+        // Google Translate makes OPTIONS requests
         $wp_methods = array( 'HEAD', 'GET', 'POST', 'OPTIONS' );
-        if ( false === in_array( strtoupper( $_SERVER['REQUEST_METHOD'] ), $wp_methods ) )
+        if ( false === in_array( $request_method, $wp_methods ) )
             return 'bad_request_http_method';
+
+        // Only GET and POST for wp-login
+        $wp_login_methods = array( 'GET', 'POST' );
+        if ( false !== stripos( $request_path, '/wp-login.php' )
+            && false === in_array( $request_method, $wp_login_methods )
+        ) {
+            return 'bad_request_login_http_method';
+        }
 
         // Request URI encoding
         // https://tools.ietf.org/html/rfc3986#section-2.2

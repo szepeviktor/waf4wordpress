@@ -8,44 +8,13 @@ Author: Szépe Viktor
 Author URI: http://www.online1.hu/
 */
 
-define('ERRORLOG_METHOD', 'fail2ban'); // FIXME -> admin
-
 define('ERRORLOG_TARPIT', 8);
 define('ERRORLOG_DEEP_TARPIT', 89);
 define('ERRORLOG_LOGIN_BLOCK_SECS', 86400);
 define('ERRORLOG_FAIL2BAN_BAN_LINES', 12);
 
 
-function errorlog_setup() {
-    add_action('wp_login_failed', 'errorlog_login_failed');
-}
-add_action('plugins_loaded', 'errorlog_setup', 100000);  // after limit-login
-
-
-
-
 // ------------------------------- METHODS -----------------------------------
-
-
-// fail2ban
-function errorlog_is_fail2ban() {
-    return true; //exec() ps ef | grep python.*fail2ban-server;
-}
-function errorlog_action_fail2ban($action) {
-    if (!errorlog_is_fail2ban()) return 'no-fail2ban';
-    switch ($action) {
-        case 'ban':
-            for ($i = 0; $i < ERRORLOG_FAIL2BAN_BAN_LINES; $i++) {
-                error_log('File does not exist: ' . $_SERVER['REQUEST_URI'].'#'.$i);
-            }
-            return true;
-            break;
-        case 'score':
-            error_log('File does not exist: ' . $_SERVER['REQUEST_URI']);
-            return true;
-            break;
-    }
-}
 
 
 // tarpit
@@ -157,10 +126,6 @@ function errorlog_action_limitlogin($action) {
 function errorlog_do_action($method , $action, $score = 0) {
     $result = false;
     switch ($method) {
-        case 'fail2ban':
-            // exec(ps -ef) pregmatch('python.*fail2ban-server')
-            $result = errorlog_action_fail2ban($action);
-            break;
         case 'tarpit':
             $result = errorlog_action_tarpit($action);
             break;
@@ -196,30 +161,6 @@ function errorlog_do_action($method , $action, $score = 0) {
 
 
 
-// wp-login.php gets a HTTP/HEAD
-function errorlog_login_init($error_codes) {
-    if ($_SERVER['REQUEST_METHOD'] == 'HEAD') {
-        errorlog_do_action(ERRORLOG_METHOD, 'ban');
-    }
-}
-add_action('login_init', 'errorlog_login_init');
-
-// banned usernames, passwords
-function errorlog_authenticate($user, $username, $pass) {
-    $banned_usernames = array('admin', 'adm', 'administrator', 'user', 'system', 'server', 'office', 'manager', 'test', 'support');
-    //+admin: custom banned usernames
-    //check username 0, 1-3
-    //check password length: 0, 1-8
-    $uslen = strlen($username);
-    $pwlen = strlen($pass);
-    if (in_array($username, $banned_usernames) || ($pwlen >= 1 && $pwlen <= 8) || ($uslen >= 1 && $uslen <= 3)) {
-        error_log('Error.log 404 WP login attempt, username: '.$username.' password: '.$pass);
-        errorlog_do_action(ERRORLOG_METHOD, 'ban');
-    }
-    return $user;
-}
-add_filter('authenticate', 'errorlog_authenticate', 1, 3);
-
 // Limit Login Attempt lockout
 function errorlog_login_failed($username) {
     global $limit_login_just_lockedout;
@@ -233,34 +174,3 @@ function errorlog_authenticate_user($userdata, $password) {
     return $userdata;
 }
 add_filter('wp_authenticate_user', 'errorlog_authenticate_user', 100000, 2);*/
-
-// HTTP/404
-function errorlog_wp_404() {
-    if (is_404()) {
-        errorlog_do_action(ERRORLOG_METHOD, 'score', 5); // score
-    }
-}
-add_action('template_redirect', 'errorlog_wp_404');
-
-// URL path begins with two slashes
-function errorlog_dblslash() {
-    if (substr($_SERVER['REQUEST_URI'], 0, 2) == '//') {
-        errorlog_do_action(ERRORLOG_METHOD, 'score', 20); // score
-    }
-}
-add_action('init', 'errorlog_dblslash');
-
-// there is a redirection
-function errorlog_redirect( $redirect_url, $requested_url ) {
-    errorlog_do_action(ERRORLOG_METHOD, 'score', 8); // score
-    return $redirect_url;
-}
-add_filter( 'redirect_canonical', 'errorlog_redirect', 10, 2);
-
-
-// ------------ MORE DETECTIONS -----------------
-
-//+logins: 'postpass', 'logout', 'lostpassword', 'retrievepassword', 'resetpass', 'rp', 'register', 'login'
-//+block/score: HTTP/HEAD, /GET, /POST
-//+more detections/methods: wishlist URL
-

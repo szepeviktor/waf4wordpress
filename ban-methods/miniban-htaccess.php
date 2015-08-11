@@ -1,29 +1,35 @@
 <?php
 
-/*
-*Apache
-*NGINX
-*other environments
-*/
+/**
+ * Apache
+ * NGINX
+ * reverse proxies: CloudFlare / Incapsula / Sucuri
+ * other environments
+ */
 
 function htaccess_rules() {
 
     -> better-wp-security/core/class-itsec-files.php
 
-define() custom HTTP header to get IP default:'X-CLUSTER-CLIENT-IP'
-preg_quote $host_ip
-"SetEnvIF " . array( 'REMOTE_ADDR', 'X-FORWARDED-FOR' ) $deny_env;
-# Apache < 2.3, # Apache ≥ 2.3
+# Mini Ban for Apache directory configuration
+SetEnvIf Remote_Addr "^192\.168\.12\.138$" mini_ban
+# CloudFlare header
+#SetEnvIf X-FORWARDED-FOR "^192\.168\.12\.138$" mini_ban
+# Rackspace header
+#SetEnvIf X-CLUSTER-CLIENT-IP "^192\.168\.12\.138$" mini_ban
+# Apache < 2.3
 <IfModule !mod_authz_core.c>
     Order allow,deny
-    Deny from env=$deny_env
-#    Deny from $host_ip
+    Deny from env=mini_ban
     Allow from all
     Satisfy All
 </IfModule>
+# Apache ≥ 2.3
 <IfModule mod_authz_core.c>
-    Require not env $deny_env
-#    Require not ip $host_ip
+    <RequireAll>
+        Require all granted
+        Require not env mini_ban
+    </RequireAll>
 </IfModule>
 
 }
@@ -51,7 +57,7 @@ function singleton_put_contents( $path, $marker, $content, $timeout ) {
         if ( $give_up >= time() )
     }
 
-    //3. read rules
+    // 3. read rules
     $file_stat = fstat( $handle );
     $contents = fread( $handle, $file_stat['size'] );
     // line ends
@@ -59,7 +65,7 @@ function singleton_put_contents( $path, $marker, $content, $timeout ) {
     //already contains?
     preg_match multiline "# BEGIN " . $marker . PHP_EOL -> "# END " . $marker . PHP_EOL;
 
-    //4. ftruncate($fp, 0); write new rules in one go
+    // 4. ftruncate($fp, 0); write new rules in one go
 
     // 5. release lock
     fflush
