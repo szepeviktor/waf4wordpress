@@ -82,17 +82,6 @@ function errorlog_action_cf($action) {
 }
 
 
-// Apache - write a rule to .htaccess
-function errorlog_is_apache($action) {
-    return ($_SERVER['SERVER_SOFTWARE'] == 'Apache');
-}
-function errorlog_action_apache($action) {
-    //ban strreplace();
-    //score sleep(ERRORLOG_TARPIT); // what??
-    return true;
-}
-
-
 // WordPress - exit; early
 function errorlog_action_wordpress($action) {
     //ban flush buffers; exit;

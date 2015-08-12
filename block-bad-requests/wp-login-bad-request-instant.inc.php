@@ -409,6 +409,13 @@ class O1_Bad_Request {
      */
     private function trigger() {
 
+        // Trigger miniban
+        if ( class_exists( 'Miniban_Htaccess' ) && $this->instant_trigger ) {
+            if ( true !== Miniban_Htaccess::ban() ) {
+                error_log( "Miniban .htaccess operation failed." );
+            }
+        }
+
         // Trigger fail2ban
         if ( $this->instant_trigger ) {
             $this->enhanced_error_log( $this->prefix_instant . $this->result, 'crit' );

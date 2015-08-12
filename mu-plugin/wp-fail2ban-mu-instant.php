@@ -133,6 +133,14 @@ class O1_WP_Fail2ban_MU {
 
     private function trigger_instant( $slug, $message, $level = 'crit' ) {
 
+        // Trigger miniban
+        if ( class_exists( 'Miniban_Htaccess' ) ) {
+            if ( true !== Miniban_Htaccess::ban() ) {
+                $this->enhanced_error_log( "Miniban .htaccess operation failed." );
+            }
+        }
+
+        // Trigger fail2ban
         $this->trigger( $slug, $message, $level, $this->prefix_instant );
 
         // Helps learning attack internals
