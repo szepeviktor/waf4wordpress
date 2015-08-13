@@ -1,16 +1,5 @@
 <?php
 
-/*
-
-# Apache Virtual host configuration
-RewriteEngine On
-RewriteMap ipblocklist "txt:/path/to/ipblocklist.txt"
-
-RewriteCond "${ipblocklist:%{REMOTE_ADDR}|NOT-FOUND}" !=NOT-FOUND
-RewriteRule ^ - [F]
-
-*/
-
 class Miniban_Rewritemap extends Miniban {
 
     public static function ban( $ban_ip, $ban_time = 86400 ) {
@@ -20,7 +9,7 @@ class Miniban_Rewritemap extends Miniban {
         }
 
         if ( empty( $ban_ip ) ) {
-            $ban_ip = $SERVER['REMOTE_ADDR'];
+            $ban_ip = $_SERVER['REMOTE_ADDR'];
         }
 
         // Process whitelist

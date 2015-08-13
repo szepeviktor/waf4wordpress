@@ -6,7 +6,7 @@ Plugin URI: https://github.com/szepeviktor/wordpress-plugin-construction
 License: The MIT License (MIT)
 Author: Viktor Szépe
 Author URI: http://www.online1.hu/webdesign/
-Version: 2.6.5
+Version: 2.7.0
 Options: O1_BAD_REQUEST_INSTANT, O1_BAD_REQUEST_MAX_LOGIN_REQUEST_SIZE,
 Options: O1_BAD_REQUEST_CDN_HEADERS, O1_BAD_REQUEST_ALLOW_REG, O1_BAD_REQUEST_ALLOW_IE8,
 Options: O1_BAD_REQUEST_ALLOW_OLD_PROXIES, O1_BAD_REQUEST_ALLOW_CONNECTION_EMPTY,
@@ -529,11 +529,11 @@ class O1_Bad_Request {
         // Limit length
         $escaped = mb_substr( $escaped, 0, 500, 'utf-8' );
         // New lines to "|"
-        $escaped = str_replace( "\n", "|", $escaped );
+        $escaped = str_replace( array( "\n", "\r" ), "|", $escaped );
         // Replace non-printables with "¿"
         $escaped = preg_replace( '/[^\P{C}]+/u', "\xC2\xBF", $escaped );
 
-        return ' (' . $string . ')';
+        return ' (' . $escaped . ')';
     }
 
 }

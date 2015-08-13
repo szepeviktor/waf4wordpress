@@ -1,18 +1,5 @@
 <?php
 
-/*
-
-# Mini Ban for Apache directory configuration
-SetEnvIf Remote_Addr "^192\.168\.12\.138$" mini_ban
-
-# CloudFlare header
-#SetEnvIf X-FORWARDED-FOR "^192\.168\.12\.138$" mini_ban
-
-# Rackspace header
-#SetEnvIf X-CLUSTER-CLIENT-IP "^192\.168\.12\.138$" mini_ban
-
-*/
-
 class Miniban_Htaccess extends Miniban {
 
     private static $ban_rules = '
@@ -46,7 +33,7 @@ class Miniban_Htaccess extends Miniban {
         }
 
         if ( empty( $ban_ip ) ) {
-            $ban_ip = $SERVER['REMOTE_ADDR'];
+            $ban_ip = $_SERVER['REMOTE_ADDR'];
         }
 
         // Process whitelist
@@ -64,7 +51,7 @@ class Miniban_Htaccess extends Miniban {
            $expires
         );
 
-        return self::alter_config( 'static::insert_with_markers',
+        return parent::alter_config( 'static::insert_with_markers',
             array( 'contents' => $ban_line, 'operation' => 'add' ), 'r+' );
     }
 
@@ -94,7 +81,7 @@ class Miniban_Htaccess extends Miniban {
         }
         $parameters['contents'] = $ban_line;
 
-        return self::alter_config( 'static::insert_with_markers', $parameters, 'r+' );
+        return parent::alter_config( 'static::insert_with_markers', $parameters, 'r+' );
     }
 
     protected static function insert_with_markers( $handle, $parameters ) {

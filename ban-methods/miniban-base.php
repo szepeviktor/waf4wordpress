@@ -1,22 +1,65 @@
 <?php
-
+/**
+ * Scaffold for Miniban ban methods
+ *
+ * @version    0.1.0
+ * @package    miniban
+ * @link       https://github.com/szepeviktor/wordpress-fail2ban
+ * @author     Viktor Szépe
+ * @license    GNU General Public License (GPL) version 2
+ */
 abstract class Miniban {
 
+    /**
+     * Full path of the config
+     *
+     * @var string
+     */
     protected static $config = '';
+
+    /**
+     * IP addresses to be excluded from banning
+     *
+     * @var array
+     */
     protected static $ignoreip = array();
+
+    /**
+     * Additional configuration data
+     *
+     * For example HTTP header name.
+     *
+     * @var array
+     */
     protected static $extra_config = array();
 
-    final public static function init( $path, $whitelist = array(), $extra_config = array() ) {
+    /**
+     * Initialize miniban
+     *
+     * Set path of configuration file, ignored IP addresses
+     * and extra configuration data.
+     *
+     * @param string $path        Full path of configuration file.
+     * @param array $ignoreip     Ignored IP addresses.
+     * @param array $extra_config Additional configuration data.
+     * @return boolean            Success.
+     */
+    final public static function init( $config, $ignoreip = array(), $extra_config = array() ) {
 
-        self::$config = $path;
+        self::$config = $config;
 
-        self::$ignoreip = $whitelist;
+        self::$ignoreip = $ignoreip;
 
         self::$extra_config = $extra_config;
 
         return self::check_config();
     }
 
+    /**
+     * Check and create if necessary the configuration file.
+     *
+     * @return boolean Success.
+     */
     final protected static function check_config() {
 
         $banlist_dir = dirname( self::$config );

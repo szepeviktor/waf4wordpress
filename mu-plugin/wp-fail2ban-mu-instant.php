@@ -3,7 +3,7 @@
 Plugin Name: WordPress fail2ban MU
 Plugin URI: https://github.com/szepeviktor/wordpress-plugin-construction
 Description: Triggers fail2ban on various attacks. <strong>This is a Must Use plugin, must be copied to <code>wp-content/mu-plugins</code>.</strong>
-Version: 4.5.0
+Version: 4.6.0
 License: The MIT License (MIT)
 Author: Viktor Szépe
 Author URI: http://www.online1.hu/webdesign/
@@ -471,11 +471,11 @@ class O1_WP_Fail2ban_MU {
         // Limit length
         $escaped = mb_substr( $escaped, 0, 500, 'utf-8' );
         // New lines to "|"
-        $escaped = str_replace( "\n", "|", $escaped );
+        $escaped = str_replace( array( "\n", "\r" ), "|", $escaped );
         // Replace non-printables with "¿"
         $escaped = preg_replace( '/[^\P{C}]+/u', "\xC2\xBF", $escaped );
 
-        return ' (' . $string . ')';
+        return ' (' . $escaped . ')';
     }
 
     private function exit_with_instructions() {
