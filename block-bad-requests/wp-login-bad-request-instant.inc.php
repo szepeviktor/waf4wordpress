@@ -6,7 +6,7 @@ Plugin URI: https://github.com/szepeviktor/wordpress-plugin-construction
 License: The MIT License (MIT)
 Author: Viktor Szépe
 Author URI: http://www.online1.hu/webdesign/
-Version: 2.7.0
+Version: 2.8.0
 Options: O1_BAD_REQUEST_INSTANT, O1_BAD_REQUEST_MAX_LOGIN_REQUEST_SIZE,
 Options: O1_BAD_REQUEST_CDN_HEADERS, O1_BAD_REQUEST_ALLOW_REG, O1_BAD_REQUEST_ALLOW_IE8,
 Options: O1_BAD_REQUEST_ALLOW_OLD_PROXIES, O1_BAD_REQUEST_ALLOW_CONNECTION_EMPTY,
@@ -19,7 +19,7 @@ Options: O1_BAD_REQUEST_POST_LOGGING
  *
  * Require it from the top of your wp-config.php:
  *
- *     require_once( dirname( __FILE__ ) . '/wp-login-bad-request-instant.inc.php' );
+ *     require_once dirname( __FILE__ ) . '/wp-login-bad-request-instant.inc.php';
  *
  * @package wordpress-fail2ban
  * @see     README.md
@@ -237,6 +237,13 @@ class O1_Bad_Request {
             || false !== strstr( $_SERVER['REQUEST_URI'], '/..' )
         ) {
             return 'bad_request_uri_hack';
+        }
+
+        // robots.txt probing in a subdirectory
+        if ( false !== stripos( $_SERVER['REQUEST_URI'], 'robots.txt' )
+            && '/robots.txt' !== $_SERVER['REQUEST_URI']
+        ) {
+            return 'bad_request_robots_probe';
         }
 
         // Author sniffing
