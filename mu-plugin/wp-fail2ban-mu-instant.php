@@ -3,7 +3,7 @@
 Plugin Name: WordPress fail2ban MU
 Plugin URI: https://github.com/szepeviktor/wordpress-plugin-construction
 Description: Triggers fail2ban on various attacks. <strong>This is a Must Use plugin, must be copied to <code>wp-content/mu-plugins</code>.</strong>
-Version: 4.6.0
+Version: 4.6.1
 License: The MIT License (MIT)
 Author: Viktor Szépe
 Author URI: http://www.online1.hu/webdesign/
@@ -16,10 +16,12 @@ if ( ! function_exists( 'add_filter' ) ) {
         . addslashes( @$_SERVER['REQUEST_URI'] )
     );
     ob_get_level() && ob_end_clean();
-    header( 'Status: 403 Forbidden' );
-    header( 'HTTP/1.1 403 Forbidden', true, 403 );
-    header( 'Connection: Close' );
-    exit();
+    if ( ! headers_sent() ) {
+        header( 'Status: 403 Forbidden' );
+        header( 'HTTP/1.1 403 Forbidden', true, 403 );
+        header( 'Connection: Close' );
+    }
+    exit;
 }
 
 /**
@@ -134,9 +136,9 @@ class O1_WP_Fail2ban_MU {
     private function trigger_instant( $slug, $message, $level = 'crit' ) {
 
         // Trigger miniban
-        if ( class_exists( 'Miniban_Htaccess' ) ) {
-            if ( true !== Miniban_Htaccess::ban() ) {
-                $this->enhanced_error_log( "Miniban .htaccess operation failed." );
+        if ( class_exists( 'Miniban' ) ) {
+            if ( true !== Miniban::ban() ) {
+                $this->enhanced_error_log( "Miniban operation failed." );
             }
         }
 
@@ -155,13 +157,15 @@ class O1_WP_Fail2ban_MU {
         );
 
         ob_get_level() && ob_end_clean();
-        header( 'Status: 403 Forbidden' );
-        header( 'HTTP/1.1 403 Forbidden' );
-        header( 'Connection: Close' );
-        header( 'Cache-Control: max-age=0, private, no-store, no-cache, must-revalidate' );
-        header( 'X-Robots-Tag: noindex, nofollow' );
-        header( 'Content-Type: text/html' );
-        header( 'Content-Length: 0' );
+        if ( ! headers_sent() ) {
+            header( 'Status: 403 Forbidden' );
+            header( 'HTTP/1.1 403 Forbidden' );
+            header( 'Connection: Close' );
+            header( 'Cache-Control: max-age=0, private, no-store, no-cache, must-revalidate' );
+            header( 'X-Robots-Tag: noindex, nofollow' );
+            header( 'Content-Type: text/html' );
+            header( 'Content-Length: 0' );
+        }
         exit();
     }
 
@@ -236,12 +240,14 @@ class O1_WP_Fail2ban_MU {
             $this->trigger( 'wpf2b_robot404', $request_uri, 'info' );
 
             ob_get_level() && ob_end_clean();
-            header( 'Status: 404 Not Found' );
-            status_header( 404 );
-            header( 'X-Robots-Tag: noindex, nofollow' );
-            //header( 'Connection: Close' );
-            header( 'Content-Length: 0' );
-            nocache_headers();
+            if ( ! headers_sent() ) {
+                header( 'Status: 404 Not Found' );
+                status_header( 404 );
+                header( 'X-Robots-Tag: noindex, nofollow' );
+                //header( 'Connection: Close' );
+                header( 'Content-Length: 0' );
+                nocache_headers();
+            }
             exit();
         }
 

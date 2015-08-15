@@ -6,7 +6,7 @@ Plugin URI: https://github.com/szepeviktor/wordpress-plugin-construction
 License: The MIT License (MIT)
 Author: Viktor Szépe
 Author URI: http://www.online1.hu/webdesign/
-Version: 2.8.0
+Version: 2.8.1
 Options: O1_BAD_REQUEST_INSTANT, O1_BAD_REQUEST_MAX_LOGIN_REQUEST_SIZE,
 Options: O1_BAD_REQUEST_CDN_HEADERS, O1_BAD_REQUEST_ALLOW_REG, O1_BAD_REQUEST_ALLOW_IE8,
 Options: O1_BAD_REQUEST_ALLOW_OLD_PROXIES, O1_BAD_REQUEST_ALLOW_CONNECTION_EMPTY,
@@ -417,9 +417,9 @@ class O1_Bad_Request {
     private function trigger() {
 
         // Trigger miniban
-        if ( class_exists( 'Miniban_Htaccess' ) && $this->instant_trigger ) {
-            if ( true !== Miniban_Htaccess::ban() ) {
-                error_log( "Miniban .htaccess operation failed." );
+        if ( class_exists( 'Miniban' ) && $this->instant_trigger ) {
+            if ( true !== Miniban::ban() ) {
+                error_log( "Miniban operation failed." );
             }
         }
 
@@ -441,14 +441,16 @@ class O1_Bad_Request {
         );
 
         ob_get_level() && ob_end_clean();
-        header( 'Status: 403 Forbidden' );
-        header( 'HTTP/1.1 403 Forbidden', true, 403 );
-        header( 'Connection: Close' );
-        header( 'Cache-Control: max-age=0, private, no-store, no-cache, must-revalidate' );
-        header( 'X-Robots-Tag: noindex, nofollow' );
-        header( 'Content-Type: text/html' );
-        header( 'Content-Length: 0' );
-        exit();
+        if ( ! headers_sent() ) {
+            header( 'Status: 403 Forbidden' );
+            header( 'HTTP/1.1 403 Forbidden', true, 403 );
+            header( 'Connection: Close' );
+            header( 'Cache-Control: max-age=0, private, no-store, no-cache, must-revalidate' );
+            header( 'X-Robots-Tag: noindex, nofollow' );
+            header( 'Content-Type: text/html' );
+            header( 'Content-Length: 0' );
+        }
+        exit;
     }
 
     /**

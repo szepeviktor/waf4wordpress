@@ -8,7 +8,7 @@
  * @author     Viktor Szépe
  * @license    GNU General Public License (GPL) version 2
  */
-abstract class Miniban {
+abstract class Miniban_Base {
 
     /**
      * Full path of the config

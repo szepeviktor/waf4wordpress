@@ -1,6 +1,6 @@
 <?php
 
-class Miniban_Rewritemap extends Miniban {
+class Miniban extends Miniban_Base {
 
     public static function ban( $ban_ip, $ban_time = 86400 ) {
 
