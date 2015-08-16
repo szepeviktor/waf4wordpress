@@ -162,3 +162,7 @@ class Miniban extends Miniban_Base {
         return fwrite( $handle, $output_lines );
     }
 }
+
+/* @TODO
+- Add auto unban on ban
+*/

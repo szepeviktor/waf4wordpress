@@ -2,10 +2,9 @@
 /*
 Plugin Name: WordPress Block Bad Requests (wp-config snippet or MU plugin)
 Description: Require it from the top of your wp-config.php or make it a Must Use plugin
-Plugin URI: https://github.com/szepeviktor/wordpress-plugin-construction
+Plugin URI: https://github.com/szepeviktor/wordpress-fail2ban
 License: The MIT License (MIT)
 Author: Viktor Szépe
-Author URI: http://www.online1.hu/webdesign/
 Version: 2.8.1
 Options: O1_BAD_REQUEST_INSTANT, O1_BAD_REQUEST_MAX_LOGIN_REQUEST_SIZE,
 Options: O1_BAD_REQUEST_CDN_HEADERS, O1_BAD_REQUEST_ALLOW_REG, O1_BAD_REQUEST_ALLOW_IE8,
@@ -81,7 +80,7 @@ class O1_Bad_Request {
      */
     public function __construct() {
 
-        /* Commented out due to multi-line logging
+        /* Commented out due to multi-line logging problem on mod_proxy_fcgi
         // Experimental upload traffic analysis
         if ( count( $_FILES ) )
             $this->enhanced_error_log( sprintf( 'bad_request_upload: %s, %s',
@@ -91,11 +90,6 @@ class O1_Bad_Request {
         */
 
         // Options
-        if ( defined( 'O1_BAD_REQUEST_POST_LOGGING' ) && O1_BAD_REQUEST_POST_LOGGING ) {
-            if ( ! empty( $_POST ) )
-                $this->enhanced_error_log( 'HTTP POST: ' . $this->esc_log( $_POST ), 'notice' );
-        }
-
         if ( defined( 'O1_BAD_REQUEST_INSTANT' ) && false === O1_BAD_REQUEST_INSTANT )
             $this->instant_trigger = false;
 
@@ -128,8 +122,16 @@ class O1_Bad_Request {
         //DEBUG echo '<pre>blocked by bad-request, reason: <b>'.$this->result;error_log('Bad_Request:'.$this->result);return;
 
         // "false" means there were no bad requests
-        if ( false !== $this->result )
+        if ( false !== $this->result ) {
             $this->trigger();
+        }
+
+        // Don't log POST requests before trigger - multi-line logging problem on mod_proxy_fcgi
+// @FIXME This blocks the mu-plugin !!!
+        if ( defined( 'O1_BAD_REQUEST_POST_LOGGING' ) && O1_BAD_REQUEST_POST_LOGGING ) {
+            if ( ! empty( $_POST ) )
+                $this->enhanced_error_log( 'HTTP POST: ' . $this->esc_log( $_POST ), 'notice' );
+        }
     }
 
     /**
@@ -430,15 +432,23 @@ class O1_Bad_Request {
             $this->enhanced_error_log( $this->prefix . $this->result );
         }
 
+        // Log POST requests after trigger - multi-line logging problem on mod_proxy_fcgi
+        if ( defined( 'O1_BAD_REQUEST_POST_LOGGING' ) && O1_BAD_REQUEST_POST_LOGGING ) {
+            if ( ! empty( $_POST ) )
+                $this->enhanced_error_log( 'HTTP POST: ' . $this->esc_log( $_POST ), 'notice' );
+        }
+
+        /* Multi-line logging problem on mod_proxy_fcgi
         // Helps learning attack internals
         $request_data = $_REQUEST;
         if ( empty( $request_data ) ) {
             $request_data = file_get_contents( 'php://input' );
         }
-        $this->enhanced_error_log( 'HTTP REQUEST: '
-            . $this->esc_log( $_SERVER['REQUEST_METHOD'] ) . '/'
-            . $this->esc_log( $request_data )
-        );
+        $this->enhanced_error_log( sprintf( 'HTTP REQUEST: %s/%s',
+            $this->esc_log( $_SERVER['REQUEST_METHOD'] ),
+            $this->esc_log( $request_data )
+        ) );
+        */
 
         ob_get_level() && ob_end_clean();
         if ( ! headers_sent() ) {
@@ -450,6 +460,7 @@ class O1_Bad_Request {
             header( 'Content-Type: text/html' );
             header( 'Content-Length: 0' );
         }
+
         exit;
     }
 
@@ -472,8 +483,10 @@ class O1_Bad_Request {
         */
 
         // Add entry point. Only correct when auto_prepend_file option is empty.
-        $error_msg = (string)$message
-            . ' <' . reset( get_included_files() );
+        $error_msg = sprintf( '%s <%s',
+            $message,
+            reset( get_included_files() )
+        );
 
         /**
          * Add log level and client data to log message if SAPI does not add it.
@@ -483,7 +496,7 @@ class O1_Bad_Request {
         $log_destination = function_exists( 'ini_get' ) ? ini_get( 'error_log' ) : '';
         if ( ! empty( $log_destination ) ) {
             if ( isset( $_SERVER['HTTP_REFERER'] ) ) {
-                $referer = ', referer:' . $this->esc_log( $_SERVER['HTTP_REFERER'] );
+                $referer = sprintf( ', referer:%s', $this->esc_log( $_SERVER['HTTP_REFERER'] ) );
             } else {
                 $referer = '';
             }
@@ -542,7 +555,7 @@ class O1_Bad_Request {
         // Replace non-printables with "¿"
         $escaped = preg_replace( '/[^\P{C}]+/u', "\xC2\xBF", $escaped );
 
-        return ' (' . $escaped . ')';
+        return sprintf( ' (%s)', $escaped );
     }
 
 }
@@ -550,8 +563,9 @@ class O1_Bad_Request {
 new O1_Bad_Request();
 
 /* @TODO
-check POST: no more, no less variables  a:5:{s:11:"redirect_to";s:28:"http://domain.com/wp-admin/";s:10:"testcookie";s:1:"1";s:3:"log";s:5:"admin";s:3:"pwd";s:6:"123456";s:9:"wp-submit";s:6:"Log In";}
-POST: login, postpass, resetpass, lostpassword, register
-GET:  logout, rp, lostpassword
-non-login POST-s: comment, trackback, pingback, XML-RPC, WP-API...
+- check POST: no more, no less variables
+    a:5:{s:11:"redirect_to";s:28:"http://domain.com/wp-admin/";s:10:"testcookie";s:1:"1";s:3:"log";s:5:"admin";s:3:"pwd";s:6:"123456";s:9:"wp-submit";s:6:"Log In";}
+- POST: login, postpass, resetpass, lostpassword, register
+- GET: logout, rp, lostpassword
+- non-login POST-s: comment, trackback, pingback, XML-RPC, WP-API
 */

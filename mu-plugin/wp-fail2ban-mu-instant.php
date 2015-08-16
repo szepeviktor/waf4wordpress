@@ -1,13 +1,12 @@
 <?php
 /*
 Plugin Name: WordPress fail2ban MU
-Plugin URI: https://github.com/szepeviktor/wordpress-plugin-construction
+Plugin URI: https://github.com/szepeviktor/wordpress-fail2ban
 Description: Triggers fail2ban on various attacks. <strong>This is a Must Use plugin, must be copied to <code>wp-content/mu-plugins</code>.</strong>
-Version: 4.6.1
+Version: 4.6.2
 License: The MIT License (MIT)
 Author: Viktor Szépe
-Author URI: http://www.online1.hu/webdesign/
-GitHub Plugin URI: https://github.com/szepeviktor/wordpress-plugin-construction/tree/master/wordpress-fail2ban/mu-plugin
+GitHub Plugin URI: https://github.com/szepeviktor/wordpress-fail2ban
 Options: O1_WP_FAIL2BAN_DISABLE_LOGIN
 */
 
@@ -129,7 +128,7 @@ class O1_WP_Fail2ban_MU {
         add_action( 'all', array( $this, 'all_action' ), 0 );
 
         // Ban spammers (Contact Form 7 Robot Trap)
-        add_action( 'robottrap_hiddenfield', array( $this, 'wpcf7_spam' ) );
+        add_action( 'robottrap_hiddenfield', array( $this, 'wpcf7_spam_hiddenfield' ) );
         add_action( 'robottrap_mx', array( $this, 'wpcf7_spam_mx' ) );
     }
 
@@ -145,16 +144,18 @@ class O1_WP_Fail2ban_MU {
         // Trigger fail2ban
         $this->trigger( $slug, $message, $level, $this->prefix_instant );
 
+        /* Multi-line logging problem on mod_proxy_fcgi
         // Helps learning attack internals
         $request_data = $_REQUEST;
         if ( empty( $request_data ) ) {
             $request_data = file_get_contents( 'php://input' );
         }
-        $this->enhanced_error_log( 'HTTP REQUEST: '
-            . $this->esc_log( $_SERVER['REQUEST_METHOD'] ) . '/'
-            . $this->esc_log( $request_data ),
+        $this->enhanced_error_log( sprintf( "HTTP REQUEST: %s/%s%s",
+            $this->esc_log( $_SERVER['REQUEST_METHOD'] ),
+            $this->esc_log( $request_data ),
             $level
-        );
+        ) );
+        */
 
         ob_get_level() && ob_end_clean();
         if ( ! headers_sent() ) {
@@ -166,7 +167,8 @@ class O1_WP_Fail2ban_MU {
             header( 'Content-Type: text/html' );
             header( 'Content-Length: 0' );
         }
-        exit();
+
+        exit;
     }
 
     private function trigger( $slug, $message, $level = 'error', $prefix = '' ) {
@@ -175,9 +177,11 @@ class O1_WP_Fail2ban_MU {
             $prefix = $this->prefix;
         }
 
-        $error_msg = $prefix
-            . $slug
-            . $this->esc_log( $message );
+        $error_msg = sprintf( '%s%s%s',
+            $prefix,
+            $slug,
+            $this->esc_log( $message )
+        );
 
         $this->enhanced_error_log( $error_msg, $level );
     }
@@ -192,8 +196,10 @@ class O1_WP_Fail2ban_MU {
 
         // Add entry point, correct when `auto_prepend_file` is empty
         $included_files = get_included_files();
-        $error_msg = (string)$message
-            . ' <' . reset( $included_files );
+        $error_msg = sprintf( '%s <%s',
+            $message,
+            reset( $included_files )
+        );
 
         /**
          * Add client data to log message if SAPI does not add it.
@@ -203,7 +209,7 @@ class O1_WP_Fail2ban_MU {
         $log_destination = function_exists( 'ini_get' ) ? ini_get( 'error_log' ) : '';
         if ( ! empty( $log_destination ) ) {
             if ( array_key_exists( 'HTTP_REFERER', $_SERVER ) ) {
-                $referer = ', referer:' . $this->esc_log( $_SERVER['HTTP_REFERER'] );
+                $referer = sprintf( ', referer:%s', $this->esc_log( $_SERVER['HTTP_REFERER'] ) );
             } else {
                 $referer = '';
             }
@@ -237,7 +243,7 @@ class O1_WP_Fail2ban_MU {
         // Don't show the 404 page for robots
         if ( $this->is_robot( $ua ) && ! is_user_logged_in() ) {
 
-            $this->trigger( 'wpf2b_robot404', $request_uri, 'info' );
+            $this->trigger( 'wpf2b_robot_404', $request_uri, 'info' );
 
             ob_get_level() && ob_end_clean();
             if ( ! headers_sent() ) {
@@ -248,7 +254,8 @@ class O1_WP_Fail2ban_MU {
                 header( 'Content-Length: 0' );
                 nocache_headers();
             }
-            exit();
+
+            exit;
         }
 
         // Humans
@@ -288,7 +295,8 @@ class O1_WP_Fail2ban_MU {
     public function disable_user_login_js() {
 
         print '<script type="text/javascript">setTimeout(function(){
-            try{document.getElementById("wp-submit").setAttribute("disabled", "disabled");} catch(e){}}, 0);</script>';
+            try{document.getElementById("wp-submit").setAttribute("disabled", "disabled");}
+            catch(e){}}, 0);</script>';
     }
 
     public function login_failed( $username ) {
@@ -346,10 +354,10 @@ class O1_WP_Fail2ban_MU {
         $ua = array_key_exists( 'HTTP_USER_AGENT', $_SERVER ) ? $_SERVER['HTTP_USER_AGENT'] : '';
         $request_path = parse_url( $_SERVER['REQUEST_URI'], PHP_URL_PATH );
         $admin_path = parse_url( admin_url(), PHP_URL_PATH );
-        $wp_dirs = 'wp-admin|wp-includes|wp-content|' . basename( WP_CONTENT_DIR );
+        $wp_dirs = sprintf( 'wp-admin|wp-includes|wp-content|%s', basename( WP_CONTENT_DIR ) );
         $uploads = wp_upload_dir();
         $uploads = basename( $uploads['baseurl'] );
-        $cache = basename( WP_CONTENT_DIR ) . '/cache';
+        $cache = sprintf( '%s/cache', basename( WP_CONTENT_DIR ) );
 
         // Don't have to handle wp-includes/ms-files.php:12
         // It does SHORTINIT, no mu-plugins get loaded
@@ -370,7 +378,7 @@ class O1_WP_Fail2ban_MU {
             // Somehow logged in?
             && ! is_user_logged_in()
         ) {
-            $this->trigger_instant( 'wpf2b_robot403', $request_path );
+            $this->trigger_instant( 'wpf2b_robot_403', $request_path );
         }
     }
 
@@ -428,26 +436,31 @@ class O1_WP_Fail2ban_MU {
 
     public function all_action( $tag ) {
 
-       global $wp_filter;
-       global $wp_actions;
+        global $wp_filter;
+        global $wp_actions;
 
-        // Actions only (not filters)
-        // `admin_post_*` or `wp_ajax_*`
-        // Not registered
+        $whitelisted_actions = array( 'wp_ajax_nopriv_wp-remove-post-lock' );
+
+        // Actions only (not filters),
+        //     `admin_post_*` or `wp_ajax_*`,
+        //     Not registered,
+        //     Not whitelisted
         if ( is_array( $wp_actions )
             && array_key_exists ( $tag, $wp_actions )
             && ( 'admin_post_' === substr( $tag, 0, 11 )
-                || 'wp_ajax_' === substr( $tag, 0, 8 ) )
+                || 'wp_ajax_' === substr( $tag, 0, 8 )
+            )
             && is_array( $wp_filter )
             && ! array_key_exists( $tag, $wp_filter )
+            && ! in_array( $tag, $whitelisted_actions )
         ) {
             $this->trigger_instant( 'wpf2b_admin_action_unknown', $tag );
         }
     }
 
-    public function wpcf7_spam( $text ) {
+    public function wpcf7_spam_hiddenfield( $text ) {
 
-        $this->trigger_instant( 'wpf2b_wpcf7_spam', $text );
+        $this->trigger_instant( 'wpf2b_wpcf7_spam_hiddenfield', $text );
     }
 
     public function wpcf7_spam_mx( $domain ) {
@@ -477,11 +490,11 @@ class O1_WP_Fail2ban_MU {
         // Limit length
         $escaped = mb_substr( $escaped, 0, 500, 'utf-8' );
         // New lines to "|"
-        $escaped = str_replace( array( "\n", "\r" ), "|", $escaped );
+        $escaped = str_replace( array( "\n", "\r" ), '|', $escaped );
         // Replace non-printables with "¿"
         $escaped = preg_replace( '/[^\P{C}]+/u', "\xC2\xBF", $escaped );
 
-        return ' (' . $escaped . ')';
+        return sprintf( ' (%s)', $escaped );
     }
 
     private function exit_with_instructions() {

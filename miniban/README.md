@@ -68,6 +68,12 @@ SetEnvIf Remote_Addr "^192\.168\.1\.100$" mini_ban
 
 ```
 
+### WordPress plugin method
+
+A small MU plugin looks up the IP address in a WordPress option.
+
+Does not work with HTML-cached pages.
+
 ### Tarpit method
 
 Wait for specified time and send random bytes continously.
