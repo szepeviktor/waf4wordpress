@@ -2,7 +2,7 @@
 /**
  * Scaffold for Miniban ban methods
  *
- * @version    0.1.0
+ * @version    0.1.1
  * @package    miniban
  * @link       https://github.com/szepeviktor/wordpress-fail2ban
  * @author     Viktor Szépe
@@ -46,13 +46,16 @@ abstract class Miniban_Base {
      */
     final public static function init( $config, $ignoreip = array(), $extra_config = array() ) {
 
-        self::$config = $config;
-
         self::$ignoreip = $ignoreip;
 
         self::$extra_config = $extra_config;
 
-        return self::check_config();
+        if ( ! empty( $config ) ) {
+            self::$config = $config;
+            return self::check_config();
+        }
+
+        return true;
     }
 
     /**
