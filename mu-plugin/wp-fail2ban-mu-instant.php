@@ -3,11 +3,11 @@
 Plugin Name: WordPress fail2ban MU
 Plugin URI: https://github.com/szepeviktor/wordpress-fail2ban
 Description: Triggers fail2ban on various attacks. <strong>This is a Must Use plugin, must be copied to <code>wp-content/mu-plugins</code>.</strong>
-Version: 4.6.2
+Version: 4.7.0
 License: The MIT License (MIT)
 Author: Viktor Szépe
 GitHub Plugin URI: https://github.com/szepeviktor/wordpress-fail2ban
-Options: O1_WP_FAIL2BAN_DISABLE_LOGIN
+Options: O1_WP_FAIL2BAN_DISABLE_LOGIN O1_WP_FAIL2BAN_ALLOW_REDIRECT
 */
 
 if ( ! function_exists( 'add_filter' ) ) {
@@ -24,11 +24,15 @@ if ( ! function_exists( 'add_filter' ) ) {
 }
 
 /**
- * WordPress fail2ban Must-Use version.
+ * WordPress fail2ban Must-Use part.
  *
  * To disable login completely copy this into your wp-config.php:
  *
  *     define( 'O1_WP_FAIL2BAN_DISABLE_LOGIN', true );
+ *
+ * To allow unlimited canonical redirections copy this into your wp-config.php:
+ *
+ *     define( 'O1_WP_FAIL2BAN_ALLOW_REDIRECT', true );
  *
  * @package wordpress-fail2ban
  * @see     README.md
@@ -111,7 +115,9 @@ class O1_WP_Fail2ban_MU {
 
         // Non-existent URLs
         add_action( 'init', array( $this, 'url_hack' ) );
-        add_filter( 'redirect_canonical', array( $this, 'redirect' ), 1, 2 );
+        if ( ! defined( 'O1_WP_FAIL2BAN_ALLOW_REDIRECT' ) || ! O1_WP_FAIL2BAN_ALLOW_REDIRECT ) {
+            add_filter( 'redirect_canonical', array( $this, 'redirect' ), 1, 2 );
+        }
         // Prevent using shortlinks which are redirected to canonical URL-s
         add_filter( 'pre_get_shortlink', '__return_empty_string' );
 

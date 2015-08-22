@@ -57,12 +57,12 @@ check_response() {
     #DEBUG echo -n "if ! grep -q $RESPONSE $FILE" | hexdump -C
 
     if ! grep -q "$RESPONSE" "$FILE"; then
-        echo "invalid HTTP status code ($(display_file "$FILE"))" >&2
+        echo "unexpected HTTP status code ($(display_file "$FILE"))" >&2
         return 1
     fi
 
     # return OK on other responses
-    [ "$HTTP_STATUS" = "302 Found" ] || return 0
+    [ "$HTTP_STATUS" == "302 Found" ] || return 0
 
     if ! grep -q "$RESPONSE_LOC" "$FILE"; then
         echo "missing redirect to WP dashboard" >&2
@@ -85,7 +85,7 @@ wp_login() {
 
     #( sleep $RESPONSE_WAIT; killall -9 nc &> /dev/null; ) &
 
-    # fir Ipv6 use `nc6`
+    # For IPv6 use `nc6`
     nc.traditional -w $RESPONSE_WAIT $HOST $PORT > "$FILE"
 
     if check_response "$FILE" "$HTTP_STATUS"; then

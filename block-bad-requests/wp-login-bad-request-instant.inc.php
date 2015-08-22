@@ -1,11 +1,11 @@
 <?php
 /*
-Plugin Name: WordPress Block Bad Requests (wp-config snippet or MU plugin)
+Plugin Name: Block Bad Requests (wp-config snippet or MU plugin)
 Description: Require it from the top of your wp-config.php or make it a Must Use plugin
 Plugin URI: https://github.com/szepeviktor/wordpress-fail2ban
 License: The MIT License (MIT)
 Author: Viktor Szépe
-Version: 2.8.1
+Version: 2.9.0
 Options: O1_BAD_REQUEST_INSTANT, O1_BAD_REQUEST_MAX_LOGIN_REQUEST_SIZE,
 Options: O1_BAD_REQUEST_CDN_HEADERS, O1_BAD_REQUEST_ALLOW_REG, O1_BAD_REQUEST_ALLOW_IE8,
 Options: O1_BAD_REQUEST_ALLOW_OLD_PROXIES, O1_BAD_REQUEST_ALLOW_CONNECTION_EMPTY,
@@ -80,15 +80,6 @@ class O1_Bad_Request {
      */
     public function __construct() {
 
-        /* Commented out due to multi-line logging problem on mod_proxy_fcgi
-        // Experimental upload traffic analysis
-        if ( count( $_FILES ) )
-            $this->enhanced_error_log( sprintf( 'bad_request_upload: %s, %s',
-                $this->esc_log( $_FILES ),
-                $this->esc_log( $_REQUEST )
-            ), 'notice' );
-        */
-
         // Options
         if ( defined( 'O1_BAD_REQUEST_INSTANT' ) && false === O1_BAD_REQUEST_INSTANT )
             $this->instant_trigger = false;
@@ -125,6 +116,16 @@ class O1_Bad_Request {
         if ( false !== $this->result ) {
             $this->trigger();
         }
+
+        /* Commented out due to multi-line logging problem on mod_proxy_fcgi
+        // Experimental upload traffic analysis
+        if ( ! empty( $_FILES ) )
+            $this->enhanced_error_log( sprintf( 'bad_request_upload: %s, %s',
+                $this->esc_log( $_FILES ),
+                $this->esc_log( $_REQUEST )
+            ), 'notice' );
+        if ( ! empty( $_FILES ) )
+        */
 
         // Don't log POST requests before trigger - multi-line logging problem on mod_proxy_fcgi
 // @FIXME This blocks the mu-plugin !!!
@@ -203,7 +204,7 @@ class O1_Bad_Request {
 
         // Only GET and POST for wp-login
         $wp_login_methods = array( 'GET', 'POST' );
-        if ( false !== stripos( $request_path, '/wp-login.php' )
+        if ( false !== strpos( $request_path, '/wp-login.php' )
             && false === in_array( $request_method, $wp_login_methods )
         ) {
             return 'bad_request_login_http_method';
@@ -263,6 +264,17 @@ class O1_Bad_Request {
             return false;
         // --------------------------- >8 ---------------------------
 
+        // File upload with *.php in name
+        if ( ! empty( $_FILES ) ) {
+            foreach ( $_FILES as $file ) {
+                if ( false !== stripos( $file['name'], '.php' )
+                    || ( isset( $file['type'] ) && false !== stripos( $file['type'], 'php' ) )
+                ) {
+                    return 'bad_request_post_upload_php';
+                }
+            }
+        }
+
         // User agent HTTP header
         if ( empty( $_SERVER['HTTP_USER_AGENT'] ) ) {
             return 'bad_request_post_user_agent_empty';
@@ -293,11 +305,12 @@ class O1_Bad_Request {
         )
             return 'bad_request_post_content_length';
 
-        // Check login requests only
-        if ( false === stripos( $request_path, '/wp-login.php' ) )
+        // Check requests only for wp-login.php
+        if ( false === strpos( $request_path, '/wp-login.php' ) )
             return false;
         // --------------------------- >8 ---------------------------
 
+        // Login request
         if ( ! empty($_POST['log'] ) ) {
             $username = trim( $_POST['log'] );
 

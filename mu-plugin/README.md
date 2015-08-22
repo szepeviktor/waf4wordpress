@@ -32,13 +32,21 @@ To deny user login totally copy this into your `wp-config.php`
 define( 'O1_WP_FAIL2BAN_DISABLE_LOGIN', true );
 ```
 
+### Allow unlimited redirections for sites with non-canonical links
+
+To allow unlimited canonical redirections copy this into your `wp-config.php`:
+
+```php
+define( 'O1_WP_FAIL2BAN_ALLOW_REDIRECT', true );
+```
+
 ### Disabling parts
 
 By default all parts (fail2ban triggers) are enabled. If you would like to disable any of them
 you have to `remove_action()` or `remove_filter()` it in your own code at `init`.
 Or comment out actions/filters in the constructor.
 
-### Warning on updates!
+### Warning regarding updates!
 
 An mu-plugin will not appear in the update notifications nor show its update status on the Plugins page.
 A nice solution is a symlink in `wp-content/mu-plugins` which keeps it activated and also up-to-date.
@@ -59,7 +67,7 @@ if ( '/wp-content/plugins/newsletter/statistics/open.php' === $newsletter_path
 }
 ```
 
-### Set up the fail2ban filter
+### Set up the fail2ban filters
 
 See: https://github.com/szepeviktor/debian-server-tools/tree/master/security/fail2ban-conf
 
