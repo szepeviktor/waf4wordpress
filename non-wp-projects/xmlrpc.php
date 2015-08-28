@@ -18,4 +18,4 @@ header( 'Cache-Control: max-age=0, private, no-store, no-cache, must-revalidate'
 header( 'X-Robots-Tag: noindex, nofollow' );
 header( 'Content-Type: text/html' );
 header( 'Content-Length: 0' );
-exit();
+exit;

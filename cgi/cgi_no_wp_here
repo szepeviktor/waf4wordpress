@@ -1,0 +1,49 @@
+#!/bin/dash
+#
+# Trigger fail2ban from a simpla CGI script.
+#
+# VERSION       :0.2.0
+# DATE          :2015-08-22
+# AUTHOR        :Viktor Szépe <viktor@szepe.net>
+# URL           :https://github.com/szepeviktor/debian-server-tools
+# LICENSE       :The MIT License (MIT)
+# REFS          :https://tools.ietf.org/html/rfc3875#section-6.3.3
+# LOCATION      :/usr/local/lib/cgi-bin/cgi_no_wp_here
+
+# Usage
+#
+# Enable Apache CGI module
+#
+#     a2enmod cgi
+#     a2enmod cgid  # For multi-threaded MPM-s
+#
+# Add Apache server configuration
+#
+#     ScriptAliasMatch "(wp-login|xmlrpc)\.php" /usr/local/lib/cgi-bin/cgi_no_wp_here
+#     <Directory /usr/local/lib/cgi-bin>
+#         AllowOverride None
+#         Options None
+#         Require all granted
+#     </Directory>
+#
+# It is a Dash script to start faster.
+#
+# .sh extension is denied by h5bp server configuration.
+
+# Trigger fail2ban
+echo "Break-in attempt detected: no_wp_here_wplogin" >&2
+
+# Response status code
+echo "Status: 403 Forbidden"
+
+# HTTP headers
+echo "Connection: Close"
+echo "Cache-Control: max-age=0, private, no-store, no-cache, must-revalidate"
+echo "X-Robots-Tag: noindex, nofollow"
+echo "Content-Type: text/html"
+echo "Content-Length: 0"
+
+# This newline closes headers, prevents "Premature end of script headers" error message
+echo
+
+exit 0

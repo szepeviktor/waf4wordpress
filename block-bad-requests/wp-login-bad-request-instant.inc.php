@@ -5,7 +5,7 @@ Description: Require it from the top of your wp-config.php or make it a Must Use
 Plugin URI: https://github.com/szepeviktor/wordpress-fail2ban
 License: The MIT License (MIT)
 Author: Viktor Szépe
-Version: 2.9.0
+Version: 2.10.0
 Options: O1_BAD_REQUEST_INSTANT, O1_BAD_REQUEST_MAX_LOGIN_REQUEST_SIZE,
 Options: O1_BAD_REQUEST_CDN_HEADERS, O1_BAD_REQUEST_ALLOW_REG, O1_BAD_REQUEST_ALLOW_IE8,
 Options: O1_BAD_REQUEST_ALLOW_OLD_PROXIES, O1_BAD_REQUEST_ALLOW_CONNECTION_EMPTY,
@@ -119,18 +119,18 @@ class O1_Bad_Request {
 
         /* Commented out due to multi-line logging problem on mod_proxy_fcgi
         // Experimental upload traffic analysis
-        if ( ! empty( $_FILES ) )
+        if ( ! empty( $_FILES ) ) {
             $this->enhanced_error_log( sprintf( 'bad_request_upload: %s, %s',
                 $this->esc_log( $_FILES ),
                 $this->esc_log( $_REQUEST )
             ), 'notice' );
-        if ( ! empty( $_FILES ) )
+        }
         */
 
         // Don't log POST requests before trigger - multi-line logging problem on mod_proxy_fcgi
 // @FIXME This blocks the mu-plugin !!!
         if ( defined( 'O1_BAD_REQUEST_POST_LOGGING' ) && O1_BAD_REQUEST_POST_LOGGING ) {
-            if ( ! empty( $_POST ) )
+            if ( 'POST' === $_SERVER['REQUEST_METHOD'] )
                 $this->enhanced_error_log( 'HTTP POST: ' . $this->esc_log( $_POST ), 'notice' );
         }
     }
@@ -260,7 +260,7 @@ class O1_Bad_Request {
         // Check HTTP POST requests only
         // wget sends: User-Agent, Accept, Host, Connection, Content-Type, Content-Length
         // curl sends: User-Agent, Host, Accept, Content-Length, Content-Type
-        if ( false === stripos( $_SERVER['REQUEST_METHOD'], 'POST' ) )
+        if ( 'POST' !== $request_method )
             return false;
         // --------------------------- >8 ---------------------------
 
@@ -290,20 +290,23 @@ class O1_Bad_Request {
         )
             return 'bad_request_post_accept';
 
-        // Content-Type HTTP header (for login, AJAX and XML-RPC)
-        if ( empty( $_SERVER['CONTENT_TYPE'] )
-            || ( false === strpos( $_SERVER['CONTENT_TYPE'], 'application/x-www-form-urlencoded' )
-                && false === strpos( $_SERVER['CONTENT_TYPE'], 'multipart/form-data' )
-                && false === strpos( $_SERVER['CONTENT_TYPE'], 'text/xml' )
-            )
-        )
-            return 'bad_request_post_content_type';
-
         // Content-Length HTTP header
-        if ( empty( $_SERVER['CONTENT_LENGTH'] )
+        if ( ! isset( $_SERVER['CONTENT_LENGTH'] )
             || ! is_numeric( $_SERVER['CONTENT_LENGTH'] )
         )
             return 'bad_request_post_content_length';
+
+        // Content-Type HTTP header (for login, AJAX and XML-RPC)
+        if ( '0' !== $_SERVER['CONTENT_LENGTH']
+            && ( empty( $_SERVER['CONTENT_TYPE'] )
+                || ( 0 !== stripos( $_SERVER['CONTENT_TYPE'], 'application/x-www-form-urlencoded' )
+                    && 0 !== stripos( $_SERVER['CONTENT_TYPE'], 'multipart/form-data' )
+                    && 0 !== stripos( $_SERVER['CONTENT_TYPE'], 'text/xml' )
+                    && 0 !== stripos( $_SERVER['CONTENT_TYPE'], 'application/json' )
+                )
+            )
+        )
+            return 'bad_request_post_content_type';
 
         // Check requests only for wp-login.php
         if ( false === strpos( $request_path, '/wp-login.php' ) )
@@ -447,7 +450,7 @@ class O1_Bad_Request {
 
         // Log POST requests after trigger - multi-line logging problem on mod_proxy_fcgi
         if ( defined( 'O1_BAD_REQUEST_POST_LOGGING' ) && O1_BAD_REQUEST_POST_LOGGING ) {
-            if ( ! empty( $_POST ) )
+            if ( 'POST' === $_SERVER['REQUEST_METHOD'] )
                 $this->enhanced_error_log( 'HTTP POST: ' . $this->esc_log( $_POST ), 'notice' );
         }
 
@@ -578,6 +581,7 @@ new O1_Bad_Request();
 /* @TODO
 - check POST: no more, no less variables
     a:5:{s:11:"redirect_to";s:28:"http://domain.com/wp-admin/";s:10:"testcookie";s:1:"1";s:3:"log";s:5:"admin";s:3:"pwd";s:6:"123456";s:9:"wp-submit";s:6:"Log In";}
+- order of headers to identify attackers
 - POST: login, postpass, resetpass, lostpassword, register
 - GET: logout, rp, lostpassword
 - non-login POST-s: comment, trackback, pingback, XML-RPC, WP-API
