@@ -81,6 +81,7 @@ Wait for specified time and send random bytes continously.
 ### CloudFlare method
 
 Communicate with cloudFlare API and ban/unban hosts.
+@TODO
 
 ### Forbidden methos
 

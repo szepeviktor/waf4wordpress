@@ -3,7 +3,7 @@
 Plugin Name: WordPress fail2ban MU
 Plugin URI: https://github.com/szepeviktor/wordpress-fail2ban
 Description: Triggers fail2ban on various attacks. <strong>This is a Must Use plugin, must be copied to <code>wp-content/mu-plugins</code>.</strong>
-Version: 4.7.0
+Version: 4.9.0
 License: The MIT License (MIT)
 Author: Viktor Szépe
 GitHub Plugin URI: https://github.com/szepeviktor/wordpress-fail2ban
@@ -11,7 +11,7 @@ Options: O1_WP_FAIL2BAN_DISABLE_LOGIN O1_WP_FAIL2BAN_ALLOW_REDIRECT
 */
 
 if ( ! function_exists( 'add_filter' ) ) {
-    error_log( 'Break-in attempt detected: wpf2b_mu_direct_access '
+    error_log( "Break-in attempt detected: wpf2b_mu_direct_access "
         . addslashes( @$_SERVER['REQUEST_URI'] )
     );
     ob_get_level() && ob_end_clean();
@@ -39,8 +39,8 @@ if ( ! function_exists( 'add_filter' ) ) {
  */
 class O1_WP_Fail2ban_MU {
 
-    private $prefix = 'Malicious traffic detected: ';
-    private $prefix_instant = 'Break-in attempt detected: ';
+    private $prefix = "Malicious traffic detected: ";
+    private $prefix_instant = "Break-in attempt detected: ";
     private $wp_die_ajax_handler;
     private $wp_die_xmlrpc_handler;
     private $wp_die_handler;
@@ -136,6 +136,9 @@ class O1_WP_Fail2ban_MU {
         // Ban spammers (Contact Form 7 Robot Trap)
         add_action( 'robottrap_hiddenfield', array( $this, 'wpcf7_spam_hiddenfield' ) );
         add_action( 'robottrap_mx', array( $this, 'wpcf7_spam_mx' ) );
+
+        // Ban bad robots (Nofollow Robot Trap)
+        add_action( 'nofollow_robot_trap', array( $this, 'nfrt_robot_trap' ) );
     }
 
     private function trigger_instant( $slug, $message, $level = 'crit' ) {
@@ -150,16 +153,17 @@ class O1_WP_Fail2ban_MU {
         // Trigger fail2ban
         $this->trigger( $slug, $message, $level, $this->prefix_instant );
 
+        wp_logout();
+
         /* Multi-line logging problem on mod_proxy_fcgi
         // Helps learning attack internals
         $request_data = $_REQUEST;
         if ( empty( $request_data ) ) {
             $request_data = file_get_contents( 'php://input' );
         }
-        $this->enhanced_error_log( sprintf( "HTTP REQUEST: %s/%s%s",
+        $this->enhanced_error_log( sprintf( "HTTP REQUEST: %s:%s",
             $this->esc_log( $_SERVER['REQUEST_METHOD'] ),
-            $this->esc_log( $request_data ),
-            $level
+            $this->esc_log( $request_data )
         ) );
         */
 
@@ -183,13 +187,27 @@ class O1_WP_Fail2ban_MU {
             $prefix = $this->prefix;
         }
 
-        $error_msg = sprintf( '%s%s%s',
+        $error_msg = sprintf( '%s%s %s',
             $prefix,
             $slug,
             $this->esc_log( $message )
         );
 
         $this->enhanced_error_log( $error_msg, $level );
+
+        // Send to Sucuri Scan
+        if ( class_exists( 'SucuriScanEvent' ) ) {
+            if ( true !== SucuriScanEvent::report_critical_event( $error_msg ) ) {
+                error_log( "Sucuri Scan report event failure." );
+            }
+        }
+
+        // Send to Simple History
+        if ( function_exists( 'SimpleLogger' ) ) {
+            $simple_level = $this->translate_apache_level( $level );
+            SimpleLogger()->log( $simple_level, $error_msg, array( 'security' => "WordPress fail2ban" ) );
+        }
+
     }
 
     private function enhanced_error_log( $message = '', $level = 'error' ) {
@@ -202,8 +220,9 @@ class O1_WP_Fail2ban_MU {
 
         // Add entry point, correct when `auto_prepend_file` is empty
         $included_files = get_included_files();
-        $error_msg = sprintf( '%s <%s',
+        $error_msg = sprintf( '%s <%s:%s',
             $message,
+            $this->esc_log( $_SERVER['REQUEST_METHOD'] ),
             reset( $included_files )
         );
 
@@ -215,7 +234,7 @@ class O1_WP_Fail2ban_MU {
         $log_destination = function_exists( 'ini_get' ) ? ini_get( 'error_log' ) : '';
         if ( ! empty( $log_destination ) ) {
             if ( array_key_exists( 'HTTP_REFERER', $_SERVER ) ) {
-                $referer = sprintf( ', referer:%s', $this->esc_log( $_SERVER['HTTP_REFERER'] ) );
+                $referer = sprintf( ', referer: %s', $this->esc_log( $_SERVER['HTTP_REFERER'] ) );
             } else {
                 $referer = '';
             }
@@ -292,7 +311,7 @@ class O1_WP_Fail2ban_MU {
             $this->trigger_instant( 'wpf2b_login_disabled_banned_username', $username );
         }
 
-        $user = new WP_Error( 'invalidcombo', __( '<strong>NOTICE</strong>: Login is disabled for now.' ) );
+        $user = new WP_Error( 'invalidcombo', __( "<strong>NOTICE</strong>: Login is disabled for now." ) );
         $this->trigger( 'wpf2b_login_disabled', $username );
 
         return $user;
@@ -327,7 +346,7 @@ class O1_WP_Fail2ban_MU {
     public function after_login( $username, $user ) {
 
         if ( is_a( $user, 'WP_User' ) ) {
-            $this->trigger( 'authenticated', $username, 'info', 'WordPress auth: ' );
+            $this->trigger( 'authenticated', $username, 'info', "WordPress auth: " );
         }
     }
 
@@ -340,7 +359,7 @@ class O1_WP_Fail2ban_MU {
             $user = '';
         }
 
-        $this->trigger( 'logged_out', $user, 'info', 'WordPress auth: ' );
+        $this->trigger( 'logged_out', $user, 'info', "WordPress auth: " );
     }
 
     public function lostpass( $username ) {
@@ -474,6 +493,11 @@ class O1_WP_Fail2ban_MU {
         $this->trigger( 'wpf2b_wpcf7_spam_mx', $domain, 'warn' );
     }
 
+    public function nfrt_robot_trap( $message ) {
+
+        $this->trigger_instant( 'wpf2b_nfrt_robot_trap', $message );
+    }
+
     /**
      * Test user agent string for robots.
      *
@@ -500,7 +524,29 @@ class O1_WP_Fail2ban_MU {
         // Replace non-printables with "¿"
         $escaped = preg_replace( '/[^\P{C}]+/u', "\xC2\xBF", $escaped );
 
-        return sprintf( ' (%s)', $escaped );
+        return sprintf( '(%s)', $escaped );
+    }
+
+    private function translate_apache_level( $apache_level ) {
+
+        $levels = array(
+            'emerg'  => 'emergency',
+            'alert'  => 'alert',
+            'crit'   => 'critical',
+            'error'  => 'error',
+            'warn'   => 'warning',
+            'notice' => 'notice',
+            'info'   => 'info',
+            'debug'  => 'debug'
+        );
+
+        if ( isset( $levels[ $apache_level ] ) ) {
+            $level = $levels[ $apache_level ];
+        } else {
+            $level = 'info';
+        }
+
+        return $level;
     }
 
     private function exit_with_instructions() {

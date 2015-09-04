@@ -5,7 +5,7 @@ Description: Require it from the top of your wp-config.php or make it a Must Use
 Plugin URI: https://github.com/szepeviktor/wordpress-fail2ban
 License: The MIT License (MIT)
 Author: Viktor Szépe
-Version: 2.10.0
+Version: 2.11.0
 Options: O1_BAD_REQUEST_INSTANT, O1_BAD_REQUEST_MAX_LOGIN_REQUEST_SIZE,
 Options: O1_BAD_REQUEST_CDN_HEADERS, O1_BAD_REQUEST_ALLOW_REG, O1_BAD_REQUEST_ALLOW_IE8,
 Options: O1_BAD_REQUEST_ALLOW_OLD_PROXIES, O1_BAD_REQUEST_ALLOW_CONNECTION_EMPTY,
@@ -63,6 +63,16 @@ class O1_Bad_Request {
         'user2',
         'username',
         'webmaster'
+    );
+    private $blacklist = array(
+        '../',
+        '/..',
+        'wp-config',
+        'allow_url_include',
+        'auto_prepend_file',
+        'testproxy.php',
+        'wso.php',
+        'w00tw00t'
     );
     private $cdn_headers;
     private $allow_registration = false;
@@ -190,7 +200,7 @@ class O1_Bad_Request {
             }
         }
 
-        // Too long HTTP request URI
+        // Too big HTTP request URI
         // Apache: LimitRequestLine directive
         if ( strlen( $_SERVER['REQUEST_URI'] ) > 2000 )
             return 'bad_request_uri_length';
@@ -210,6 +220,11 @@ class O1_Bad_Request {
             return 'bad_request_login_http_method';
         }
 
+        // Request URI does not begin with forward slash (may begin with URL scheme)
+        if ( '/' !== substr( $_SERVER['REQUEST_URI'], 0, 1 ) ) {
+            return 'bad_request_uri_slash';
+        }
+
         // Request URI encoding
         // https://tools.ietf.org/html/rfc3986#section-2.2
         // reserved    = gen-delims / sub-delims
@@ -220,26 +235,16 @@ class O1_Bad_Request {
         // "#" removed
         // "%" added
         if ( substr_count( $_SERVER['REQUEST_URI'] , '?' ) > 1
-            || false !== strstr( $_SERVER['REQUEST_URI'], '#' )
+            || false !== strpos( $_SERVER['REQUEST_URI'], '#' )
             || 1 === preg_match( "/[^%:\/?\[\]@!$&'()*+,;=A-Za-z0-9._~-]/", $_SERVER['REQUEST_URI'] )
         ) {
             $this->instant_trigger = false;
             return 'bad_request_uri_encoding';
         }
 
-        // Path traversal in query string
-        if ( false !== strstr( $request_query, '../' ) ) {
-            return 'bad_request_uri_query_hack';
-        }
-
-        // Request URI:
-        //  - does not begin with forward slash (may begin with URL scheme)
-        //  - contains path traversal
-        if ( '/' !== substr( $_SERVER['REQUEST_URI'], 0, 1 )
-            || false !== strstr( $_SERVER['REQUEST_URI'], '../' )
-            || false !== strstr( $_SERVER['REQUEST_URI'], '/..' )
-        ) {
-            return 'bad_request_uri_hack';
+        // URL (path and query string) blacklist
+        if ( true === $this->strifounda( $_SERVER['REQUEST_URI'], $this->blacklist ) ) {
+            return 'bad_request_uri_blacklist';
         }
 
         // robots.txt probing in a subdirectory
@@ -249,7 +254,7 @@ class O1_Bad_Request {
             return 'bad_request_robots_probe';
         }
 
-        // Author sniffing
+        // WordPress author sniffing
         // Except on post listing by author on wp-admin
         if ( false === strpos( $request_path, '/wp-admin/' )
             && isset( $_REQUEST['author'] )
@@ -493,14 +498,16 @@ class O1_Bad_Request {
     private function enhanced_error_log( $message = '', $level = 'error' ) {
 
         /*
-        // log_errors option does not actually disable logging
+        // log_errors directive does not actually disable logging.
         $log_enabled = ( '1' === ini_get( 'log_errors' ) );
         if ( ! $log_enabled || empty( $log_destination ) ) {
         */
 
-        // Add entry point. Only correct when auto_prepend_file option is empty.
-        $error_msg = sprintf( '%s <%s',
+        // Add entry point.
+        // Only correct when auto_prepend_file option is empty.
+        $error_msg = sprintf( '%s <%s/%s',
             $message,
+            $this->esc_log( $_SERVER['REQUEST_METHOD'] ),
             reset( get_included_files() )
         );
 
@@ -555,11 +562,11 @@ class O1_Bad_Request {
     }
 
     /**
-     * Prepare a string to safe logging.
+     * Prepare a string to safe logging
      *
-     * @param string $string  String to escape
+     * @param string $string  String to escape.
      *
-     * @return string         Escaped string in parentheses
+     * @return string         Escaped string in parentheses.
      */
     private function esc_log( $string ) {
 
@@ -574,6 +581,24 @@ class O1_Bad_Request {
         return sprintf( ' (%s)', $escaped );
     }
 
+    /**
+     * Whether a string contains a case-insensitive substring
+     *
+     * @param string $haystack  The haystack.
+     * @param array $needles    The needles.
+     *
+     * @return boolean          A needle is found.
+     */
+    private function strifounda( $haystack, $needles ) {
+
+        foreach( $needles as $substring ) {
+            if ( false !== stripos( $haystack, $substring ) ) {
+                return true;
+            }
+        }
+
+        return false;
+    }
 }
 
 new O1_Bad_Request();
