@@ -219,11 +219,11 @@ class O1_WP_Fail2ban_MU {
         */
 
         // Add entry point, correct when `auto_prepend_file` is empty
-        $included_files = get_included_files();
+        $first_included_file = reset( get_included_files() );
         $error_msg = sprintf( '%s <%s:%s',
             $message,
             $this->esc_log( $_SERVER['REQUEST_METHOD'] ),
-            reset( $included_files )
+            $first_included_file
         );
 
         /**
