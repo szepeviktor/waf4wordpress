@@ -5,7 +5,7 @@
 # VERSION       :0.2.0
 # DATE          :2015-08-22
 # AUTHOR        :Viktor Szépe <viktor@szepe.net>
-# URL           :https://github.com/szepeviktor/debian-server-tools
+# URL           :https://github.com/szepeviktor/wordpress-fail2ban
 # LICENSE       :The MIT License (MIT)
 # REFS          :https://tools.ietf.org/html/rfc3875#section-6.3.3
 # LOCATION      :/usr/local/lib/cgi-bin/cgi_no_wp_here

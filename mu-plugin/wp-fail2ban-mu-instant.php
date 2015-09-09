@@ -3,11 +3,12 @@
 Plugin Name: WordPress fail2ban MU
 Plugin URI: https://github.com/szepeviktor/wordpress-fail2ban
 Description: Triggers fail2ban on various attacks. <strong>This is a Must Use plugin, must be copied to <code>wp-content/mu-plugins</code>.</strong>
-Version: 4.9.0
+Version: 4.9.2
 License: The MIT License (MIT)
 Author: Viktor Szépe
 GitHub Plugin URI: https://github.com/szepeviktor/wordpress-fail2ban
-Options: O1_WP_FAIL2BAN_DISABLE_LOGIN O1_WP_FAIL2BAN_ALLOW_REDIRECT
+Options: O1_WP_FAIL2BAN_DISABLE_LOGIN
+Options: O1_WP_FAIL2BAN_ALLOW_REDIRECT
 */
 
 if ( ! function_exists( 'add_filter' ) ) {
@@ -99,8 +100,13 @@ class O1_WP_Fail2ban_MU {
         // Don't redirect to admin
         remove_action( 'template_redirect', 'wp_redirect_admin_locations', 1000 );
 
-        // Disable login
+        // Don't use shortlinks which are redirected to canonical URL-s
+        add_filter( 'pre_get_shortlink', '__return_empty_string' );
+
+
+        // Login related
         if ( defined( 'O1_WP_FAIL2BAN_DISABLE_LOGIN' ) && O1_WP_FAIL2BAN_DISABLE_LOGIN ) {
+            // Disable login
             add_action( 'login_head', array( $this, 'disable_user_login_js' ) );
             add_filter( 'authenticate', array( $this, 'authentication_disabled' ),  0, 3 );
         } else {
@@ -118,8 +124,6 @@ class O1_WP_Fail2ban_MU {
         if ( ! defined( 'O1_WP_FAIL2BAN_ALLOW_REDIRECT' ) || ! O1_WP_FAIL2BAN_ALLOW_REDIRECT ) {
             add_filter( 'redirect_canonical', array( $this, 'redirect' ), 1, 2 );
         }
-        // Prevent using shortlinks which are redirected to canonical URL-s
-        add_filter( 'pre_get_shortlink', '__return_empty_string' );
 
         // Robot and human 404
         add_action( 'plugins_loaded', array( $this, 'robot_403' ), 0 );
@@ -205,7 +209,14 @@ class O1_WP_Fail2ban_MU {
         // Send to Simple History
         if ( function_exists( 'SimpleLogger' ) ) {
             $simple_level = $this->translate_apache_level( $level );
-            SimpleLogger()->log( $simple_level, $error_msg, array( 'security' => "WordPress fail2ban" ) );
+            $context = array(
+                '_security' => "WordPress fail2ban",
+                '_server_request_method' => $this->esc_log( $_SERVER['REQUEST_METHOD'] )
+            );
+            if ( array_key_exists( 'HTTP_USER_AGENT', $_SERVER ) ) {
+                $context['_server_http_user_agent'] = $this->esc_log( $_SERVER['HTTP_USER_AGENT'] );
+            }
+            SimpleLogger()->log( $simple_level, $error_msg, $context );
         }
 
     }
@@ -257,18 +268,17 @@ class O1_WP_Fail2ban_MU {
             return;
         }
 
-        // HEAD probing
+        $ua = array_key_exists( 'HTTP_USER_AGENT', $_SERVER ) ? $_SERVER['HTTP_USER_AGENT'] : '';
+
+        // HEAD probing resulting in 404
         if ( false !== stripos( $_SERVER['REQUEST_METHOD'], 'HEAD' ) ) {
-            $this->trigger_instant( 'wpf2b_404_head', $request_path );
+            $this->trigger_instant( 'wpf2b_404_head', $_SERVER['REQUEST_URI'] );
         }
 
-        $ua = array_key_exists( 'HTTP_USER_AGENT', $_SERVER ) ? $_SERVER['HTTP_USER_AGENT'] : '';
-        $request_uri = $_SERVER['REQUEST_URI'];
-
-        // Don't show the 404 page for robots
+        // Don't run 404 template for robots
         if ( $this->is_robot( $ua ) && ! is_user_logged_in() ) {
 
-            $this->trigger( 'wpf2b_robot_404', $request_uri, 'info' );
+            $this->trigger( 'wpf2b_robot_404', $_SERVER['REQUEST_URI'], 'info' );
 
             ob_get_level() && ob_end_clean();
             if ( ! headers_sent() ) {
@@ -284,7 +294,7 @@ class O1_WP_Fail2ban_MU {
         }
 
         // Humans
-        $this->trigger( 'wpf2b_404', $request_uri, 'info' );
+        $this->trigger( 'wpf2b_404', $_SERVER['REQUEST_URI'], 'info' );
     }
 
     public function url_hack() {

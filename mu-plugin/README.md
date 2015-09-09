@@ -65,6 +65,10 @@ if ( '/wp-content/plugins/newsletter/statistics/open.php' === $newsletter_path
     // UA hack for old email clients.
     $_SERVER['HTTP_USER_AGENT'] = 'Mozilla/5.0 ' . $_SERVER['HTTP_USER_AGENT'];
 }
+
+// Enable PayPal IPN in WooCommerce
+$wc_api_path = parse_url( $_SERVER['REQUEST_URI'], PHP_URL_PATH );
+if ( '/wc-api/WC_Gateway_Paypal/' === $wc_api_path ) $_SERVER['HTTP_ACCEPT'] = '*/*';
 ```
 
 ### Set up the fail2ban filters

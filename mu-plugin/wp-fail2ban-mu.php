@@ -6,8 +6,7 @@ Description: Triggers fail2ban on 404s and various attacks. <strong>This is a Mu
 Version: 3.5.0
 License: The MIT License (MIT)
 Author: Viktor Szépe
-Author URI: http://www.online1.hu/webdesign/
-GitHub Plugin URI: https://github.com/szepeviktor/wordpress-plugin-construction/tree/master/wordpress-fail2ban/mu-plugin
+GitHub Plugin URI: https://github.com/szepeviktor/wordpress-fail2ban
 Options: O1_WP_FAIL2BAN_DISABLE_LOGIN
 */
 

@@ -1,14 +1,13 @@
 <?php
 /*
 Plugin Name: WordPress fail2ban
-Plugin URI: https://github.com/szepeviktor/wordpress-plugin-construction
+Plugin URI: https://github.com/szepeviktor/wordpress-fail2ban
 Description: Reports 404s and various attacks in error.log for fail2ban
 Version: 0.9.1
 Upstream: based on WordPress fail2ban MU v2.5
 License: The MIT License (MIT)
 Author: Viktor Szépe
-Author URI: http://www.online1.hu/webdesign/
-GitHub Plugin URI: https://github.com/szepeviktor/wordpress-plugin-construction/tree/master/wordpress-fail2ban
+GitHub Plugin URI: https://github.com/szepeviktor/wordpress-fail2ban
 */
 
 if ( ! function_exists( 'add_filter' ) ) {
