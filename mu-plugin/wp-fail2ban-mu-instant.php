@@ -3,7 +3,7 @@
 Plugin Name: WordPress fail2ban MU
 Plugin URI: https://github.com/szepeviktor/wordpress-fail2ban
 Description: Triggers fail2ban on various attacks. <strong>This is a Must Use plugin, must be copied to <code>wp-content/mu-plugins</code>.</strong>
-Version: 4.9.2
+Version: 4.9.3
 License: The MIT License (MIT)
 Author: Viktor Szépe
 GitHub Plugin URI: https://github.com/szepeviktor/wordpress-fail2ban
@@ -110,7 +110,9 @@ class O1_WP_Fail2ban_MU {
             add_action( 'login_head', array( $this, 'disable_user_login_js' ) );
             add_filter( 'authenticate', array( $this, 'authentication_disabled' ),  0, 3 );
         } else {
-            // wp-login + XMLRPC login (any authentication)
+            // Prevent registering with banned username
+            add_filter( 'validate_username', array( $this, 'banned_username' ), 99999, 2 );
+            // wp-login or XMLRPC login (any authentication)
             add_action( 'wp_login_failed', array( $this, 'login_failed' ) );
             add_filter( 'authenticate', array( $this, 'before_login' ), 0, 3 );
             // @TODO No filter for successful XMLRPC login in wp_authenticate()
@@ -231,10 +233,9 @@ class O1_WP_Fail2ban_MU {
 
         // Add entry point, correct when `auto_prepend_file` is empty
         $first_included_file = reset( get_included_files() );
-        $error_msg = sprintf( '%s <%s:%s',
+        $error_msg = sprintf( '%s <%s',
             $message,
-            $this->esc_log( $_SERVER['REQUEST_METHOD'] ),
-            $first_included_file
+            $this->esc_log( sprintf( '%s:%s', $_SERVER['REQUEST_METHOD'], $first_included_file ) )
         );
 
         /**
@@ -313,6 +314,16 @@ class O1_WP_Fail2ban_MU {
         }
 
         return $redirect_url;
+    }
+
+    public function banned_username ( $valid, $username ) {
+
+        if ( in_array( strtolower( $username ), $this->names2ban ) ) {
+            $this->trigger( 'wpf2b_register_banned_username', $username, 'notice' );
+            $valid = false;
+        }
+
+        return $valid;
     }
 
     public function authentication_disabled( $user, $username, $password ) {
