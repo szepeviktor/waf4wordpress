@@ -16,7 +16,7 @@ Miniban::init(
 );
 ```
 
-`wp-miniban-htaccess.inc.php` contains `miniban-base.php` and `miniban-htaccess.php`.
+`wp-miniban-htaccess.inc.php` is a concatenation of `miniban-base.php` and `miniban-htaccess.php`.
 
 Set up daily cron job to unban old bans.
 
@@ -24,7 +24,7 @@ Set up daily cron job to unban old bans.
 php -r 'require "/PATH/TO/wp-miniban-htaccess.inc.php"; Miniban::unban();'
 ```
 
-### .htaccess method for Apache
+### .htaccess method for Apache - miniban-htaccess.php
 
 Based on which HTTP header hosts should be banned:
 
@@ -63,31 +63,32 @@ SetEnvIf Remote_Addr "^192\.168\.1\.100$" mini_ban
 #SetEnvIf X-CLUSTER-CLIENT-IP "^192\.168\.1\.100$" mini_ban
 
 # Varnish
+@todo
 
 # HA proxy
-
+@todo
 ```
 
-### WordPress plugin method
+### WordPress plugin method - miniban-wordpress.php
 
-A small MU plugin looks up the IP address in a WordPress option.
+A small MU plugin (miniban-firewall.php) bans the IP address stored in a WordPress option.
 
 Does not work with HTML-cached pages.
 
-### Tarpit method
+### Tarpit method - miniban-tarpit.php
 
 Wait for specified time and send random bytes continously.
 
-### CloudFlare method
+### CloudFlare method - miniban-cloudflare.php
 
 Communicate with cloudFlare API and ban/unban hosts.
 @TODO
 
-### Forbidden methos
+### Forbidden method - miniban-forbidden.php
 
 Only respond with HTTP 403 forbidden.
 
-### RewriteMap method for Apache
+### RewriteMap method for Apache - miniban-rewritemap.php
 
 ```apache
 # Virtual host configuration
@@ -97,7 +98,7 @@ RewriteCond "${ipblocklist:%{REMOTE_ADDR}|NOT-FOUND}" !=NOT-FOUND
 RewriteRule ^ - [F]
 ```
 
-### Nginx user configuration
+### Nginx user configuration - miniban-nginx.php
 
 ```nginx
 @TODO

@@ -2,7 +2,7 @@
 /**
  * Scaffold for Miniban ban methods
  *
- * @version    0.1.1
+ * @version    0.1.2
  * @package    miniban
  * @link       https://github.com/szepeviktor/wordpress-fail2ban
  * @author     Viktor Szépe
@@ -39,7 +39,7 @@ abstract class Miniban_Base {
      * Set path of configuration file, ignored IP addresses
      * and extra configuration data.
      *
-     * @param string $path        Full path of configuration file.
+     * @param string $config      Full path of configuration file.
      * @param array $ignoreip     Ignored IP addresses.
      * @param array $extra_config Additional configuration data.
      * @return boolean            Success.

@@ -1,5 +1,13 @@
 <?php
-
+/**
+ * Htaccess Miniban method
+ *
+ * @version    0.1.2
+ * @package    miniban
+ * @link       https://github.com/szepeviktor/wordpress-fail2ban
+ * @author     Viktor Szépe
+ * @license    GNU General Public License (GPL) version 2
+ */
 class Miniban extends Miniban_Base {
 
     private static $ban_rules = '
@@ -33,7 +41,16 @@ class Miniban extends Miniban_Base {
         }
 
         if ( empty( $ban_ip ) ) {
-            $ban_ip = $_SERVER['REMOTE_ADDR'];
+            if ( 'Remote_Addr' === parent::$extra_config['header'] ) {
+                $header_name = 'REMOTE_ADDR';
+            } else {
+                $header_name = 'HTTP_' . strtoupper( parent::$extra_config['header'] );
+            }
+
+            if ( empty( $_SERVER[ $header_name ] ) ) {
+                return false;
+            }
+            $ban_ip = $_SERVER[ $header_name ];
         }
 
         // Process whitelist

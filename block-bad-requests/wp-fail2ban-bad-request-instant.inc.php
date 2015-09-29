@@ -434,7 +434,7 @@ class O1_Bad_Request {
         if ( 'Mozilla/5.0' !== substr( $user_agent, 0, 11 ) )
             return 'bad_request_wplogin_user_agent_mozilla50';
 
-        // Allow
+        // Allowed to login
         return false;
     }
 

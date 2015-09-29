@@ -4,10 +4,10 @@ Bans commonly used user names (hardcoded in a property), blocks non-static reque
 prevents author sniffing and examines every HTTP header in a login request.
 Then triggers fail2ban accordingly.
 
-To install copy `wp-login-bad-request.inc.php` beside your `wp-config.php` and put this line in top of `wp-config.php`:
+To install copy `wp-fail2ban-bad-request-instant.inc.php` beside your `wp-config.php` and put this line in top of `wp-config.php`:
 
 ```php
-require_once dirname( __FILE__ ) . '/wp-login-bad-request.inc.php';
+require_once dirname( __FILE__ ) . '/wp-fail2ban-bad-request-instant.inc.php';
 ```
 
 Or – in a worse case – install it as an mu-plugin, or in the **worst case** as a normal plugin.
@@ -87,4 +87,4 @@ You can customize the fail2ban trigger string in the `$prefix` property.
 
 Tests are included as a shell script: `bad-request-test.sh`
 
-[GitHub repository](https://github.com/szepeviktor/wordpress-plugin-construction/tree/master/wordpress-fail2ban)
+[GitHub repository](https://github.com/szepeviktor/wordpress-fail2ban)

@@ -1,7 +1,7 @@
 <?php
 /*
-Plugin Name: WordPress fail2ban option table scan MU
-Version: 0.1.4
+Plugin Name: WordPress-fail2ban option table scan MU
+Version: 0.1.5
 Description: Find <code>&lt;script&gt;</code> and <code>&lt;iframe&gt;</code> tags in wp_options table and alert.
 Plugin URI: https://github.com/szepeviktor/wordpress-fail2ban
 License: The MIT License (MIT)
@@ -9,10 +9,10 @@ Author: Viktor Szépe
 GitHub Plugin URI: https://github.com/szepeviktor/wordpress-fail2ban
 */
 
-add_action( 'plugins_loaded', 'wpf2b_add_option_scan_schedule' );
+add_action( 'plugins_loaded', 'wpf2b_option_scan_schedule' );
 add_action( 'wpf2b/daily', 'wpf2b_option_scan' );
 
-function wpf2b_add_option_scan_schedule() {
+function wpf2b_option_scan_schedule() {
 
     if ( false === wp_get_schedule( 'wpf2b/daily' ) ) {
         wp_schedule_event( time(), 'daily', 'wpf2b/daily' );
