@@ -24,31 +24,37 @@ function fail2ban_404_watchdog( $log_entry ) {
             break;
     }
 
-    if ( empty( $slug ) )
+    if ( empty( $slug ) ) {
         return;
+    }
 
-    // when error messages are sent to a file (aka. PHP error log)
+    // When error messages are sent to a file (aka. PHP error log)
     // IP address and referer are not logged
     $log_destination = ini_get( 'error_log' );
 
     // SAPI should add client data
-    $error_msg = $prefix
-        . $slug
-        . ' (' . addslashes( $log_entry['request_uri'] ) . ')'
-        . ' <' . reset( get_included_files() );
+    $included_files = get_included_files();
+    $error_msg = sprintf( '%s%s (%s) <%s',
+        $prefix,
+        $slug,
+        addslashes( $log_entry['request_uri'] ),
+        reset( $incuded_files )
+    );
 
-    // add client data to log message
+    // Add client data to log message
     if ( ! empty( $log_destination ) ) {
-        if ( isset( $_SERVER['HTTP_REFERER'] ) ) {
-            $referer = addslashes( $_SERVER['HTTP_REFERER'] );
+        if ( array_key_exists( 'HTTP_REFERER', $_SERVER ) ) {
+            $referer = sprintf( ', referer: %s', addslashes( $_SERVER['HTTP_REFERER'] ) );
         } else {
-            $referer = false;
+            $referer = '';
         }
 
-        $error_msg = '[error] '
-            . '[client ' . $_SERVER['REMOTE_ADDR'] . ':' . $_SERVER['REMOTE_PORT'] . '] '
-            . $error_msg
-            . ( $referer ? ', referer: ' . $referer : '' );
+        $error_msg = sprintf( '[error] [client %s:%s] %s%s',
+            $_SERVER['REMOTE_ADDR'],
+            $_SERVER['REMOTE_PORT'],
+            $error_msg,
+            $referer
+        );
     }
 
     error_log( $error_msg );
