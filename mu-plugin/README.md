@@ -71,6 +71,21 @@ $wc_api_path = parse_url( $_SERVER['REQUEST_URI'], PHP_URL_PATH );
 if ( '/wc-api/WC_Gateway_Paypal/' === $wc_api_path ) $_SERVER['HTTP_ACCEPT'] = '*/*';
 ```
 
+### Learning attack internals
+
+Helps learning attack internals. Insert this code after `wp_logout();` in `trigger_instant()`.
+
+```php
+        $request_data = $_REQUEST;
+        if ( empty( $request_data ) ) {
+            $request_data = file_get_contents( 'php://input' );
+        }
+        $this->enhanced_error_log( sprintf( 'HTTP REQUEST: %s:%s',
+            $this->esc_log( $_SERVER['REQUEST_METHOD'] ),
+            $this->esc_log( $request_data )
+        ) );
+```
+
 ### Set up the fail2ban filters
 
 See: https://github.com/szepeviktor/debian-server-tools/tree/master/security/fail2ban-conf

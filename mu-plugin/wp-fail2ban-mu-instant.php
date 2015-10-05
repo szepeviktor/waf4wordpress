@@ -3,7 +3,7 @@
 Plugin Name: WordPress fail2ban MU
 Plugin URI: https://github.com/szepeviktor/wordpress-fail2ban
 Description: Triggers fail2ban on various attacks. <strong>This is a Must Use plugin, must be copied to <code>wp-content/mu-plugins</code>.</strong>
-Version: 4.9.3
+Version: 4.9.4
 License: The MIT License (MIT)
 Author: Viktor Szépe
 GitHub Plugin URI: https://github.com/szepeviktor/wordpress-fail2ban
@@ -12,8 +12,8 @@ Options: O1_WP_FAIL2BAN_ALLOW_REDIRECT
 */
 
 if ( ! function_exists( 'add_filter' ) ) {
-    error_log( "Break-in attempt detected: wpf2b_mu_direct_access "
-        . addslashes( @$_SERVER['REQUEST_URI'] )
+    error_log( 'Break-in attempt detected: wpf2b_mu_direct_access '
+        . addslashes( isset( $_SERVER['REQUEST_URI'] ) ? $_SERVER['REQUEST_URI'] : '' )
     );
     ob_get_level() && ob_end_clean();
     if ( ! headers_sent() ) {
@@ -40,8 +40,8 @@ if ( ! function_exists( 'add_filter' ) ) {
  */
 class O1_WP_Fail2ban_MU {
 
-    private $prefix = "Malicious traffic detected: ";
-    private $prefix_instant = "Break-in attempt detected: ";
+    private $prefix = 'Malicious traffic detected: ';
+    private $prefix_instant = 'Break-in attempt detected: ';
     private $wp_die_ajax_handler;
     private $wp_die_xmlrpc_handler;
     private $wp_die_handler;
@@ -79,7 +79,7 @@ class O1_WP_Fail2ban_MU {
         'user',
         'user2',
         'username',
-        'webmaster'
+        'webmaster',
     );
 
     public function __construct() {
@@ -94,8 +94,9 @@ class O1_WP_Fail2ban_MU {
         }
 
         // Prevent usage as a normal plugin in wp-content/plugins
-        if ( did_action( 'muplugins_loaded' ) )
+        if ( did_action( 'muplugins_loaded' ) ) {
             $this->exit_with_instructions();
+        }
 
         // Don't redirect to admin
         remove_action( 'template_redirect', 'wp_redirect_admin_locations', 1000 );
@@ -103,19 +104,17 @@ class O1_WP_Fail2ban_MU {
         // Don't use shortlinks which are redirected to canonical URL-s
         add_filter( 'pre_get_shortlink', '__return_empty_string' );
 
-
         // Login related
         if ( defined( 'O1_WP_FAIL2BAN_DISABLE_LOGIN' ) && O1_WP_FAIL2BAN_DISABLE_LOGIN ) {
             // Disable login
             add_action( 'login_head', array( $this, 'disable_user_login_js' ) );
-            add_filter( 'authenticate', array( $this, 'authentication_disabled' ),  0, 3 );
+            add_filter( 'authenticate', array( $this, 'authentication_disabled' ),  0, 2 );
         } else {
             // Prevent registering with banned username
             add_filter( 'validate_username', array( $this, 'banned_username' ), 99999, 2 );
             // wp-login or XMLRPC login (any authentication)
             add_action( 'wp_login_failed', array( $this, 'login_failed' ) );
-            add_filter( 'authenticate', array( $this, 'before_login' ), 0, 3 );
-            // @TODO No filter for successful XMLRPC login in wp_authenticate()
+            add_filter( 'authenticate', array( $this, 'before_login' ), 0, 2 );
             add_action( 'wp_login', array( $this, 'after_login' ), 99999, 2 );
         }
         add_action( 'wp_logout', array( $this, 'logout' ) );
@@ -152,26 +151,15 @@ class O1_WP_Fail2ban_MU {
         // Trigger miniban
         if ( class_exists( 'Miniban' ) ) {
             if ( true !== Miniban::ban() ) {
-                $this->enhanced_error_log( "Miniban operation failed." );
+                $this->enhanced_error_log( 'Miniban operation failed.' );
             }
         }
 
         // Trigger fail2ban
         $this->trigger( $slug, $message, $level, $this->prefix_instant );
 
+        // Remove session
         wp_logout();
-
-        /* Multi-line logging problem on mod_proxy_fcgi
-        // Helps learning attack internals
-        $request_data = $_REQUEST;
-        if ( empty( $request_data ) ) {
-            $request_data = file_get_contents( 'php://input' );
-        }
-        $this->enhanced_error_log( sprintf( "HTTP REQUEST: %s:%s",
-            $this->esc_log( $_SERVER['REQUEST_METHOD'] ),
-            $this->esc_log( $request_data )
-        ) );
-        */
 
         ob_get_level() && ob_end_clean();
         if ( ! headers_sent() ) {
@@ -204,7 +192,7 @@ class O1_WP_Fail2ban_MU {
         // Send to Sucuri Scan
         if ( class_exists( 'SucuriScanEvent' ) ) {
             if ( true !== SucuriScanEvent::report_critical_event( $error_msg ) ) {
-                error_log( "Sucuri Scan report event failure." );
+                error_log( 'Sucuri Scan report event failure.' );
             }
         }
 
@@ -212,8 +200,8 @@ class O1_WP_Fail2ban_MU {
         if ( function_exists( 'SimpleLogger' ) ) {
             $simple_level = $this->translate_apache_level( $level );
             $context = array(
-                '_security' => "WordPress fail2ban",
-                '_server_request_method' => $this->esc_log( $_SERVER['REQUEST_METHOD'] )
+                '_security' => 'WordPress fail2ban',
+                '_server_request_method' => $this->esc_log( $_SERVER['REQUEST_METHOD'] ),
             );
             if ( array_key_exists( 'HTTP_USER_AGENT', $_SERVER ) ) {
                 $context['_server_http_user_agent'] = $this->esc_log( $_SERVER['HTTP_USER_AGENT'] );
@@ -226,12 +214,12 @@ class O1_WP_Fail2ban_MU {
     private function enhanced_error_log( $message = '', $level = 'error' ) {
 
         /*
-        // `log_errors` PHP option does not actually disable logging
+        // log_errors PHP directive does not actually disable logging
         $log_enabled = ( '1' === ini_get( 'log_errors' ) );
         if ( ! $log_enabled || empty( $log_destination ) ) {
         */
 
-        // Add entry point, correct when `auto_prepend_file` is empty
+        // Add entry point, correct when auto_prepend_file is empty
         $first_included_file = reset( get_included_files() );
         $error_msg = sprintf( '%s <%s',
             $message,
@@ -253,8 +241,8 @@ class O1_WP_Fail2ban_MU {
 
             $error_msg = sprintf( '[%s] [client %s:%s] %s%s',
                 $level,
-                @$_SERVER['REMOTE_ADDR'],
-                @$_SERVER['REMOTE_PORT'],
+                $_SERVER['REMOTE_ADDR'],
+                $_SERVER['REMOTE_PORT'],
                 $error_msg,
                 $referer
             );
@@ -286,7 +274,7 @@ class O1_WP_Fail2ban_MU {
                 header( 'Status: 404 Not Found' );
                 status_header( 404 );
                 header( 'X-Robots-Tag: noindex, nofollow' );
-                //header( 'Connection: Close' );
+                header( 'Connection: Close' );
                 header( 'Content-Length: 0' );
                 nocache_headers();
             }
@@ -316,7 +304,7 @@ class O1_WP_Fail2ban_MU {
         return $redirect_url;
     }
 
-    public function banned_username ( $valid, $username ) {
+    public function banned_username( $valid, $username ) {
 
         if ( in_array( strtolower( $username ), $this->names2ban ) ) {
             $this->trigger( 'wpf2b_register_banned_username', $username, 'notice' );
@@ -326,13 +314,13 @@ class O1_WP_Fail2ban_MU {
         return $valid;
     }
 
-    public function authentication_disabled( $user, $username, $password ) {
+    public function authentication_disabled( $user, $username ) {
 
         if ( in_array( strtolower( $username ), $this->names2ban ) ) {
             $this->trigger_instant( 'wpf2b_login_disabled_banned_username', $username );
         }
 
-        $user = new WP_Error( 'invalidcombo', __( "<strong>NOTICE</strong>: Login is disabled for now." ) );
+        $user = new WP_Error( 'invalidcombo', __( '<strong>NOTICE</strong>: Login is disabled for now.' ) );
         $this->trigger( 'wpf2b_login_disabled', $username );
 
         return $user;
@@ -353,13 +341,15 @@ class O1_WP_Fail2ban_MU {
     /**
      * Ban blacklisted usernames and authentication through XML-RPC.
      */
-    public function before_login( $user, $username, $password ) {
+    public function before_login( $user, $username ) {
 
-        if ( in_array( strtolower( $username ), $this->names2ban ) )
+        if ( in_array( strtolower( $username ), $this->names2ban ) ) {
             $this->trigger_instant( 'wpf2b_banned_username', $username );
+        }
 
-        if ( defined( 'XMLRPC_REQUEST' ) && XMLRPC_REQUEST )
+        if ( defined( 'XMLRPC_REQUEST' ) && XMLRPC_REQUEST ) {
             $this->trigger_instant( 'wpf2b_xmlrpc_login', $username );
+        }
 
         return $user;
     }
@@ -367,7 +357,7 @@ class O1_WP_Fail2ban_MU {
     public function after_login( $username, $user ) {
 
         if ( is_a( $user, 'WP_User' ) ) {
-            $this->trigger( 'authenticated', $username, 'info', "WordPress auth: " );
+            $this->trigger( 'authenticated', $username, 'info', 'WordPress auth: ' );
         }
     }
 
@@ -380,7 +370,7 @@ class O1_WP_Fail2ban_MU {
             $user = '';
         }
 
-        $this->trigger( 'logged_out', $user, 'info', "WordPress auth: " );
+        $this->trigger( 'logged_out', $user, 'info', 'WordPress auth: ' );
     }
 
     public function lostpass( $username ) {
@@ -439,8 +429,9 @@ class O1_WP_Fail2ban_MU {
     public function wp_die_ajax_handler( $message, $title, $args ) {
 
         // wp-admin/includes/ajax-actions.php returns -1 of security breach
-        if ( ! is_scalar( $message ) || (int) $message < 0 )
+        if ( ! is_scalar( $message ) || (int) $message < 0 ) {
             $this->trigger( 'wpf2b_wpdie_ajax', $message );
+        }
 
         // call previous handler
         call_user_func( $this->wp_die_ajax_handler, $message, $title, $args );
@@ -456,8 +447,9 @@ class O1_WP_Fail2ban_MU {
 
     public function wp_die_xmlrpc_handler( $message, $title, $args ) {
 
-        if ( ! empty( $message ) )
+        if ( ! empty( $message ) ) {
             $this->trigger( 'wpf2b_wpdie_xmlrpc', $message );
+        }
 
         // call previous handler
         call_user_func( $this->wp_die_xmlrpc_handler, $message, $title, $args );
@@ -473,8 +465,9 @@ class O1_WP_Fail2ban_MU {
 
     public function wp_die_handler( $message, $title, $args ) {
 
-        if ( ! empty( $message ) )
+        if ( ! empty( $message ) ) {
             $this->trigger( 'wpf2b_wpdie', $message );
+        }
 
         // call previous handler
         call_user_func( $this->wp_die_handler, $message, $title, $args );
@@ -487,12 +480,9 @@ class O1_WP_Fail2ban_MU {
 
         $whitelisted_actions = array( 'wp_ajax_nopriv_wp-remove-post-lock' );
 
-        // Actions only (not filters),
-        //     `admin_post_*` or `wp_ajax_*`,
-        //     Not registered,
-        //     Not whitelisted
+        // Actions only, not filters, not registered except whitelisted ones
         if ( is_array( $wp_actions )
-            && array_key_exists ( $tag, $wp_actions )
+            && array_key_exists( $tag, $wp_actions )
             && ( 'admin_post_' === substr( $tag, 0, 11 )
                 || 'wp_ajax_' === substr( $tag, 0, 8 )
             )
@@ -537,7 +527,7 @@ class O1_WP_Fail2ban_MU {
 
     private function esc_log( $string ) {
 
-        $escaped = serialize( $string ) ;
+        $escaped = serialize( $string );
         // Limit length
         $escaped = mb_substr( $escaped, 0, 500, 'utf-8' );
         // New lines to "|"
@@ -558,7 +548,7 @@ class O1_WP_Fail2ban_MU {
             'warn'   => 'warning',
             'notice' => 'notice',
             'info'   => 'info',
-            'debug'  => 'debug'
+            'debug'  => 'debug',
         );
 
         if ( isset( $levels[ $apache_level ] ) ) {
@@ -579,19 +569,18 @@ class O1_WP_Fail2ban_MU {
             and it should not be activated as one.<br />
             Instead, <code style="font-family:Consolas,Monaco,monospace;background:rgba(0,0,0,0.07)">%s</code>
             must be copied to <code style="font-family:Consolas,Monaco,monospace;background:rgba(0,0,0,0.07)">%s</code></p>',
-
             str_replace( $doc_root, '', __FILE__ ),
             str_replace( $doc_root, '', trailingslashit( WPMU_PLUGIN_DIR ) ) . basename( __FILE__ )
         );
 
         exit( $iframe_msg );
     }
-
 }
 
 new O1_WP_Fail2ban_MU();
 
 /*
+- No filter for successful XMLRPC login in wp_authenticate()
 - write test.sh
 - robot requests not through `/index.php` (exclude: xmlrpc, trackback, see: wp_403())
 - append: http://plugins.svn.wordpress.org/block-bad-queries/trunk/block-bad-queries.php
@@ -603,13 +592,7 @@ new O1_WP_Fail2ban_MU();
 - robots&errors in /wp-comments-post.php (as block-bad-requests.inc)
 - log xmlrpc? add_action( 'xmlrpc_call', function( $call ) { if ( 'pingback.ping' == $call ) {} } );
 - log proxy IP: HTTP_X_FORWARDED_FOR, HTTP_INCAP_CLIENT_IP, HTTP_CF_CONNECTING_IP (could be faked)
-- scores system:
-    double score for
-        robots, humans ???
-        human non-GET 404 (robots get 403)
-    403 immediate ban
-    rob/hum score-pair templates in <select>
-    fake Googlebot, Referer: http://www.google.com ???
+- fake Googlebot, Referer: http://www.google.com ???
 
 - registration errors: the dirty way
 add_filter( 'login_errors', function ( $em ) {

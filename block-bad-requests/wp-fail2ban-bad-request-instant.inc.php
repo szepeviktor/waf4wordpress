@@ -5,7 +5,7 @@ Description: Require it from the top of your wp-config.php or make it a Must Use
 Plugin URI: https://github.com/szepeviktor/wordpress-fail2ban
 License: The MIT License (MIT)
 Author: Viktor Szépe
-Version: 2.11.0
+Version: 2.11.1
 GitHub Plugin URI: https://github.com/szepeviktor/wordpress-fail2ban
 Options: O1_BAD_REQUEST_INSTANT
 Options: O1_BAD_REQUEST_MAX_LOGIN_REQUEST_SIZE
@@ -68,7 +68,7 @@ class O1_Bad_Request {
         'user',
         'user2',
         'username',
-        'webmaster'
+        'webmaster',
     );
     private $blacklist = array(
         '../',
@@ -78,7 +78,7 @@ class O1_Bad_Request {
         'auto_prepend_file',
         'testproxy.php',
         'wso.php',
-        'w00tw00t'
+        'w00tw00t',
     );
     private $cdn_headers;
     private $allow_registration = false;
@@ -97,57 +97,55 @@ class O1_Bad_Request {
     public function __construct() {
 
         // Options
-        if ( defined( 'O1_BAD_REQUEST_INSTANT' ) && false === O1_BAD_REQUEST_INSTANT )
+        if ( defined( 'O1_BAD_REQUEST_INSTANT' ) && false === O1_BAD_REQUEST_INSTANT ) {
             $this->instant_trigger = false;
+        }
 
-        if ( defined( 'O1_BAD_REQUEST_MAX_LOGIN_REQUEST_SIZE' ) )
+        if ( defined( 'O1_BAD_REQUEST_MAX_LOGIN_REQUEST_SIZE' ) ) {
             $this->max_login_request_size = intval( O1_BAD_REQUEST_MAX_LOGIN_REQUEST_SIZE );
+        }
 
-        if ( defined( 'O1_BAD_REQUEST_CDN_HEADERS' ) )
+        if ( defined( 'O1_BAD_REQUEST_CDN_HEADERS' ) ) {
             $this->cdn_headers = explode( ':', O1_BAD_REQUEST_CDN_HEADERS );
+        }
 
-        if ( defined( 'O1_BAD_REQUEST_ALLOW_REG' ) && O1_BAD_REQUEST_ALLOW_REG )
+        if ( defined( 'O1_BAD_REQUEST_ALLOW_REG' ) && O1_BAD_REQUEST_ALLOW_REG ) {
             $this->allow_registration = true;
+        }
 
-        if ( defined( 'O1_BAD_REQUEST_ALLOW_IE8' ) && O1_BAD_REQUEST_ALLOW_IE8 )
+        if ( defined( 'O1_BAD_REQUEST_ALLOW_IE8' ) && O1_BAD_REQUEST_ALLOW_IE8 ) {
             $this->allow_ie8_login = true;
+        }
 
-        if ( defined( 'O1_BAD_REQUEST_ALLOW_OLD_PROXIES' ) && O1_BAD_REQUEST_ALLOW_OLD_PROXIES )
+        if ( defined( 'O1_BAD_REQUEST_ALLOW_OLD_PROXIES' ) && O1_BAD_REQUEST_ALLOW_OLD_PROXIES ) {
             $this->allow_old_proxies = true;
+        }
 
-        if ( defined( 'O1_BAD_REQUEST_ALLOW_CONNECTION_EMPTY' ) && O1_BAD_REQUEST_ALLOW_CONNECTION_EMPTY )
+        if ( defined( 'O1_BAD_REQUEST_ALLOW_CONNECTION_EMPTY' ) && O1_BAD_REQUEST_ALLOW_CONNECTION_EMPTY ) {
             $this->allow_connection_empty = true;
+        }
 
-        if ( defined( 'O1_BAD_REQUEST_ALLOW_CONNECTION_CLOSE' ) && O1_BAD_REQUEST_ALLOW_CONNECTION_CLOSE )
+        if ( defined( 'O1_BAD_REQUEST_ALLOW_CONNECTION_CLOSE' ) && O1_BAD_REQUEST_ALLOW_CONNECTION_CLOSE ) {
             $this->allow_connection_close = true;
+        }
 
-        if ( defined( 'O1_BAD_REQUEST_ALLOW_TWO_CAPS' ) && O1_BAD_REQUEST_ALLOW_TWO_CAPS )
+        if ( defined( 'O1_BAD_REQUEST_ALLOW_TWO_CAPS' ) && O1_BAD_REQUEST_ALLOW_TWO_CAPS ) {
             $this->allow_two_capitals = true;
+        }
 
         $this->result = $this->check();
-
-        //DEBUG echo '<pre>blocked by bad-request, reason: <b>'.$this->result;error_log('Bad_Request:'.$this->result);return;
 
         // "false" means there were no bad requests
         if ( false !== $this->result ) {
             $this->trigger();
         }
 
-        /* Commented out due to multi-line logging problem on mod_proxy_fcgi
-        // Experimental upload traffic analysis
-        if ( ! empty( $_FILES ) ) {
-            $this->enhanced_error_log( sprintf( 'bad_request_upload: %s, %s',
-                $this->esc_log( $_FILES ),
-                $this->esc_log( $_REQUEST )
-            ), 'notice' );
-        }
-        */
-
+        // @FIXME This blocks the mu-plugin's trigger!!!
         // Don't log POST requests before trigger - multi-line logging problem on mod_proxy_fcgi
-// @FIXME This blocks the mu-plugin !!!
         if ( defined( 'O1_BAD_REQUEST_POST_LOGGING' ) && O1_BAD_REQUEST_POST_LOGGING ) {
-            if ( 'POST' === $_SERVER['REQUEST_METHOD'] )
+            if ( 'POST' === $_SERVER['REQUEST_METHOD'] ) {
                 $this->enhanced_error_log( 'HTTP POST: ' . $this->esc_log( $_POST ), 'notice' );
+            }
         }
     }
 
@@ -158,7 +156,7 @@ class O1_Bad_Request {
      */
     private function check() {
 
-        // Declare apache_request_headers()
+        // Declare apache_request_headers function
         if ( ! function_exists( 'apache_request_headers' ) ) {
             /**
              * Fetch all HTTP request headers.
@@ -167,12 +165,14 @@ class O1_Bad_Request {
              */
             function apache_request_headers() {
 
-               $headers = array();
-               foreach ( $_SERVER as $name => $value )
-                   if ( 'HTTP_' === substr( $name, 0, 5 ) )
-                       $headers[ substr( $name, 5 ) ] = $value;
+                $headers = array();
+                foreach ( $_SERVER as $name => $value ) {
+                    if ( 'HTTP_' === substr( $name, 0, 5 ) ) {
+                        $headers[ substr( $name, 5 ) ] = $value;
+                    }
+                }
 
-               return $headers;
+                return $headers;
             }
         }
 
@@ -181,8 +181,9 @@ class O1_Bad_Request {
         if ( php_sapi_name() === 'cli'
             || $_SERVER['REMOTE_ADDR'] === $_SERVER['SERVER_ADDR']
             || defined( 'WP_INSTALLING' ) && WP_INSTALLING
-        )
+        ) {
             return false;
+        }
 
         $request_path = parse_url( $_SERVER['REQUEST_URI'], PHP_URL_PATH );
         $request_query = isset( $_SERVER['QUERY_STRING'] )
@@ -199,7 +200,6 @@ class O1_Bad_Request {
                 // Log HTTP request headers
                 $this->enhanced_error_log( 'HTTP headers: ' . $this->esc_log( apache_request_headers() ) );
                 // Work-around to prevent edge server banning
-                // @TODO Block these by another method
                 $this->prefix = 'Attack through CDN: ';
                 $this->instant_trigger = false;
                 return 'bad_request_cdn_attack';
@@ -208,15 +208,17 @@ class O1_Bad_Request {
 
         // Too big HTTP request URI
         // Apache: LimitRequestLine directive
-        if ( strlen( $_SERVER['REQUEST_URI'] ) > 2000 )
+        if ( strlen( $_SERVER['REQUEST_URI'] ) > 2000 ) {
             return 'bad_request_uri_length';
+        }
 
         // Unknown HTTP request method
         $request_method = strtoupper( $_SERVER['REQUEST_METHOD'] );
         // Google Translate makes OPTIONS requests
         $wp_methods = array( 'HEAD', 'GET', 'POST', 'OPTIONS' );
-        if ( false === in_array( $request_method, $wp_methods ) )
+        if ( false === in_array( $request_method, $wp_methods ) ) {
             return 'bad_request_http_method';
+        }
 
         // Only GET and POST for wp-login
         $wp_login_methods = array( 'GET', 'POST' );
@@ -265,14 +267,16 @@ class O1_Bad_Request {
         if ( false === strpos( $request_path, '/wp-admin/' )
             && isset( $_REQUEST['author'] )
             && is_numeric( $_REQUEST['author'] )
-        )
+        ) {
             return 'bad_request_wp_author_sniffing';
+        }
 
         // Check HTTP POST requests only
         // wget sends: User-Agent, Accept, Host, Connection, Content-Type, Content-Length
         // curl sends: User-Agent, Host, Accept, Content-Length, Content-Type
-        if ( 'POST' !== $request_method )
+        if ( 'POST' !== $request_method ) {
             return false;
+        }
         // --------------------------- >8 ---------------------------
 
         // File upload with *.php in name
@@ -295,17 +299,19 @@ class O1_Bad_Request {
 
         // Accept HTTP header
         // IE9, wget and curl sends only "*/*"
-        // || false === strpos( $_SERVER['HTTP_ACCEPT'], 'text/html' )
+        // Otherwise the minimum should be: 'text/html'
         if ( empty( $_SERVER['HTTP_ACCEPT'] )
             || false === strpos( $_SERVER['HTTP_ACCEPT'], '/' )
-        )
+        ) {
             return 'bad_request_post_accept';
+        }
 
         // Content-Length HTTP header
         if ( ! isset( $_SERVER['CONTENT_LENGTH'] )
             || ! is_numeric( $_SERVER['CONTENT_LENGTH'] )
-        )
+        ) {
             return 'bad_request_post_content_length';
+        }
 
         // Content-Type HTTP header (for login, AJAX and XML-RPC)
         if ( '0' !== $_SERVER['CONTENT_LENGTH']
@@ -316,26 +322,30 @@ class O1_Bad_Request {
                     && 0 !== stripos( $_SERVER['CONTENT_TYPE'], 'application/json' )
                 )
             )
-        )
+        ) {
             return 'bad_request_post_content_type';
+        }
 
         // Check requests only for wp-login.php
-        if ( false === strpos( $request_path, '/wp-login.php' ) )
+        if ( false === strpos( $request_path, '/wp-login.php' ) ) {
             return false;
+        }
         // --------------------------- >8 ---------------------------
 
         // Login request
-        if ( ! empty($_POST['log'] ) ) {
+        if ( ! empty( $_POST['log'] ) ) {
             $username = trim( $_POST['log'] );
 
             // Banned usernames
-            if ( in_array( strtolower( $username ), $this->names2ban ) )
+            if ( in_array( strtolower( $username ), $this->names2ban ) ) {
                 return 'bad_request_wplogin_username_banned';
+            }
 
             // Attackers try usernames with "TwoCapitals"
             if ( ! $this->allow_two_capitals ) {
-                if ( 1 === preg_match( '/^[A-Z][a-z]+[A-Z][a-z]+$/', $username ) )
+                if ( 1 === preg_match( '/^[A-Z][a-z]+[A-Z][a-z]+$/', $username ) ) {
                     return 'bad_request_wplogin_username_twocapitals';
+                }
             }
         }
 
@@ -343,29 +353,34 @@ class O1_Bad_Request {
         $request_size = strlen( http_build_query( apache_request_headers() ) )
             + strlen( $_SERVER['REQUEST_URI'] )
             + strlen( http_build_query( $_POST ) );
-        if ( $request_size > $this->max_login_request_size )
+        if ( $request_size > $this->max_login_request_size ) {
             return 'bad_request_wplogin_request_size';
+        }
 
         // Content-Type HTTP header (application/x-www-form-urlencoded)
-        if ( false === strpos( $_SERVER['CONTENT_TYPE'], 'application/x-www-form-urlencoded' ) )
+        if ( false === strpos( $_SERVER['CONTENT_TYPE'], 'application/x-www-form-urlencoded' ) ) {
             return 'bad_request_wplogin_content_type';
+        }
 
         // Accept-Language HTTP header
         if ( empty( $_SERVER['HTTP_ACCEPT_LANGUAGE'] )
             || strlen( $_SERVER['HTTP_ACCEPT_LANGUAGE'] ) < 2
-        )
+        ) {
             return 'bad_request_wplogin_accept_language';
+        }
 
         // Referer HTTP header
-        if ( empty( $_SERVER['HTTP_REFERER'] ) )
+        if ( empty( $_SERVER['HTTP_REFERER'] ) ) {
             return 'bad_request_wplogin_referer_empty';
+        }
 
         $referer = $_SERVER['HTTP_REFERER'];
 
         // Referer HTTP header
         if ( ! $this->allow_registration ) {
-            if ( parse_url( $referer, PHP_URL_HOST ) !== $server_name )
+            if ( parse_url( $referer, PHP_URL_HOST ) !== $server_name ) {
                 return 'bad_request_wplogin_referer_host';
+            }
         }
 
         // Skip following checks on post password
@@ -374,65 +389,76 @@ class O1_Bad_Request {
 
             if ( isset( $queries['action'] )
                 && 'postpass' === $queries['action']
-            )
+            ) {
                 return false;
+            }
         }
         // --------------------------- >8 ---------------------------
 
         // Referer HTTP header
         if ( ! $this->allow_registration ) {
-            if ( false === strpos( parse_url( $referer, PHP_URL_PATH ), '/wp-login.php' ) )
+            if ( false === strpos( parse_url( $referer, PHP_URL_PATH ), '/wp-login.php' ) ) {
                 return 'bad_request_wplogin_referer_path';
+            }
         }
 
         // HTTP protocol version
-        if ( empty( $_SERVER['SERVER_PROTOCOL'] ) )
-                return 'bad_request_wplogin_protocol_empty';
+        if ( empty( $_SERVER['SERVER_PROTOCOL'] ) ) {
+            return 'bad_request_wplogin_protocol_empty';
+        }
 
         if ( ! $this->allow_old_proxies ) {
-            if ( false === strpos( $_SERVER['SERVER_PROTOCOL'], 'HTTP/1.1' ) )
+            if ( false === strpos( $_SERVER['SERVER_PROTOCOL'], 'HTTP/1.1' ) ) {
                 return 'bad_request_wplogin_http11';
+            }
         }
 
         // Connection HTTP header (keep alive)
         if ( ! $this->allow_connection_empty ) {
-            if ( empty( $_SERVER['HTTP_CONNECTION'] ) )
+            if ( empty( $_SERVER['HTTP_CONNECTION'] ) ) {
                 return 'bad_request_wplogin_connection_empty';
+            }
 
             if ( ! $this->allow_connection_close ) {
-                if ( false === stripos( $_SERVER['HTTP_CONNECTION'], 'keep-alive' ) )
+                if ( false === stripos( $_SERVER['HTTP_CONNECTION'], 'keep-alive' ) ) {
                     return 'bad_request_wplogin_connection';
+                }
             }
         }
 
         // Accept-Encoding HTTP header
         if ( empty( $_SERVER['HTTP_ACCEPT_ENCODING'] )
             || false === strpos( $_SERVER['HTTP_ACCEPT_ENCODING'], 'gzip' )
-        )
+        ) {
             return 'bad_request_wplogin_accept_encoding';
+        }
 
         // WordPress test cookie
         if ( ! $this->allow_registration ) {
 
             if ( empty( $_SERVER['HTTP_COOKIE'] )
                 || false === strpos( $_SERVER['HTTP_COOKIE'], 'wordpress_test_cookie' )
-            )
+            ) {
                 return 'bad_request_wplogin_test_cookie';
+            }
         }
 
         // IE8 logins
         if ( $this->allow_ie8_login ) {
-            if ( 'Mozilla/4.0 (compatible; MSIE 8.0;' === substr( $user_agent, 0, 34 ) )
+            if ( 'Mozilla/4.0 (compatible; MSIE 8.0;' === substr( $user_agent, 0, 34 ) ) {
                 return false;
+            }
         }
 
         // Botnet user agents
-        if ( 1 === preg_match('/Firefox\/1|bot|spider|crawl|user-agent|random|"|\\\\/i', $user_agent ) )
+        if ( 1 === preg_match( '/Firefox\/1|bot|spider|crawl|user-agent|random|"|\\\\/i', $user_agent ) ) {
             return 'bad_request_wplogin_user_agent_botnet';
+        }
 
         // Modern browser user agents
-        if ( 'Mozilla/5.0' !== substr( $user_agent, 0, 11 ) )
+        if ( 'Mozilla/5.0' !== substr( $user_agent, 0, 11 ) ) {
             return 'bad_request_wplogin_user_agent_mozilla50';
+        }
 
         // Allowed to login
         return false;
@@ -448,7 +474,7 @@ class O1_Bad_Request {
         // Trigger miniban
         if ( class_exists( 'Miniban' ) && $this->instant_trigger ) {
             if ( true !== Miniban::ban() ) {
-                error_log( "Miniban operation failed." );
+                error_log( 'Miniban operation failed.' );
             }
         }
 
@@ -461,21 +487,10 @@ class O1_Bad_Request {
 
         // Log POST requests after trigger - multi-line logging problem on mod_proxy_fcgi
         if ( defined( 'O1_BAD_REQUEST_POST_LOGGING' ) && O1_BAD_REQUEST_POST_LOGGING ) {
-            if ( 'POST' === $_SERVER['REQUEST_METHOD'] )
+            if ( 'POST' === $_SERVER['REQUEST_METHOD'] ) {
                 $this->enhanced_error_log( 'HTTP POST: ' . $this->esc_log( $_POST ), 'notice' );
+            }
         }
-
-        /* Multi-line logging problem on mod_proxy_fcgi
-        // Helps learning attack internals
-        $request_data = $_REQUEST;
-        if ( empty( $request_data ) ) {
-            $request_data = file_get_contents( 'php://input' );
-        }
-        $this->enhanced_error_log( sprintf( 'HTTP REQUEST: %s/%s',
-            $this->esc_log( $_SERVER['REQUEST_METHOD'] ),
-            $this->esc_log( $request_data )
-        ) );
-        */
 
         ob_get_level() && ob_end_clean();
         if ( ! headers_sent() ) {
@@ -509,12 +524,11 @@ class O1_Bad_Request {
         if ( ! $log_enabled || empty( $log_destination ) ) {
         */
 
-        // Add entry point.
-        // Only correct when auto_prepend_file option is empty.
-        $error_msg = sprintf( '%s <%s/%s',
+        // Add entry point, correct when `auto_prepend_file` is empty
+        $first_included_file = reset( get_included_files() );
+        $error_msg = sprintf( '%s <%s',
             $message,
-            $this->esc_log( $_SERVER['REQUEST_METHOD'] ),
-            reset( get_included_files() )
+            $this->esc_log( sprintf( '%s:%s', $_SERVER['REQUEST_METHOD'], $first_included_file ) )
         );
 
         /**
@@ -557,8 +571,9 @@ class O1_Bad_Request {
             $name_value_array = explode( '=', $name_value );
 
             // Check field name
-            if ( empty( $name_value_array[0] ) )
+            if ( empty( $name_value_array[0] ) ) {
                 continue;
+            }
 
             // Set field value
             $query[ $name_value_array[0] ] = isset( $name_value_array[1] ) ? $name_value_array[1] : '';
@@ -576,11 +591,11 @@ class O1_Bad_Request {
      */
     private function esc_log( $string ) {
 
-        $escaped = serialize( $string ) ;
+        $escaped = serialize( $string );
         // Limit length
         $escaped = mb_substr( $escaped, 0, 500, 'utf-8' );
         // New lines to "|"
-        $escaped = str_replace( array( "\n", "\r" ), "|", $escaped );
+        $escaped = str_replace( array( "\n", "\r" ), '|', $escaped );
         // Replace non-printables with "¿"
         $escaped = preg_replace( '/[^\P{C}]+/u', "\xC2\xBF", $escaped );
 
@@ -597,7 +612,7 @@ class O1_Bad_Request {
      */
     private function strifounda( $haystack, $needles ) {
 
-        foreach( $needles as $substring ) {
+        foreach ( $needles as $substring ) {
             if ( false !== stripos( $haystack, $substring ) ) {
                 return true;
             }
@@ -609,7 +624,8 @@ class O1_Bad_Request {
 
 new O1_Bad_Request();
 
-/* @TODO
+/*
+- Block CDN attacks by another method
 - check POST: no more, no less variables
     a:5:{s:11:"redirect_to";s:28:"http://domain.com/wp-admin/";s:10:"testcookie";s:1:"1";s:3:"log";s:5:"admin";s:3:"pwd";s:6:"123456";s:9:"wp-submit";s:6:"Log In";}
 - order of headers to identify attackers

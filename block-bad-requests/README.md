@@ -73,6 +73,21 @@ HTTP_CF_CONNECTING_IP:HTTP_X_FORWARDED_FOR:HTTP_CF_RAY
 - (boolean) `O1_BAD_REQUEST_ALLOW_CONNECTION_CLOSE` allow other HTTP Connection headers than `keep-alive`
 - (boolean) `O1_BAD_REQUEST_ALLOW_TWO_CAPS` allow user names like `JohnDoe`
 
+### Experimental upload traffic analysis
+
+Insert this code at the end of `__construct()`.
+
+```php
+        if ( ! empty( $_FILES ) ) {
+            $this->enhanced_error_log( sprintf( 'bad_request_upload: %s, %s',
+                $this->esc_log( $_FILES ),
+                $this->esc_log( $_REQUEST )
+            ), 'notice' );
+        }
+```
+
+To learn attack internals insert the code in the MU plugin's README just before `ob_get_level()` in `trigger()`.
+
 ### SPDY note
 
 All connections with SPDY are persistent connections.

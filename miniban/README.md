@@ -24,6 +24,23 @@ Set up daily cron job to unban old bans.
 php -r 'require "/PATH/TO/wp-miniban-htaccess.inc.php"; Miniban::unban();'
 ```
 
+The best place to run Miniban is the PHP directive `auto_prepend_file`.
+Put the above PHP code in a file, let's name it `miniban-load.php`.
+
+If you use Apache's mod_php module add this line to your `.htaccess` file:
+
+```apache
+php_value auto_prepend_file "/PATH/TO/miniban-load.php"
+```
+
+If you use mod_fastcgi or mod_proxy_fcgi add this line to your `.user.ini` file.
+
+```ini
+auto_prepend_file = "/PATH/TO/miniban-load.php"
+```
+
+Scanning for `.user.ini` must be enabled server-wide in the `user_ini.filename` directive.
+
 ### .htaccess method for Apache - miniban-htaccess.php
 
 Based on which HTTP header hosts should be banned:
@@ -101,5 +118,5 @@ RewriteRule ^ - [F]
 ### Nginx user configuration - miniban-nginx.php
 
 ```nginx
-@TODO
+@TODO incron -> reload nginx config
 ```
