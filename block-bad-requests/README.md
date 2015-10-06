@@ -88,6 +88,40 @@ Insert this code at the end of `__construct()`.
 
 To learn attack internals insert the code in the MU plugin's README just before `ob_get_level()` in `trigger()`.
 
+### XMLRPC request and response
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<methodCall>
+  <methodName>wp.getUsersBlogs</methodName>
+  <params>
+   <param><value>username</value></param>
+   <param><value>password</value></param>
+  </params>
+</methodCall>
+```
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<methodResponse>
+  <params>
+    <param>
+      <value>
+      <array><data>
+  <value><struct>
+  <member><name>isAdmin</name><value><boolean>1</boolean></value></member>
+  <member><name>url</name><value><string>http://domain.wp/</string></value></member>
+  <member><name>blogid</name><value><string>1</string></value></member>
+  <member><name>blogName</name><value><string>Blog name</string></value></member>
+  <member><name>xmlrpc</name><value><string>http://domain.wp/xmlrpc.php</string></value></member>
+</struct></value>
+</data></array>
+      </value>
+    </param>
+  </params>
+</methodResponse>
+```
+
 ### SPDY note
 
 All connections with SPDY are persistent connections.

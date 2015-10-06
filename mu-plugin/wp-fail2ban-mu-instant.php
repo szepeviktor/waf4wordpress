@@ -3,7 +3,7 @@
 Plugin Name: WordPress fail2ban MU
 Plugin URI: https://github.com/szepeviktor/wordpress-fail2ban
 Description: Triggers fail2ban on various attacks. <strong>This is a Must Use plugin, must be copied to <code>wp-content/mu-plugins</code>.</strong>
-Version: 4.9.4
+Version: 4.10.0
 License: The MIT License (MIT)
 Author: Viktor Szépe
 GitHub Plugin URI: https://github.com/szepeviktor/wordpress-fail2ban
@@ -162,14 +162,14 @@ class O1_WP_Fail2ban_MU {
         wp_logout();
 
         ob_get_level() && ob_end_clean();
-        if ( ! headers_sent() ) {
-            header( 'Status: 403 Forbidden' );
-            header( 'HTTP/1.1 403 Forbidden' );
-            header( 'Connection: Close' );
-            header( 'Cache-Control: max-age=0, private, no-store, no-cache, must-revalidate' );
-            header( 'X-Robots-Tag: noindex, nofollow' );
-            header( 'Content-Type: text/html' );
-            header( 'Content-Length: 0' );
+        if ( defined( 'XMLRPC_REQUEST' ) && XMLRPC_REQUEST ) {
+            $this->fake_xmlrpc();
+        } elseif ( ! headers_sent() ) {
+            if ( 'wp-login.php' === $GLOBALS['pagenow'] && ! empty( $_POST['log'] ) ) {
+                $this->fake_wplogin();
+            } else {
+                $this->ban();
+            }
         }
 
         exit;
@@ -209,6 +209,69 @@ class O1_WP_Fail2ban_MU {
             SimpleLogger()->log( $simple_level, $error_msg, $context );
         }
 
+    }
+
+    private function ban() {
+
+        header( 'Status: 403 Forbidden' );
+        header( 'HTTP/1.1 403 Forbidden', true, 403 );
+        header( 'Connection: Close' );
+        header( 'Cache-Control: max-age=0, private, no-store, no-cache, must-revalidate' );
+        header( 'X-Robots-Tag: noindex, nofollow' );
+        header( 'Content-Type: text/html' );
+        header( 'Content-Length: 0' );
+    }
+
+    private function fake_wplogin() {
+
+        $server_name = isset( $_SERVER['SERVER_NAME'] )
+            ? $_SERVER['SERVER_NAME']
+            : $_SERVER['HTTP_HOST'];
+        $username = trim( $_POST['log'] );
+        $expire = time() + 3600;
+        $token = substr( hash_hmac( 'sha256', rand(), 'token' ), 0, 43 );
+        $hash = hash_hmac( 'sha256', rand(), 'hash' );
+        $auth_cookie = $username . '|' . $expire . '|' . $token . '|' . $hash;
+        $authcookie_name = 'wordpress_' . md5( 'authcookie' );
+        $loggedincookie_name = 'wordpress_logged_in_' . md5( 'cookiehash' );
+
+        header( 'Cache-Control: max-age=0, private, no-store, no-cache, must-revalidate' );
+        header( 'X-Robots-Tag: noindex, nofollow' );
+        setcookie( $authcookie_name, $auth_cookie, $expire, '/brake/wp_content/plugins', false, false, true );
+        setcookie( $authcookie_name, $auth_cookie, $expire, '/brake/wp-admin', false, false, true );
+        setcookie( $loggedincookie_name, $auth_cookie, $expire, '/', false, false, true );
+        header( 'Location: ' . home_url( '/brake/wp-admin/' ) );
+    }
+
+    private function fake_xmlrpc() {
+
+        header( 'Connection: Close' );
+        header( 'Cache-Control: max-age=0, private, no-store, no-cache, must-revalidate' );
+        header( 'X-Robots-Tag: noindex, nofollow' );
+        header( 'Content-Type: text/xml; charset=UTF-8' );
+
+        printf( '<?xml version="1.0" encoding="UTF-8"?>
+<methodResponse>
+  <params>
+    <param>
+      <value>
+      <array><data>
+  <value><struct>
+  <member><name>isAdmin</name><value><boolean>1</boolean></value></member>
+  <member><name>url</name><value><string>%s</string></value></member>
+  <member><name>blogid</name><value><string>1</string></value></member>
+  <member><name>blogName</name><value><string>brake</string></value></member>
+  <member><name>xmlrpc</name><value><string>%s</string></value></member>
+</struct></value>
+</data></array>
+      </value>
+    </param>
+  </params>
+</methodResponse>
+',
+            home_url( '/' ),
+            home_url( '/brake/xmlrpc.php' )
+        );
     }
 
     private function enhanced_error_log( $message = '', $level = 'error' ) {

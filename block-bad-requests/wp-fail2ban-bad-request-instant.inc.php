@@ -5,7 +5,7 @@ Description: Require it from the top of your wp-config.php or make it a Must Use
 Plugin URI: https://github.com/szepeviktor/wordpress-fail2ban
 License: The MIT License (MIT)
 Author: Viktor Szépe
-Version: 2.11.1
+Version: 2.12.0
 GitHub Plugin URI: https://github.com/szepeviktor/wordpress-fail2ban
 Options: O1_BAD_REQUEST_INSTANT
 Options: O1_BAD_REQUEST_MAX_LOGIN_REQUEST_SIZE
@@ -35,6 +35,8 @@ class O1_Bad_Request {
     private $prefix_instant = 'Break-in attempt detected: ';
     private $instant_trigger = true;
     private $max_login_request_size = 2000;
+    private $is_wplogin = false;
+    private $is_xmlrpc = false;
     private $names2ban = array(
         'access',
         'admin',
@@ -220,14 +222,6 @@ class O1_Bad_Request {
             return 'bad_request_http_method';
         }
 
-        // Only GET and POST for wp-login
-        $wp_login_methods = array( 'GET', 'POST' );
-        if ( false !== strpos( $request_path, '/wp-login.php' )
-            && false === in_array( $request_method, $wp_login_methods )
-        ) {
-            return 'bad_request_login_http_method';
-        }
-
         // Request URI does not begin with forward slash (may begin with URL scheme)
         if ( '/' !== substr( $_SERVER['REQUEST_URI'], 0, 1 ) ) {
             return 'bad_request_uri_slash';
@@ -255,6 +249,11 @@ class O1_Bad_Request {
             return 'bad_request_uri_blacklist';
         }
 
+        // HTTP protocol name
+        if ( empty( $_SERVER['SERVER_PROTOCOL'] ) ) {
+            return 'bad_request_protocol_empty';
+        }
+
         // robots.txt probing in a subdirectory
         if ( false !== stripos( $_SERVER['REQUEST_URI'], 'robots.txt' )
             && '/robots.txt' !== $_SERVER['REQUEST_URI']
@@ -277,7 +276,15 @@ class O1_Bad_Request {
         if ( 'POST' !== $request_method ) {
             return false;
         }
+
         // --------------------------- >8 ---------------------------
+        // is_post
+
+        if ( defined( 'XMLRPC_REQUEST' ) && XMLRPC_REQUEST ) {
+            $this->is_xmlrpc = true;
+        } elseif ( false !== strpos( $request_path, '/wp-login.php' ) ) {
+            $this->is_wplogin = true;
+        }
 
         // File upload with *.php in name
         if ( ! empty( $_FILES ) ) {
@@ -313,13 +320,20 @@ class O1_Bad_Request {
             return 'bad_request_post_content_length';
         }
 
-        // Content-Type HTTP header (for login, AJAX and XML-RPC)
+        // Content-Type HTTP header (for login, XML-RPC and AJAX)
         if ( '0' !== $_SERVER['CONTENT_LENGTH']
             && ( empty( $_SERVER['CONTENT_TYPE'] )
+                || ( $this->is_wplogin
+                    && 0 !== stripos( $_SERVER['CONTENT_TYPE'], 'application/x-www-form-urlencoded' )
+                )
+                || ( $this->is_xmlrpc
+                    && 0 !== stripos( $_SERVER['CONTENT_TYPE'], 'text/xml' )
+                )
                 || ( 0 !== stripos( $_SERVER['CONTENT_TYPE'], 'application/x-www-form-urlencoded' )
                     && 0 !== stripos( $_SERVER['CONTENT_TYPE'], 'multipart/form-data' )
                     && 0 !== stripos( $_SERVER['CONTENT_TYPE'], 'text/xml' )
                     && 0 !== stripos( $_SERVER['CONTENT_TYPE'], 'application/json' )
+                    && 0 !== stripos( $_SERVER['CONTENT_TYPE'], 'application/octet-stream' )
                 )
             )
         ) {
@@ -327,12 +341,20 @@ class O1_Bad_Request {
         }
 
         // Check requests only for wp-login.php
-        if ( false === strpos( $request_path, '/wp-login.php' ) ) {
+        if ( ! $this->is_wplogin ) {
             return false;
         }
-        // --------------------------- >8 ---------------------------
 
-        // Login request
+        // --------------------------- >8 ---------------------------
+        // is_wplogin
+
+        // wp-login methods
+        $wp_login_methods = array( 'GET', 'POST' );
+        if ( false === in_array( $request_method, $wp_login_methods ) ) {
+            return 'bad_request_wplogin_http_method';
+        }
+
+        // Login request with non-empty username
         if ( ! empty( $_POST['log'] ) ) {
             $username = trim( $_POST['log'] );
 
@@ -355,11 +377,6 @@ class O1_Bad_Request {
             + strlen( http_build_query( $_POST ) );
         if ( $request_size > $this->max_login_request_size ) {
             return 'bad_request_wplogin_request_size';
-        }
-
-        // Content-Type HTTP header (application/x-www-form-urlencoded)
-        if ( false === strpos( $_SERVER['CONTENT_TYPE'], 'application/x-www-form-urlencoded' ) ) {
-            return 'bad_request_wplogin_content_type';
         }
 
         // Accept-Language HTTP header
@@ -393,7 +410,9 @@ class O1_Bad_Request {
                 return false;
             }
         }
+
         // --------------------------- >8 ---------------------------
+        // NOT postpass
 
         // Referer HTTP header
         if ( ! $this->allow_registration ) {
@@ -403,13 +422,11 @@ class O1_Bad_Request {
         }
 
         // HTTP protocol version
-        if ( empty( $_SERVER['SERVER_PROTOCOL'] ) ) {
-            return 'bad_request_wplogin_protocol_empty';
-        }
-
         if ( ! $this->allow_old_proxies ) {
-            if ( false === strpos( $_SERVER['SERVER_PROTOCOL'], 'HTTP/1.1' ) ) {
-                return 'bad_request_wplogin_http11';
+            if ( false === strpos( $_SERVER['SERVER_PROTOCOL'], 'HTTP/1.1' )
+                && false === strpos( $_SERVER['SERVER_PROTOCOL'], 'HTTP/2' )
+            ) {
+                return 'bad_request_wplogin_http11_2';
             }
         }
 
@@ -435,7 +452,6 @@ class O1_Bad_Request {
 
         // WordPress test cookie
         if ( ! $this->allow_registration ) {
-
             if ( empty( $_SERVER['HTTP_COOKIE'] )
                 || false === strpos( $_SERVER['HTTP_COOKIE'], 'wordpress_test_cookie' )
             ) {
@@ -493,17 +509,84 @@ class O1_Bad_Request {
         }
 
         ob_get_level() && ob_end_clean();
-        if ( ! headers_sent() ) {
-            header( 'Status: 403 Forbidden' );
-            header( 'HTTP/1.1 403 Forbidden', true, 403 );
-            header( 'Connection: Close' );
-            header( 'Cache-Control: max-age=0, private, no-store, no-cache, must-revalidate' );
-            header( 'X-Robots-Tag: noindex, nofollow' );
-            header( 'Content-Type: text/html' );
-            header( 'Content-Length: 0' );
+        if ( $this->is_xmlrpc ) {
+            $this->fake_xmlrpc();
+        } elseif ( ! headers_sent() ) {
+            if ( $this->is_wplogin && ! empty( $_POST['log'] ) ) {
+                $this->fake_wplogin();
+            } else {
+                $this->ban();
+            }
         }
 
         exit;
+    }
+
+    private function ban() {
+
+        header( 'Status: 403 Forbidden' );
+        header( 'HTTP/1.1 403 Forbidden', true, 403 );
+        header( 'Connection: Close' );
+        header( 'Cache-Control: max-age=0, private, no-store, no-cache, must-revalidate' );
+        header( 'X-Robots-Tag: noindex, nofollow' );
+        header( 'Content-Type: text/html' );
+        header( 'Content-Length: 0' );
+    }
+
+    private function fake_wplogin() {
+
+        $server_name = isset( $_SERVER['SERVER_NAME'] )
+            ? $_SERVER['SERVER_NAME']
+            : $_SERVER['HTTP_HOST'];
+        $username = trim( $_POST['log'] );
+        $expire = time() + 3600;
+        $token = substr( hash_hmac( 'sha256', rand(), 'token' ), 0, 43 );
+        $hash = hash_hmac( 'sha256', rand(), 'hash' );
+        $auth_cookie = $username . '|' . $expire . '|' . $token . '|' . $hash;
+        $authcookie_name = 'wordpress_' . md5( 'authcookie' );
+        $loggedincookie_name = 'wordpress_logged_in_' . md5( 'cookiehash' );
+
+        header( 'Cache-Control: max-age=0, private, no-store, no-cache, must-revalidate' );
+        header( 'X-Robots-Tag: noindex, nofollow' );
+        setcookie( $authcookie_name, $auth_cookie, $expire, '/brake/wp_content/plugins', false, false, true );
+        setcookie( $authcookie_name, $auth_cookie, $expire, '/brake/wp-admin', false, false, true );
+        setcookie( $loggedincookie_name, $auth_cookie, $expire, '/', false, false, true );
+        header( 'Location: http://' . $server_name . '/brake/wp-admin/' );
+    }
+
+    private function fake_xmlrpc() {
+
+        $server_name = isset( $_SERVER['SERVER_NAME'] )
+            ? $_SERVER['SERVER_NAME']
+            : $_SERVER['HTTP_HOST'];
+
+        header( 'Connection: Close' );
+        header( 'Cache-Control: max-age=0, private, no-store, no-cache, must-revalidate' );
+        header( 'X-Robots-Tag: noindex, nofollow' );
+        header( 'Content-Type: text/xml; charset=UTF-8' );
+
+        printf( '<?xml version="1.0" encoding="UTF-8"?>
+<methodResponse>
+  <params>
+    <param>
+      <value>
+      <array><data>
+  <value><struct>
+  <member><name>isAdmin</name><value><boolean>1</boolean></value></member>
+  <member><name>url</name><value><string>http://%s/</string></value></member>
+  <member><name>blogid</name><value><string>1</string></value></member>
+  <member><name>blogName</name><value><string>brake</string></value></member>
+  <member><name>xmlrpc</name><value><string>http://%s/brake/xmlrpc.php</string></value></member>
+</struct></value>
+</data></array>
+      </value>
+    </param>
+  </params>
+</methodResponse>
+',
+            $server_name,
+            $server_name
+        );
     }
 
     /**
@@ -604,7 +687,7 @@ class O1_Bad_Request {
     }
 
     /**
-     * Whether a string contains a case-insensitive substring
+     * Whether an array contains a case-insensitive substring
      *
      * @param string $haystack  The haystack.
      * @param array $needles    The needles.
@@ -626,6 +709,7 @@ class O1_Bad_Request {
 new O1_Bad_Request();
 
 /*
+- How to restrict AJAX content type?
 - Block CDN attacks by another method
 - check POST: no more, no less variables
     a:5:{s:11:"redirect_to";s:28:"http://domain.com/wp-admin/";s:10:"testcookie";s:1:"1";s:3:"log";s:5:"admin";s:3:"pwd";s:6:"123456";s:9:"wp-submit";s:6:"Log In";}
