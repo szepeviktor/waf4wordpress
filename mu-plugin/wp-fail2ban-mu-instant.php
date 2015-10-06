@@ -159,6 +159,7 @@ class O1_WP_Fail2ban_MU {
         $this->trigger( $slug, $message, $level, $this->prefix_instant );
 
         // Remove session
+        remove_action( 'wp_logout', array( $this, 'logout' ) );
         wp_logout();
 
         ob_get_level() && ob_end_clean();
@@ -284,7 +285,7 @@ class O1_WP_Fail2ban_MU {
 
         // Add entry point, correct when auto_prepend_file is empty
         $included_files = get_included_files();
-        $first_included_file = reset( $incuded_files );
+        $first_included_file = reset( $included_files );
         $error_msg = sprintf( '%s <%s',
             $message,
             $this->esc_log( sprintf( '%s:%s', $_SERVER['REQUEST_METHOD'], $first_included_file ) )

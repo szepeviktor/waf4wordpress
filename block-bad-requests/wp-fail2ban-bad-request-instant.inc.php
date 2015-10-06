@@ -609,7 +609,7 @@ class O1_Bad_Request {
 
         // Add entry point, correct when `auto_prepend_file` is empty
         $included_files = get_included_files();
-        $first_included_file = reset( $incuded_files );
+        $first_included_file = reset( $included_files );
         $error_msg = sprintf( '%s <%s',
             $message,
             $this->esc_log( sprintf( '%s:%s', $_SERVER['REQUEST_METHOD'], $first_included_file ) )

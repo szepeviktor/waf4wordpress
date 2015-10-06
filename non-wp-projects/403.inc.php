@@ -10,7 +10,7 @@ Author: Viktor Szépe
 $included_files = get_included_files();
 error_log( sprintf( 'Malicious traffic detected: 403_forbidden %s:%s',
     addslashes( $_SERVER['REQUEST_URI'] ),
-    reset( $incuded_files )
+    reset( $included_files )
 ) );
 
 /*

@@ -38,7 +38,7 @@ function fail2ban_404_watchdog( $log_entry ) {
         $prefix,
         $slug,
         addslashes( $log_entry['request_uri'] ),
-        reset( $incuded_files )
+        reset( $included_files )
     );
 
     // Add client data to log message
