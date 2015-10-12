@@ -5,7 +5,7 @@ Description: Require it from the top of your wp-config.php or make it a Must Use
 Plugin URI: https://github.com/szepeviktor/wordpress-fail2ban
 License: The MIT License (MIT)
 Author: Viktor Szépe
-Version: 2.12.0
+Version: 2.12.1
 GitHub Plugin URI: https://github.com/szepeviktor/wordpress-fail2ban
 Options: O1_BAD_REQUEST_INSTANT
 Options: O1_BAD_REQUEST_MAX_LOGIN_REQUEST_SIZE
@@ -24,7 +24,7 @@ Options: O1_BAD_REQUEST_POST_LOGGING
  *
  * Require it from the top of your wp-config.php:
  *
- *     require_once dirname( __FILE__ ) . '/wp-login-bad-request-instant.inc.php';
+ *     require_once dirname( __FILE__ ) . '/wp-fail2ban-bad-request-instant.inc.php';
  *
  * @package wordpress-fail2ban
  * @see     README.md
@@ -286,13 +286,27 @@ class O1_Bad_Request {
             $this->is_wplogin = true;
         }
 
-        // File upload with *.php in name
+        // PHP file upload
         if ( ! empty( $_FILES ) ) {
-            foreach ( $_FILES as $file ) {
-                if ( false !== stripos( $file['name'], '.php' )
-                    || ( isset( $file['type'] ) && false !== stripos( $file['type'], 'php' ) )
-                ) {
-                    return 'bad_request_post_upload_php';
+            foreach ( $_FILES as $files ) {
+                // Make it look like an HTML array
+                if ( ! is_array( $files['name'] ) ) {
+                    // Only name and type are checked
+                    $files['name'] = array( $files['name'] );
+                    if ( isset( $files['type'] ) ) {
+                        $files['type'] = array( $files['type'] );
+                    }
+                }
+                foreach ( $files['name'] as $index => $notused ) {
+                    if ( false !== stripos( $files['name'][ $index ], '.php' )
+                        || (
+                            isset( $files['type'] )
+                            &&isset( $files['type'][ $index ] )
+                            && false !== stripos( $files['type'][ $index ], 'php' )
+                        )
+                    ) {
+                        return 'bad_request_post_upload_php';
+                    }
                 }
             }
         }

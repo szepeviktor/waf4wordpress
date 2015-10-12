@@ -3,7 +3,7 @@
 Plugin Name: WordPress fail2ban MU
 Plugin URI: https://github.com/szepeviktor/wordpress-fail2ban
 Description: Triggers fail2ban on various attacks. <strong>This is a Must Use plugin, must be copied to <code>wp-content/mu-plugins</code>.</strong>
-Version: 4.10.0
+Version: 4.10.2
 License: The MIT License (MIT)
 Author: Viktor Szépe
 GitHub Plugin URI: https://github.com/szepeviktor/wordpress-fail2ban
@@ -540,22 +540,24 @@ class O1_WP_Fail2ban_MU {
 
     public function all_action( $tag ) {
 
-        global $wp_filter;
-        global $wp_actions;
-
-        $whitelisted_actions = array( 'wp_ajax_nopriv_wp-remove-post-lock' );
-
-        // Actions only, not filters, not registered except whitelisted ones
-        if ( is_array( $wp_actions )
-            && array_key_exists( $tag, $wp_actions )
-            && ( 'admin_post_' === substr( $tag, 0, 11 )
-                || 'wp_ajax_' === substr( $tag, 0, 8 )
-            )
-            && is_array( $wp_filter )
-            && ! array_key_exists( $tag, $wp_filter )
-            && ! in_array( $tag, $whitelisted_actions )
+        // Check this first to speed things up
+        if ( 'wp_ajax_' === substr( $tag, 0, 8 )
+            || 'admin_post_' === substr( $tag, 0, 11 )
         ) {
-            $this->trigger_instant( 'wpf2b_admin_action_unknown', $tag );
+            global $wp_actions;
+            global $wp_filter;
+
+            $whitelisted_actions = array( 'wp_ajax_nopriv_wp-remove-post-lock' );
+
+            // Actions only, not filters, not registered ones, except whitelisted ones
+            if ( is_array( $wp_actions )
+                && array_key_exists( $tag, $wp_actions )
+                && is_array( $wp_filter )
+                && ! array_key_exists( $tag, $wp_filter )
+                && ! in_array( $tag, $whitelisted_actions )
+            ) {
+                $this->trigger_instant( 'wpf2b_admin_action_unknown', $tag );
+            }
         }
     }
 
