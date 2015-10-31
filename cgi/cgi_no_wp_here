@@ -2,8 +2,8 @@
 #
 # Trigger fail2ban from a simpla CGI script.
 #
-# VERSION       :0.2.0
-# DATE          :2015-08-22
+# VERSION       :0.2.1
+# DATE          :2015-10-23
 # AUTHOR        :Viktor Szépe <viktor@szepe.net>
 # URL           :https://github.com/szepeviktor/wordpress-fail2ban
 # LICENSE       :The MIT License (MIT)
@@ -26,7 +26,7 @@
 #         Require all granted
 #     </Directory>
 #
-# It is a Dash script to start faster.
+# This is a **Dash** script to start faster.
 #
 # .sh extension is denied by h5bp server configuration.
 

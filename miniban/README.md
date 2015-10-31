@@ -1,6 +1,6 @@
 # Miniban
 
-Ban hosts on webservers and reverse proxies.
+Ban hosts. Works on webservers and reverse proxies.
 
 ## Installation of htaccess method
 
@@ -27,13 +27,13 @@ php -r 'require "/PATH/TO/wp-miniban-htaccess.inc.php"; Miniban::unban();'
 The best place to run Miniban is the PHP directive `auto_prepend_file`.
 Put the above PHP code in a file, let's name it `miniban-load.php`.
 
-If you use Apache's mod_php module add this line to your `.htaccess` file:
+If you use Apache's `mod_php` module add this line to your `.htaccess` file:
 
 ```apache
 php_value auto_prepend_file "/PATH/TO/miniban-load.php"
 ```
 
-If you use mod_fastcgi or mod_proxy_fcgi add this line to your `.user.ini` file.
+If you use `mod_fastcgi` or `mod_proxy_fcgi` module add this line to your `.user.ini` file.
 
 ```ini
 auto_prepend_file = "/PATH/TO/miniban-load.php"

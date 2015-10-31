@@ -1,11 +1,11 @@
 <?php
 /*
 Plugin Name: Block Bad Requests (wp-config snippet or MU plugin)
+Version: 2.12.1
 Description: Require it from the top of your wp-config.php or make it a Must Use plugin
 Plugin URI: https://github.com/szepeviktor/wordpress-fail2ban
 License: The MIT License (MIT)
 Author: Viktor Szépe
-Version: 2.12.1
 GitHub Plugin URI: https://github.com/szepeviktor/wordpress-fail2ban
 Options: O1_BAD_REQUEST_INSTANT
 Options: O1_BAD_REQUEST_MAX_LOGIN_REQUEST_SIZE
@@ -301,7 +301,7 @@ class O1_Bad_Request {
                     if ( false !== stripos( $files['name'][ $index ], '.php' )
                         || (
                             isset( $files['type'] )
-                            &&isset( $files['type'][ $index ] )
+                            && isset( $files['type'][ $index ] )
                             && false !== stripos( $files['type'][ $index ], 'php' )
                         )
                     ) {

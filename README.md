@@ -15,7 +15,7 @@ beside your `wp-config.php` and copy this line in top of `wp-config.php`:
 require_once dirname( __FILE__ ) . '/wp-fail2ban-bad-request-instant.inc.php';
 ```
 
-Or – in a worse case – install it as an mu-plugin, or in the **worst case** as a normal plugin.
+Or – in a worse case – install it as an mu-plugin.
 
 ### mu-plugin
 
@@ -34,11 +34,12 @@ To install copy the fake `wp-login.php`and `xmlrpc.php` to your **non-WordPress*
 
 ### The normal plugin - wp-fail2ban.php
 
+Please **DO NOT use it** because it is outdated. Use the *must use* plugin (mu-plugin) version.
+
 Examines every HTTP header in a login requests and triggers fail2ban accordingly.
-This is the normal version of the plugin with configuration options aka. UI.
+This is the normal version of the plugin with a setting page on WordPress admin.
 
 It is not yet syncronized to the mu-plugin.
-Please **DO NOT** use it because it is outdated. Use the *must use* plugin (mu-plugin) version.
 
 ### WordPress fail2ban is not in WordPress.org's plugin directory
 
