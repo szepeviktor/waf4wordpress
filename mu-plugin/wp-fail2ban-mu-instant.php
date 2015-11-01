@@ -1,7 +1,7 @@
 <?php
 /*
 Plugin Name: WordPress fail2ban MU
-Version: 4.10.2
+Version: 4.10.3
 Description: Triggers fail2ban on various attacks. <strong>This is a Must Use plugin, must be copied to <code>wp-content/mu-plugins</code>.</strong>
 Plugin URI: https://github.com/szepeviktor/wordpress-fail2ban
 License: The MIT License (MIT)
@@ -136,7 +136,8 @@ class O1_WP_Fail2ban_MU {
         add_filter( 'wp_die_handler', array( $this, 'wp_die' ), 1 );
 
         // Unknown admin-ajax and admin-post action
-        add_action( 'all', array( $this, 'all_action' ), 0 );
+        // admin_init is done just before AJAX actions
+        add_action( 'admin_init', array( $this, 'hook_all_action' ) );
 
         // Ban spammers (Contact Form 7 Robot Trap)
         add_action( 'robottrap_hiddenfield', array( $this, 'wpcf7_spam_hiddenfield' ) );
@@ -485,7 +486,7 @@ class O1_WP_Fail2ban_MU {
 
     public function wp_die_ajax( $arg ) {
 
-        // remember the previous handler
+        // Remember the previous handler
         $this->wp_die_ajax_handler = $arg;
 
         return array( $this, 'wp_die_ajax_handler' );
@@ -493,18 +494,18 @@ class O1_WP_Fail2ban_MU {
 
     public function wp_die_ajax_handler( $message, $title, $args ) {
 
-        // wp-admin/includes/ajax-actions.php returns -1 of security breach
+        // wp-admin/includes/ajax-actions.php returns -1 on security breach
         if ( ! is_scalar( $message ) || (int) $message < 0 ) {
             $this->trigger( 'wpf2b_wpdie_ajax', $message );
         }
 
-        // call previous handler
+        // Call previous handler
         call_user_func( $this->wp_die_ajax_handler, $message, $title, $args );
     }
 
     public function wp_die_xmlrpc( $arg ) {
 
-        // remember the previous handler
+        // Remember the previous handler
         $this->wp_die_xmlrpc_handler = $arg;
 
         return array( $this, 'wp_die_xmlrpc_handler' );
@@ -516,13 +517,13 @@ class O1_WP_Fail2ban_MU {
             $this->trigger( 'wpf2b_wpdie_xmlrpc', $message );
         }
 
-        // call previous handler
+        // Call previous handler
         call_user_func( $this->wp_die_xmlrpc_handler, $message, $title, $args );
     }
 
     public function wp_die( $arg ) {
 
-        // remember the previous handler
+        // Remember the previous handler
         $this->wp_die_handler = $arg;
 
         return array( $this, 'wp_die_handler' );
@@ -534,8 +535,13 @@ class O1_WP_Fail2ban_MU {
             $this->trigger( 'wpf2b_wpdie', $message );
         }
 
-        // call previous handler
+        // Call previous handler
         call_user_func( $this->wp_die_handler, $message, $title, $args );
+    }
+
+    public function hook_all_action() {
+
+        add_action( 'all', array( $this, 'all_action' ), 0 );
     }
 
     public function all_action( $tag ) {
