@@ -1,7 +1,7 @@
 <?php
 /*
 Plugin Name: WordPress fail2ban MU
-Version: 4.10.3
+Version: 4.10.4
 Description: Triggers fail2ban on various attacks. <strong>This is a Must Use plugin, must be copied to <code>wp-content/mu-plugins</code>.</strong>
 Plugin URI: https://github.com/szepeviktor/wordpress-fail2ban
 License: The MIT License (MIT)
@@ -541,12 +541,15 @@ class O1_WP_Fail2ban_MU {
 
     public function hook_all_action() {
 
-        add_action( 'all', array( $this, 'all_action' ), 0 );
+        // Don't slow down everything
+        if ( ! empty( $_REQUEST['action'] ) ) {
+            add_action( 'all', array( $this, 'all_action' ), 0 );
+        }
     }
 
     public function all_action( $tag ) {
 
-        // Check this first to speed things up
+        // Check tag first to speed things up
         if ( 'wp_ajax_' === substr( $tag, 0, 8 )
             || 'admin_post_' === substr( $tag, 0, 11 )
         ) {
@@ -556,6 +559,7 @@ class O1_WP_Fail2ban_MU {
             $whitelisted_actions = array( 'wp_ajax_nopriv_wp-remove-post-lock' );
 
             // Actions only, not filters, not registered ones, except whitelisted ones
+            // Actions are basically filters
             if ( is_array( $wp_actions )
                 && array_key_exists( $tag, $wp_actions )
                 && is_array( $wp_filter )

@@ -51,6 +51,43 @@ cd wp-content/
 ln -s plugins/wordpress-fail2ban/mu-plugin/wp-fail2ban-mu.php mu-plugins/
 ```
 
+### Support Newsletter plugin, ALO EasyMail Newsletter plugin and PayPal IPN
+
+Copy this into your in `wp-config.php`.
+
+```php
+// Enable email opens in Newsletter plugin
+if ( isset( $_SERVER['REQUEST_URI'] ) ) {
+    $o1_newsletter_path = parse_url( $_SERVER['REQUEST_URI'], PHP_URL_PATH );
+    if ( '/wp-content/plugins/newsletter/statistics/open.php' === $o1_newsletter_path
+        || '/wp-content/plugins/newsletter/statistics/link.php' === $o1_newsletter_path
+    ) {
+        // UA hack for old email clients
+        $_SERVER['HTTP_USER_AGENT'] = 'Mozilla/5.0 ' . $_SERVER['HTTP_USER_AGENT'];
+    }
+}
+
+// Enable email open tracking in ALO EasyMail Newsletter plugin
+if ( isset( $_SERVER['REQUEST_URI'] ) ) {
+    $o1_alo_path = parse_url( $_SERVER['REQUEST_URI'], PHP_URL_PATH );
+    if ( '/wp-content/plugins/alo-easymail/tr.php' === $o1_alo_path ) {
+        // UA hack for old email clients
+        $_SERVER['HTTP_USER_AGENT'] = 'Mozilla/5.0 ' . $_SERVER['HTTP_USER_AGENT'];
+    }
+}
+
+// Enable PayPal IPN in WooCommerce
+if ( isset( $_SERVER['REQUEST_URI'] ) ) {
+    $o1_wc_api_path = parse_url( $_SERVER['REQUEST_URI'], PHP_URL_PATH );
+    if ( '/wc-api/WC_Gateway_Paypal/' === $o1_wc_api_path ) {
+        // PayPal IPN does not send Accept: and User-Agent: headers
+        $_SERVER['HTTP_ACCEPT'] = '*/*';
+        $_SERVER['HTTP_USER_AGENT'] = 'Mozilla/5.0 PayPal/IPN';
+    }
+}
+```
+
 ### Support and feature requests
 
 [Open a new issue](https://github.com/szepeviktor/wordpress-fail2ban/issues/new)
+

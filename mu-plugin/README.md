@@ -52,25 +52,6 @@ An mu-plugin will not appear in the update notifications nor show its update sta
 A nice solution is a symlink in `wp-content/mu-plugins` which keeps it activated and also up-to-date.
 In that case don't activate the normal plugin.
 
-### Support direct PHP excution of Newsletter plugin
-
-Copy this into your in `wp-config.php`.
-
-```php
-// Enable email opens
-$newsletter_path = parse_url( $_SERVER['REQUEST_URI'], PHP_URL_PATH );
-if ( '/wp-content/plugins/newsletter/statistics/open.php' === $newsletter_path
-    || '/wp-content/plugins/newsletter/statistics/link.php' === $newsletter_path
-) {
-    // UA hack for old email clients.
-    $_SERVER['HTTP_USER_AGENT'] = 'Mozilla/5.0 ' . $_SERVER['HTTP_USER_AGENT'];
-}
-
-// Enable PayPal IPN in WooCommerce
-$wc_api_path = parse_url( $_SERVER['REQUEST_URI'], PHP_URL_PATH );
-if ( '/wc-api/WC_Gateway_Paypal/' === $wc_api_path ) $_SERVER['HTTP_ACCEPT'] = '*/*';
-```
-
 ### Learning attack internals
 
 Helps learning attack internals. Insert this code after `wp_logout();` in `trigger_instant()`.
