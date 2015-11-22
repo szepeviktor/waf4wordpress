@@ -1,7 +1,7 @@
 <?php
 /*
 Plugin Name: Block Bad Requests (wp-config snippet or MU plugin)
-Version: 2.12.1
+Version: 2.12.3
 Description: Require it from the top of your wp-config.php or make it a Must Use plugin
 Plugin URI: https://github.com/szepeviktor/wordpress-fail2ban
 License: The MIT License (MIT)
@@ -24,7 +24,7 @@ Options: O1_BAD_REQUEST_POST_LOGGING
  *
  * Require it from the top of your wp-config.php:
  *
- *     require_once dirname( __FILE__ ) . '/wp-fail2ban-bad-request-instant.inc.php';
+ *     require_once __DIR__ . '/wp-fail2ban-bad-request-instant.inc.php';
  *
  * @package wordpress-fail2ban
  * @see     README.md
@@ -81,6 +81,8 @@ class O1_Bad_Request {
         'testproxy.php',
         'wso.php',
         'w00tw00t',
+        '/administrator',
+        'connector.asp',
     );
     private $cdn_headers;
     private $allow_registration = false;
@@ -244,7 +246,7 @@ class O1_Bad_Request {
             return 'bad_request_uri_encoding';
         }
 
-        // URL (path and query string) blacklist
+        // URL path and query string blacklist
         if ( true === $this->strifounda( $_SERVER['REQUEST_URI'], $this->blacklist ) ) {
             return 'bad_request_uri_blacklist';
         }

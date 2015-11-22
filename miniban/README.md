@@ -7,9 +7,9 @@ Ban hosts. Works on webservers and reverse proxies.
 Copy this to your `wp-config.php`.
 
 ```php
-require_once dirname( __FILE__ ) . '/wp-miniban-htaccess.inc.php';
+require_once __DIR__ . '/wp-miniban-htaccess.inc.php';
 Miniban::init(
-    dirname( __FILE__ ) . '/.htaccess',
+    __DIR__ . '/.htaccess',
     // These IP addresses and IP ranges will get whitelisted.
     array( '127.0.0.0/8', 'SERVER-IP', '66.249.64.0/19' ),
     array( 'header' => 'Remote_Addr' )
@@ -41,15 +41,21 @@ auto_prepend_file = "/PATH/TO/miniban-load.php"
 
 Scanning for `.user.ini` must be enabled server-wide in the `user_ini.filename` directive.
 
+
 ### .htaccess method for Apache - miniban-htaccess.php
 
-Based on which HTTP header hosts should be banned:
+Hosts should be banned based on these HTTP headers:
 
-- Apache without reverse proxy
-- CloudFlare
-- Rackspace
-- Varnish
-- HA proxy
+| Webserver / Proxy            | HTTP header           |
+| ---------------------------- | --------------------- |
+| Apache without reverse proxy | `Remote_Addr`         |
+| CloudFlare                   | `X-FORWARDED-FOR`     |
+| Incapsula                    | @TODO                 |
+| Rackspace                    | `X-CLUSTER-CLIENT-IP` |
+| Varnish                      | `X-FORWARDED-FOR`     |
+| HA proxy                     | `X-FORWARDED-FOR`     |
+
+Sample `.htaccess` file that is generated on first ban:
 
 ```apache
 # Apache < 2.3
@@ -75,16 +81,18 @@ SetEnvIf Remote_Addr "^192\.168\.1\.100$" mini_ban
 #SetEnvIf X-FORWARDED-FOR "^192\.168\.1\.100$" mini_ban
 
 # Incapsula
+#
 
 # Rackspace header
 #SetEnvIf X-CLUSTER-CLIENT-IP "^192\.168\.1\.100$" mini_ban
 
 # Varnish
-@todo
+#SetEnvIf X-FORWARDED-FOR "^192\.168\.1\.100$" mini_ban
 
 # HA proxy
-@todo
+#SetEnvIf X-FORWARDED-FOR "^192\.168\.1\.100$" mini_ban
 ```
+
 
 ### WordPress plugin method - miniban-wordpress.php
 
@@ -92,18 +100,22 @@ A small MU plugin (miniban-firewall.php) bans the IP address stored in a WordPre
 
 Does not work with HTML-cached pages.
 
+
 ### Tarpit method - miniban-tarpit.php
 
 Wait for specified time and send random bytes continously.
+
 
 ### CloudFlare method - miniban-cloudflare.php
 
 Communicate with cloudFlare API and ban/unban hosts.
 @TODO
 
+
 ### Forbidden method - miniban-forbidden.php
 
 Only respond with HTTP 403 forbidden.
+
 
 ### RewriteMap method for Apache - miniban-rewritemap.php
 
@@ -114,6 +126,7 @@ RewriteMap ipblocklist "txt:/path/to/ipblocklist.txt"
 RewriteCond "${ipblocklist:%{REMOTE_ADDR}|NOT-FOUND}" !=NOT-FOUND
 RewriteRule ^ - [F]
 ```
+
 
 ### Nginx user configuration - miniban-nginx.php
 
