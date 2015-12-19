@@ -79,6 +79,7 @@ class O1_Bad_Request {
         'allow_url_include',
         'auto_prepend_file',
         'testproxy.php',
+        'httptest.php',
         'wso.php',
         'w00tw00t',
         '/administrator',
@@ -202,7 +203,11 @@ class O1_Bad_Request {
             $common_headers = array_intersect( $this->cdn_headers, array_keys( $_SERVER ) );
             if ( $common_headers === $this->cdn_headers ) {
                 // Log HTTP request headers
-                $this->enhanced_error_log( 'HTTP headers: ' . $this->esc_log( apache_request_headers() ) );
+                $cdn_combined_headers = array_merge(
+                    array( 'REQUEST_URI' => $_SERVER['REQUEST_URI'] ),
+                    apache_request_headers()
+                );
+                $this->enhanced_error_log( 'HTTP headers: ' . $this->esc_log( $cdn_combined_headers ) );
                 // Work-around to prevent edge server banning
                 $this->prefix = 'Attack through CDN: ';
                 $this->instant_trigger = false;
@@ -219,6 +224,7 @@ class O1_Bad_Request {
         // Unknown HTTP request method
         $request_method = strtoupper( $_SERVER['REQUEST_METHOD'] );
         // Google Translate makes OPTIONS requests
+        // and Microsoft Office Protocol Discovery does it also
         $wp_methods = array( 'HEAD', 'GET', 'POST', 'OPTIONS' );
         if ( false === in_array( $request_method, $wp_methods ) ) {
             return 'bad_request_http_method';
