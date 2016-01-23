@@ -149,20 +149,20 @@ class O1_WP_Fail2ban_MU {
 
     private function trigger_instant( $slug, $message, $level = 'crit' ) {
 
-        // Trigger miniban
+        // Trigger Miniban at first
         if ( class_exists( 'Miniban' ) ) {
             if ( true !== Miniban::ban() ) {
                 $this->enhanced_error_log( 'Miniban operation failed.' );
             }
         }
 
-        // Trigger fail2ban
         $this->trigger( $slug, $message, $level, $this->prefix_instant );
 
         // Remove session
         remove_action( 'wp_logout', array( $this, 'logout' ) );
         wp_logout();
 
+        // Respond
         ob_get_level() && ob_end_clean();
         if ( defined( 'XMLRPC_REQUEST' ) && XMLRPC_REQUEST ) {
             $this->fake_xmlrpc();
@@ -183,22 +183,22 @@ class O1_WP_Fail2ban_MU {
             $prefix = $this->prefix;
         }
 
+        // Trigger fail2ban
         $error_msg = sprintf( '%s%s %s',
             $prefix,
             $slug,
             $this->esc_log( $message )
         );
-
         $this->enhanced_error_log( $error_msg, $level );
 
-        // Send to Sucuri Scan
+        // Report to Sucuri Scan
         if ( class_exists( 'SucuriScanEvent' ) ) {
             if ( true !== SucuriScanEvent::report_critical_event( $error_msg ) ) {
                 error_log( 'Sucuri Scan report event failure.' );
             }
         }
 
-        // Send to Simple History
+        // Report to Simple History
         if ( function_exists( 'SimpleLogger' ) ) {
             $simple_level = $this->translate_apache_level( $level );
             $context = array(
@@ -660,7 +660,9 @@ class O1_WP_Fail2ban_MU {
 new O1_WP_Fail2ban_MU();
 
 /*
-- No filter for successful XMLRPC login in wp_authenticate()
+- fake Googlebot, Referer: http://www.google.com
+      grep -hi ' "[^"]*Googlebot[^"]*"$' /var/log/apache2/*access.log|grep -v "^66\.249\."
+- core: No filter for successful XMLRPC login in wp_authenticate()
 - write test.sh
 - robot requests not through `/index.php` (exclude: xmlrpc, trackback, see: wp_403())
 - append: http://plugins.svn.wordpress.org/block-bad-queries/trunk/block-bad-queries.php
@@ -669,18 +671,14 @@ new O1_WP_Fail2ban_MU();
 - new: invalid user/email during registration
 - new: invalid user during lost password
 - new: invalid "lost password" token
-- robots&errors in /wp-comments-post.php (as block-bad-requests.inc)
+- robots & errors in /wp-comments-post.php (as in block-bad-requests.inc)
 - log xmlrpc? add_action( 'xmlrpc_call', function( $call ) { if ( 'pingback.ping' == $call ) {} } );
 - log proxy IP: HTTP_X_FORWARDED_FOR, HTTP_INCAP_CLIENT_IP, HTTP_CF_CONNECTING_IP (could be faked)
-- fake Googlebot, Referer: http://www.google.com ???
-
 - registration errors: the dirty way
-add_filter( 'login_errors', function ( $em ) {
-    error_log( 'em:' . $em );
-    return $em;
-}, 0 );
-
-- general
-    - bad queries https://github.com/wp-plugins/block-bad-queries/
-    - bad UAs
+      add_filter( 'login_errors', function ( $em ) {
+          error_log( 'em:' . $em );
+          return $em;
+      }, 0 );
+- bad queries https://github.com/wp-plugins/block-bad-queries/
+- bad UAs
 */

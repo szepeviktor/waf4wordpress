@@ -1,7 +1,7 @@
 <?php
 /*
 Plugin Name: Block Bad Requests (wp-config snippet or MU plugin)
-Version: 2.12.3
+Version: 2.12.4
 Description: Require it from the top of your wp-config.php or make it a Must Use plugin
 Plugin URI: https://github.com/szepeviktor/wordpress-fail2ban
 License: The MIT License (MIT)
@@ -34,7 +34,7 @@ class O1_Bad_Request {
     private $prefix = 'Malicious traffic detected: ';
     private $prefix_instant = 'Break-in attempt detected: ';
     private $instant_trigger = true;
-    private $max_login_request_size = 2000;
+    private $max_login_request_size = 4000;
     private $is_wplogin = false;
     private $is_xmlrpc = false;
     private $names2ban = array(
@@ -80,6 +80,7 @@ class O1_Bad_Request {
         'auto_prepend_file',
         'testproxy.php',
         'httptest.php',
+        'bigdump.php',
         'wso.php',
         'w00tw00t',
         '/administrator',

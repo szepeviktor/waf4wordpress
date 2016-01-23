@@ -1,0 +1,7 @@
+{
+    "name": "szepeviktor/wordpress-fail2ban",
+    "description": "Proactive security with Fail2ban",
+    "require": {
+        "php": ">=5.3.0"
+    }
+}
