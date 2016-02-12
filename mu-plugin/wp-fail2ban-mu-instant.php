@@ -208,6 +208,9 @@ class O1_WP_Fail2ban_MU {
             if ( array_key_exists( 'HTTP_USER_AGENT', $_SERVER ) ) {
                 $context['_server_http_user_agent'] = $this->esc_log( $_SERVER['HTTP_USER_AGENT'] );
             }
+            if ( ! class_exists( 'SimpleLogger' ) ) {
+                SimpleHistory::get_instance()->load_loggers();
+            }
             SimpleLogger()->log( $simple_level, $error_msg, $context );
         }
 
