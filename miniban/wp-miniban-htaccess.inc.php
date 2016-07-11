@@ -1,9 +1,8 @@
 <?php
-
 /**
  * Scaffold for Miniban ban methods
  *
- * @version    0.1.0
+ * @version    0.1.2
  * @package    miniban
  * @link       https://github.com/szepeviktor/wordpress-fail2ban
  * @author     Viktor Szépe
@@ -40,20 +39,23 @@ abstract class Miniban_Base {
      * Set path of configuration file, ignored IP addresses
      * and extra configuration data.
      *
-     * @param string $path        Full path of configuration file.
+     * @param string $config      Full path of configuration file.
      * @param array $ignoreip     Ignored IP addresses.
      * @param array $extra_config Additional configuration data.
      * @return boolean            Success.
      */
     final public static function init( $config, $ignoreip = array(), $extra_config = array() ) {
 
-        self::$config = $config;
-
         self::$ignoreip = $ignoreip;
 
         self::$extra_config = $extra_config;
 
-        return self::check_config();
+        if ( ! empty( $config ) ) {
+            self::$config = $config;
+            return self::check_config();
+        }
+
+        return true;
     }
 
     /**
@@ -157,6 +159,15 @@ abstract class Miniban_Base {
     }
 }
 
+/**
+ * Htaccess Miniban method
+ *
+ * @version    0.1.2
+ * @package    miniban
+ * @link       https://github.com/szepeviktor/wordpress-fail2ban
+ * @author     Viktor Szépe
+ * @license    GNU General Public License (GPL) version 2
+ */
 class Miniban extends Miniban_Base {
 
     private static $ban_rules = '
@@ -190,7 +201,16 @@ class Miniban extends Miniban_Base {
         }
 
         if ( empty( $ban_ip ) ) {
-            $ban_ip = $_SERVER['REMOTE_ADDR'];
+            if ( 'Remote_Addr' === parent::$extra_config['header'] ) {
+                $header_name = 'REMOTE_ADDR';
+            } else {
+                $header_name = 'HTTP_' . strtoupper( parent::$extra_config['header'] );
+            }
+
+            if ( empty( $_SERVER[ $header_name ] ) ) {
+                return false;
+            }
+            $ban_ip = $_SERVER[ $header_name ];
         }
 
         // Process whitelist
@@ -203,13 +223,14 @@ class Miniban extends Miniban_Base {
         // Prepare .htaccess rule
         $expires = time() + $ban_time;
         $ban_line = sprintf( 'SetEnvIf %s "^%s$" mini_ban #%s',
-           parent::$extra_config['header'],
-           preg_quote( $ban_ip ),
-           $expires
+            parent::$extra_config['header'],
+            preg_quote( $ban_ip ),
+            $expires
         );
 
         return parent::alter_config( 'static::insert_with_markers',
-            array( 'contents' => $ban_line, 'operation' => 'add' ), 'r+' );
+            array( 'contents' => $ban_line, 'operation' => 'add' ), 'r+'
+        );
     }
 
     public static function unban( $unban_ip = null ) {
@@ -227,8 +248,8 @@ class Miniban extends Miniban_Base {
         if ( $unban_ip ) {
             // One IP
             $ban_line = sprintf( 'SetEnvIf %s "^%s$" mini_ban',
-               parent::$extra_config['header'],
-               preg_quote( $unban_ip )
+                parent::$extra_config['header'],
+                preg_quote( $unban_ip )
             );
         } else {
             // Unban all expired
@@ -259,7 +280,7 @@ class Miniban extends Miniban_Base {
 
             foreach ( $contents as $markerline ) {
                 // # BEGIN
-                if ( false !== strpos( $markerline, '# BEGIN MINIBAN') ) {
+                if ( false !== strpos( $markerline, '# BEGIN MINIBAN' ) ) {
                     $foreign = false;
                 }
                 // # END
@@ -275,8 +296,8 @@ class Miniban extends Miniban_Base {
                 if ( 'add' === $operation ) {
                     $output[] = $markerline;
 
-                // Unban one IP or all expired
                 } elseif ( 'del' === $operation ) {
+                    // Unban one IP or all expired
                     // Inside our makers?
                     //     Contains "#"?
                     //     Parse line - not a condition
@@ -290,7 +311,7 @@ class Miniban extends Miniban_Base {
                         || false === strpos( $marker_rule, $parameters['contents'] )
                         || ( ! empty( $parameters['now'] )
                             && is_numeric( $marker_expires )
-                            && (int)$marker_expires > $parameters['now']
+                            && (int) $marker_expires > $parameters['now']
                         )
                     ) {
                         $output[] = $markerline;
@@ -310,7 +331,7 @@ class Miniban extends Miniban_Base {
             $output[] = '';
         }
 
-        $output_lines = implode( "\n", $output);
+        $output_lines = implode( "\n", $output );
 
         // Replace .htaccess contents
         ftruncate( $handle, 0 );
@@ -319,3 +340,7 @@ class Miniban extends Miniban_Base {
         return fwrite( $handle, $output_lines );
     }
 }
+
+/* @TODO
+- Add auto unban on ban
+*/

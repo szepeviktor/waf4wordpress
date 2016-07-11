@@ -1,8 +1,8 @@
 <?php
 /*
-Plugin Name: WordPress fail2ban MU
+Plugin Name: WordPress Fail2ban MU
 Version: 4.10.5
-Description: Triggers fail2ban on various attacks. <strong>This is a Must Use plugin, must be copied to <code>wp-content/mu-plugins</code>.</strong>
+Description: Triggers Fail2ban on various attacks. <strong>This is a Must Use plugin, must be copied to <code>wp-content/mu-plugins</code>.</strong>
 Plugin URI: https://github.com/szepeviktor/wordpress-fail2ban
 License: The MIT License (MIT)
 Author: Viktor Szépe
@@ -88,7 +88,7 @@ class O1_WP_Fail2ban_MU {
         // Don't run on install and upgrade
         if ( php_sapi_name() === 'cli'
             || $_SERVER['REMOTE_ADDR'] === $_SERVER['SERVER_ADDR']
-            || defined( 'WP_INSTALLING' ) && WP_INSTALLING
+            || ( defined( 'WP_INSTALLING' ) && WP_INSTALLING )
         ) {
             return;
         }
@@ -328,7 +328,7 @@ class O1_WP_Fail2ban_MU {
 
         $ua = array_key_exists( 'HTTP_USER_AGENT', $_SERVER ) ? $_SERVER['HTTP_USER_AGENT'] : '';
 
-        // HEAD probing resulting in 404
+        // HEAD probing resulting in a 404
         if ( false !== stripos( $_SERVER['REQUEST_METHOD'], 'HEAD' ) ) {
             $this->trigger_instant( 'wpf2b_404_head', $_SERVER['REQUEST_URI'] );
         }
@@ -663,6 +663,9 @@ class O1_WP_Fail2ban_MU {
 new O1_WP_Fail2ban_MU();
 
 /*
+- non-attack 404:
+  logsearch.sh -e wpf2b_404|sed -ne 's|.*wpf2b_404 (s:[0-9]\+:"\([^"]*\)";).*|\1|p'|grep -vx "/[a-z/-]\+/\|.*\.jpg"|sort
+  + non-ascii post slugs
 - fake Googlebot, Referer: http://www.google.com
       grep -hi ' "[^"]*Googlebot[^"]*"$' /var/log/apache2/*access.log|grep -v "^66\.249\."
 - core: No filter for successful XMLRPC login in wp_authenticate()

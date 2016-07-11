@@ -1,7 +1,7 @@
 <?php
 /*
 Plugin Name: Block Bad Requests (wp-config snippet or MU plugin)
-Version: 2.12.4
+Version: 2.13.0
 Description: Require it from the top of your wp-config.php or make it a Must Use plugin
 Plugin URI: https://github.com/szepeviktor/wordpress-fail2ban
 License: The MIT License (MIT)
@@ -222,6 +222,13 @@ class O1_Bad_Request {
             return 'bad_request_uri_length';
         }
 
+        // Too big user agent
+        if ( isset( $_SERVER['HTTP_USER_AGENT'] )
+            && strlen( $_SERVER['HTTP_USER_AGENT'] ) > 400
+        ) {
+            return 'bad_request_user_agent_length';
+        }
+
         // Unknown HTTP request method
         $request_method = strtoupper( $_SERVER['REQUEST_METHOD'] );
         // Google Translate makes OPTIONS requests
@@ -245,7 +252,7 @@ class O1_Bad_Request {
         // unreserved  = ALPHA / DIGIT / "-" / "." / "_" / "~"
         // "#" removed
         // "%" added
-        if ( substr_count( $_SERVER['REQUEST_URI'] , '?' ) > 1
+        if ( substr_count( $_SERVER['REQUEST_URI'], '?' ) > 1
             || false !== strpos( $_SERVER['REQUEST_URI'], '#' )
             || 1 === preg_match( "/[^%:\/?\[\]@!$&'()*+,;=A-Za-z0-9._~-]/", $_SERVER['REQUEST_URI'] )
         ) {

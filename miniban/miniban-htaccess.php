@@ -63,13 +63,14 @@ class Miniban extends Miniban_Base {
         // Prepare .htaccess rule
         $expires = time() + $ban_time;
         $ban_line = sprintf( 'SetEnvIf %s "^%s$" mini_ban #%s',
-           parent::$extra_config['header'],
-           preg_quote( $ban_ip ),
-           $expires
+            parent::$extra_config['header'],
+            preg_quote( $ban_ip ),
+            $expires
         );
 
         return parent::alter_config( 'static::insert_with_markers',
-            array( 'contents' => $ban_line, 'operation' => 'add' ), 'r+' );
+            array( 'contents' => $ban_line, 'operation' => 'add' ), 'r+'
+        );
     }
 
     public static function unban( $unban_ip = null ) {
@@ -87,8 +88,8 @@ class Miniban extends Miniban_Base {
         if ( $unban_ip ) {
             // One IP
             $ban_line = sprintf( 'SetEnvIf %s "^%s$" mini_ban',
-               parent::$extra_config['header'],
-               preg_quote( $unban_ip )
+                parent::$extra_config['header'],
+                preg_quote( $unban_ip )
             );
         } else {
             // Unban all expired
@@ -119,7 +120,7 @@ class Miniban extends Miniban_Base {
 
             foreach ( $contents as $markerline ) {
                 // # BEGIN
-                if ( false !== strpos( $markerline, '# BEGIN MINIBAN') ) {
+                if ( false !== strpos( $markerline, '# BEGIN MINIBAN' ) ) {
                     $foreign = false;
                 }
                 // # END
@@ -135,8 +136,8 @@ class Miniban extends Miniban_Base {
                 if ( 'add' === $operation ) {
                     $output[] = $markerline;
 
-                // Unban one IP or all expired
                 } elseif ( 'del' === $operation ) {
+                    // Unban one IP or all expired
                     // Inside our makers?
                     //     Contains "#"?
                     //     Parse line - not a condition
@@ -150,7 +151,7 @@ class Miniban extends Miniban_Base {
                         || false === strpos( $marker_rule, $parameters['contents'] )
                         || ( ! empty( $parameters['now'] )
                             && is_numeric( $marker_expires )
-                            && (int)$marker_expires > $parameters['now']
+                            && (int) $marker_expires > $parameters['now']
                         )
                     ) {
                         $output[] = $markerline;
@@ -170,7 +171,7 @@ class Miniban extends Miniban_Base {
             $output[] = '';
         }
 
-        $output_lines = implode( "\n", $output);
+        $output_lines = implode( "\n", $output );
 
         // Replace .htaccess contents
         ftruncate( $handle, 0 );
