@@ -1,7 +1,7 @@
 <?php
 /*
 Plugin Name: Block Bad Requests (wp-config snippet or MU plugin)
-Version: 2.13.0
+Version: 2.14.0
 Description: Require it from the top of your wp-config.php or make it a Must Use plugin
 Plugin URI: https://github.com/szepeviktor/wordpress-fail2ban
 License: The MIT License (MIT)
@@ -37,6 +37,7 @@ class O1_Bad_Request {
     private $max_login_request_size = 4000;
     private $is_wplogin = false;
     private $is_xmlrpc = false;
+    private $is_options_method = false;
     private $names2ban = array(
         'access',
         'admin',
@@ -85,6 +86,7 @@ class O1_Bad_Request {
         'w00tw00t',
         '/administrator',
         'connector.asp',
+        '/HNAP1',
     );
     private $cdn_headers;
     private $allow_registration = false;
@@ -233,7 +235,14 @@ class O1_Bad_Request {
         $request_method = strtoupper( $_SERVER['REQUEST_METHOD'] );
         // Google Translate makes OPTIONS requests
         // and Microsoft Office Protocol Discovery does it also
-        $wp_methods = array( 'HEAD', 'GET', 'POST', 'OPTIONS' );
+        // Windows Explorer (Microsoft-WebDAV-MiniRedir) also
+        // https://tools.ietf.org/html/rfc2616#section-9.2
+        if ( 'OPTIONS' === $request_method ) {
+            $this->is_options_method = true;
+            $this->instant_trigger = false;
+            return 'bad_request_http_options_method';
+        }
+        $wp_methods = array( 'HEAD', 'GET', 'POST' );
         if ( false === in_array( $request_method, $wp_methods ) ) {
             return 'bad_request_http_method';
         }
@@ -539,7 +548,9 @@ class O1_Bad_Request {
         }
 
         ob_get_level() && ob_end_clean();
-        if ( $this->is_xmlrpc ) {
+        if ( $this->is_options_method ) {
+            $this->disable_options_method();
+        } elseif ( $this->is_xmlrpc ) {
             $this->fake_xmlrpc();
         } elseif ( ! headers_sent() ) {
             if ( $this->is_wplogin && ! empty( $_POST['log'] ) ) {
@@ -556,10 +567,19 @@ class O1_Bad_Request {
 
         header( 'Status: 403 Forbidden' );
         header( 'HTTP/1.1 403 Forbidden', true, 403 );
+
         header( 'Connection: Close' );
         header( 'Cache-Control: max-age=0, private, no-store, no-cache, must-revalidate' );
         header( 'X-Robots-Tag: noindex, nofollow' );
-        header( 'Content-Type: text/html' );
+        header( 'Content-Length: 0' );
+    }
+
+    private function disable_options_method() {
+
+        header( 'Status: 405 Method Not Allowed' );
+        header( 'HTTP/1.1 405 Method Not Allowed', true, 405 );
+
+        header( 'Allow: GET, POST, HEAD' );
         header( 'Content-Length: 0' );
     }
 
@@ -581,6 +601,7 @@ class O1_Bad_Request {
         setcookie( $authcookie_name, $auth_cookie, $expire, '/brake/wp_content/plugins', false, false, true );
         setcookie( $authcookie_name, $auth_cookie, $expire, '/brake/wp-admin', false, false, true );
         setcookie( $loggedincookie_name, $auth_cookie, $expire, '/', false, false, true );
+
         header( 'Location: http://' . $server_name . '/brake/wp-admin/' );
     }
 
