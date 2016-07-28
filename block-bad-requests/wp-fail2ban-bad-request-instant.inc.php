@@ -77,6 +77,7 @@ class O1_Bad_Request {
         '../',
         '/..',
         'wp-config',
+        '/brake/wp-admin/',
         'allow_url_include',
         'auto_prepend_file',
         'testproxy.php',
@@ -87,6 +88,7 @@ class O1_Bad_Request {
         '/administrator',
         'connector.asp',
         '/HNAP1',
+        '() { ', // Shell shock () { :;};
     );
     private $cdn_headers;
     private $allow_registration = false;

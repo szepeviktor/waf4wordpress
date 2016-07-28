@@ -4,7 +4,19 @@ Trigger banning on malicious requests by the Fail2ban daemon running on a server
 Shared hosting has no server-wide banning (because of security reasons)
 but you can use it without Fail2ban to stop attacks temporarily by setting trigger count to 1.
 
-### block-bad-requests
+Your WordPress (really HTTP) security consists of:
+
+1. Have daily backup
+1. Blocking known *shadow nets*
+1. Having Fail2ban installed which controlls the firewall
+1. Maintain your website + use strict Fail2ban filters which ban at the first attack instantly
+1. Deny access to core WordPress files, themes and plugins
+1. WordPress Fail2ban (this project)
+1. Leanmail which filters notification emails
+
+See the security folder in my `debian-server-tools` repo.
+
+### O1_Bad_Request class
 
 Examines every HTTP header in a login requests and triggers Fail2ban accordingly.
 
@@ -17,16 +29,15 @@ require_once dirname( __FILE__ ) . '/wp-fail2ban-bad-request-instant.inc.php';
 
 Or – in a worse case – install it as an mu-plugin.
 
-### mu-plugin
+### O1_WP_Fail2ban_MU class
 
-Triggers Fail2ban on common attack types. Login is only logged, use
-[block-bad-requests](https://github.com/szepeviktor/wordpress-fail2ban/blob/master/README.md#block-bad-requests)
-for that.
+It is an MU plugin that triggers Fail2ban on various attack types. Login is only logged, use
+O1_Bad_Request class for handling that.
 
 To install copy `wp-fail2ban-mu.php` into your `wp-content/mu-plugins/` directory.
 You may have to create the `mu-plugins` directory. It activates automatically.
 
-### non-wp-projects
+### non-wp-projects folder
 
 Triggers Fail2ban on WordPress login probes.
 
@@ -39,17 +50,12 @@ Please **DO NOT use it** because it is outdated. Use the *must use* plugin (mu-p
 Examines every HTTP header in a login requests and triggers Fail2ban accordingly.
 This is the normal version of the plugin with a setting page on WordPress admin.
 
-It is not yet syncronized to the mu-plugin.
+**It is not yet syncronized to the mu-plugin.**
 
 ### WordPress Fail2ban is not in WordPress.org's plugin directory
 
-After is it published on WordPress.org you can install the plugin and skip normal activation
-but create a symlink to the must use (mu-plugins) version. That way it activates automatically.
-
-```bash
-cd wp-content/
-ln -s plugins/wordpress-fail2ban/mu-plugin/wp-fail2ban-mu.php mu-plugins/
-```
+After is it published on WordPress.org you can install the plugin and skip normal activation.
+That way it activates automatically.
 
 ### Support Newsletter plugin, ALO EasyMail Newsletter plugin and PayPal IPN
 
