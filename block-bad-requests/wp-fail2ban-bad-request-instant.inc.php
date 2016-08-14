@@ -1,7 +1,7 @@
 <?php
 /*
 Plugin Name: Block Bad Requests (wp-config snippet or MU plugin)
-Version: 2.14.0
+Version: 2.14.1
 Description: Require it from the top of your wp-config.php or make it a Must Use plugin
 Plugin URI: https://github.com/szepeviktor/wordpress-fail2ban
 License: The MIT License (MIT)
@@ -74,21 +74,24 @@ class O1_Bad_Request {
         'webmaster',
     );
     private $blacklist = array(
-        '../',
-        '/..',
-        'wp-config',
-        '/brake/wp-admin/',
-        'allow_url_include',
-        'auto_prepend_file',
-        'testproxy.php',
-        'httptest.php',
-        'bigdump.php',
-        'wso.php',
-        'w00tw00t',
-        '/administrator',
-        'connector.asp',
-        '/HNAP1',
+        '../', // path traversal
+        '/..', // path traversal
+        'wp-config', // WP core
+        '/brake/wp-admin/', // from fake_wplogin()
+        'allow_url_include', // PHP directive
+        'auto_prepend_file', // PHP directive
+        'testproxy.php', // scan for open proxies
+        'httptest.php', // scan for open proxies
+        'bigdump.php', // Staggered MySQL Dump Importer
+        'wso.php', // Web Shell
+        'w00tw00t', // DFind Scanner
+        '/administrator', // Joomla Administrator
+        'connector.asp', // Joomla FCKeditor 2.x File Manager Connector for ASP
+        '/HNAP1', // D-Link routers
         '() { ', // Shell shock () { :;};
+        '/cgi-bin/', // CGI folder
+        'error_log', // default PHP error log
+        'error-log', // PHP error log
     );
     private $cdn_headers;
     private $allow_registration = false;

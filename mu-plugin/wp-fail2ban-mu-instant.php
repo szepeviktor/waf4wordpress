@@ -1,6 +1,6 @@
 <?php
 /*
-Plugin Name: WordPress Fail2ban MU
+Plugin Name: WordPress Fail2ban (MU)
 Version: 4.10.5
 Description: Triggers Fail2ban on various attacks. <strong>This is a Must Use plugin, must be copied to <code>wp-content/mu-plugins</code>.</strong>
 Plugin URI: https://github.com/szepeviktor/wordpress-fail2ban
