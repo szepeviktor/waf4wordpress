@@ -1,20 +1,21 @@
 # WordPress Fail2ban
 
-Trigger banning on malicious requests by the Fail2ban daemon running on a server.
+Trigger banning on malicious requests by the Fail2ban daemon running on a server.  
 Shared hosting has no server-wide banning (because of security reasons)
-but you can use it without Fail2ban to stop attacks temporarily by setting trigger count to 1.
+but you can install it without Fail2ban to stop attacks by using one of the Miniban methods.
 
 Your WordPress (really HTTP) security consists of:
 
+1. Use HTTPS
 1. Have daily backup
 1. Blocking known *shadow nets*
-1. Having Fail2ban installed which controlls the firewall
+1. Have Fail2ban installed which controlls the firewall
 1. Maintain your website + use strict Fail2ban filters which ban at the first attack instantly
 1. Deny access to core WordPress files, themes and plugins
 1. WordPress Fail2ban (this project)
 1. Leanmail which filters notification emails
 
-See the security folder in my `debian-server-tools` repo.
+See the security and webserver folder in my `debian-server-tools` repo.
 
 ### O1_Bad_Request class
 
@@ -24,10 +25,10 @@ To install copy `wp-fail2ban-bad-request-instant.inc.php`
 beside your `wp-config.php` and copy this line in top of `wp-config.php`:
 
 ```php
-require_once dirname( __FILE__ ) . '/wp-fail2ban-bad-request-instant.inc.php';
+require_once __DIR__ . '/wp-fail2ban-bad-request-instant.inc.php';
 ```
 
-Or – in a worse case – install it as an mu-plugin.
+Or – in a worse case – install it as an MU plugin.
 
 ### O1_WP_Fail2ban_MU class
 
@@ -45,7 +46,7 @@ To install copy the fake `wp-login.php`and `xmlrpc.php` to your **non-WordPress*
 
 ### The normal plugin - wp-fail2ban.php
 
-Please **DO NOT use it** because it is outdated. Use the *must use* plugin (mu-plugin) version.
+Please **DO NOT use it** because it is outdated. Use the MU plugin version from the `mu-plugin` folder.
 
 Examines every HTTP header in a login requests and triggers Fail2ban accordingly.
 This is the normal version of the plugin with a setting page on WordPress admin.
@@ -54,8 +55,8 @@ This is the normal version of the plugin with a setting page on WordPress admin.
 
 ### WordPress Fail2ban is not in WordPress.org's plugin directory
 
-After is it published on WordPress.org you can install the plugin and skip normal activation.
-That way it activates automatically.
+After is it published on WordPress.org you can install the plugin and skip file copying.  
+That way it'll be done automatically.
 
 ### Support Newsletter plugin, ALO EasyMail Newsletter plugin and PayPal IPN
 

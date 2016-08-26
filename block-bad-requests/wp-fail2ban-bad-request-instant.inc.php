@@ -1,8 +1,8 @@
 <?php
 /*
-Plugin Name: Block Bad Requests (wp-config snippet or MU plugin)
+Plugin Name: Block Bad Requests (required from wp-config or MU plugin)
 Version: 2.14.1
-Description: Require it from the top of your wp-config.php or make it a Must Use plugin
+Description: Stop various HTTP attacks and trigger Fail2ban.
 Plugin URI: https://github.com/szepeviktor/wordpress-fail2ban
 License: The MIT License (MIT)
 Author: Viktor Szépe
@@ -29,7 +29,7 @@ Options: O1_BAD_REQUEST_POST_LOGGING
  * @package wordpress-fail2ban
  * @see     README.md
  */
-class O1_Bad_Request {
+final class O1_Bad_Request {
 
     private $prefix = 'Malicious traffic detected: ';
     private $prefix_instant = 'Break-in attempt detected: ';
@@ -193,7 +193,7 @@ class O1_Bad_Request {
         // WP_INSTALLING is available even before wp-config.php
         if ( php_sapi_name() === 'cli'
             || $_SERVER['REMOTE_ADDR'] === $_SERVER['SERVER_ADDR']
-            || defined( 'WP_INSTALLING' ) && WP_INSTALLING
+            || ( defined( 'WP_INSTALLING' ) && WP_INSTALLING )
         ) {
             return false;
         }
@@ -520,12 +520,12 @@ class O1_Bad_Request {
             return 'bad_request_wplogin_user_agent_mozilla50';
         }
 
-        // Allowed to login
+        // Allowed to log in
         return false;
     }
 
     /**
-     * Trigger fail2ban and exit with HTTP 403.
+     * Trigger fail2ban and respond HTTP/403.
      *
      * @return null
      */
@@ -764,13 +764,13 @@ class O1_Bad_Request {
 
 new O1_Bad_Request();
 
-/*
+/* @TODO
 - How to restrict AJAX content type?
 - Block CDN attacks by another method
 - check POST: no more, no less variables
     a:5:{s:11:"redirect_to";s:28:"http://domain.com/wp-admin/";s:10:"testcookie";s:1:"1";s:3:"log";s:5:"admin";s:3:"pwd";s:6:"123456";s:9:"wp-submit";s:6:"Log In";}
 - order of headers to identify attackers
-- POST: login, postpass, resetpass, lostpassword, register
-- GET: logout, rp, lostpassword
-- non-login POST-s: comment, trackback, pingback, XML-RPC, WP-API
+- wp-login POST: login, postpass, resetpass, lostpassword, register
+- wp-login GET: logout, rp, lostpassword
+- non-login POST-s: comment, trackback, pingback, XML-RPC, WP-API, plugin POST-s
 */

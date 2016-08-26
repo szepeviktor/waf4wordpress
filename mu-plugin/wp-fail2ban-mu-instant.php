@@ -2,7 +2,7 @@
 /*
 Plugin Name: WordPress Fail2ban (MU)
 Version: 4.10.5
-Description: Triggers Fail2ban on various attacks. <strong>This is a Must Use plugin, must be copied to <code>wp-content/mu-plugins</code>.</strong>
+Description: Stop WordPress related attacks and trigger Fail2ban.
 Plugin URI: https://github.com/szepeviktor/wordpress-fail2ban
 License: The MIT License (MIT)
 Author: Viktor Szépe
@@ -38,7 +38,7 @@ if ( ! function_exists( 'add_filter' ) ) {
  * @package wordpress-fail2ban
  * @see     README.md
  */
-class O1_WP_Fail2ban_MU {
+final class O1_WP_Fail2ban_MU {
 
     private $prefix = 'Malicious traffic detected: ';
     private $prefix_instant = 'Break-in attempt detected: ';
@@ -122,7 +122,7 @@ class O1_WP_Fail2ban_MU {
 
         // Non-existent URLs
         add_action( 'init', array( $this, 'url_hack' ) );
-        if ( ! defined( 'O1_WP_FAIL2BAN_ALLOW_REDIRECT' ) || ! O1_WP_FAIL2BAN_ALLOW_REDIRECT ) {
+        if ( ! ( defined( 'O1_WP_FAIL2BAN_ALLOW_REDIRECT' ) && O1_WP_FAIL2BAN_ALLOW_REDIRECT ) ) {
             add_filter( 'redirect_canonical', array( $this, 'redirect' ), 1, 2 );
         }
 
