@@ -92,6 +92,8 @@ final class O1_Bad_Request {
         '/cgi-bin/', // CGI folder
         'error_log', // default PHP error log
         'error-log', // PHP error log
+        'htaccess', // Apache httpd configuration
+        'web.config', // IIS configuration
     );
     private $cdn_headers;
     private $allow_registration = false;
