@@ -8,6 +8,7 @@ To install copy `wp-fail2ban-bad-request-instant.inc.php` beside your `wp-config
 
 ```php
 require_once dirname( __FILE__ ) . '/wp-fail2ban-bad-request-instant.inc.php';
+new O1\Bad_Request();
 ```
 
 Or – in a worse case – install it as an mu-plugin.
@@ -21,24 +22,35 @@ wp option get "active_plugins"
 
 ### List of HTTP request parts checked
 
-- login POST request size `*`
 - custom CDN headers `*`
+- URI length
+- User Agent length
+- HTTP methods
+- Slash in URI, URI encoding, blacklist for the URI
+- HTTP Protocol
+- Request for robots.txt in a subdirectory
 - `author` query field
-- request method to identify POST requests
-- `log` POST variable (the WordPress username) `*`
+- Request method to identify POST requests
+- PHP file upload
+- HTTP/POST without User Agent
 - Accept header
-- Accept-Language header
-- Content-Type header
 - Content-Length header
+- Content-Type header
+- HTTP methods for WordPress login
+- `log` POST variable blacklist (the WordPress username) `*`
+- Request size for WordPress login `*`
+- Accept-Language header
 - Referer header `*`
 - `action` query field to allow requests for password protected posts
-- protocol `*`
+- HTTP Protocol for WordPress login `*`
 - Connection header `*`
-- Accept-Encoding
-- cookie named `wordpress_test_cookie` `*`
+- Accept-Encoding header
+- Cookie named `wordpress_test_cookie` `*`
 - User-Agent header `*`
 
 The list is in order of appearance, `*` means it can be disabled by an option below.
+
+`grep -o "return '.*';" wp-fail2ban-bad-request-instant.inc.php`
 
 ### Options
 

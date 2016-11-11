@@ -26,6 +26,7 @@ beside your `wp-config.php` and copy this line in top of `wp-config.php`:
 
 ```php
 require_once __DIR__ . '/wp-fail2ban-bad-request-instant.inc.php';
+new O1\Bad_Request();
 ```
 
 Or – in a worse case – install it as an MU plugin.

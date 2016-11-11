@@ -1,7 +1,7 @@
 <?php
 /*
 Plugin Name: Block Bad Requests (required from wp-config or MU plugin)
-Version: 2.14.1
+Version: 2.15.0
 Description: Stop various HTTP attacks and trigger Fail2ban.
 Plugin URI: https://github.com/szepeviktor/wordpress-fail2ban
 License: The MIT License (MIT)
@@ -19,6 +19,8 @@ Options: O1_BAD_REQUEST_ALLOW_TWO_CAPS
 Options: O1_BAD_REQUEST_POST_LOGGING
 */
 
+namespace O1;
+
 /**
  * WordPress Block Bad Requests.
  *
@@ -29,7 +31,7 @@ Options: O1_BAD_REQUEST_POST_LOGGING
  * @package wordpress-fail2ban
  * @see     README.md
  */
-final class O1_Bad_Request {
+final class Bad_Request {
 
     private $prefix = 'Malicious traffic detected: ';
     private $prefix_instant = 'Break-in attempt detected: ';
@@ -153,6 +155,7 @@ final class O1_Bad_Request {
         // "false" means there were no bad requests
         if ( false !== $this->result ) {
             $this->trigger();
+            exit;
         }
 
         // @FIXME This blocks the mu-plugin's trigger!!!
@@ -197,9 +200,13 @@ final class O1_Bad_Request {
             || $_SERVER['REMOTE_ADDR'] === $_SERVER['SERVER_ADDR']
             || ( defined( 'WP_INSTALLING' ) && WP_INSTALLING )
         ) {
+            // Local access
             return false;
         }
 
+        $request_method = strtoupper( $_SERVER['REQUEST_METHOD'] );
+        $wp_methods = array( 'HEAD', 'GET', 'POST' );
+        $wp_login_methods = array( 'GET', 'POST' );
         $request_path = parse_url( $_SERVER['REQUEST_URI'], PHP_URL_PATH );
         $request_query = isset( $_SERVER['QUERY_STRING'] )
             ? $_SERVER['QUERY_STRING']
@@ -238,10 +245,9 @@ final class O1_Bad_Request {
             return 'bad_request_user_agent_length';
         }
 
-        // Unknown HTTP request method
-        $request_method = strtoupper( $_SERVER['REQUEST_METHOD'] );
+        // HTTP request method
         // Google Translate makes OPTIONS requests
-        // and Microsoft Office Protocol Discovery does it also
+        // Microsoft Office Protocol Discovery does it also
         // Windows Explorer (Microsoft-WebDAV-MiniRedir) also
         // https://tools.ietf.org/html/rfc2616#section-9.2
         if ( 'OPTIONS' === $request_method ) {
@@ -249,7 +255,6 @@ final class O1_Bad_Request {
             $this->instant_trigger = false;
             return 'bad_request_http_options_method';
         }
-        $wp_methods = array( 'HEAD', 'GET', 'POST' );
         if ( false === in_array( $request_method, $wp_methods ) ) {
             return 'bad_request_http_method';
         }
@@ -306,6 +311,7 @@ final class O1_Bad_Request {
         // wget sends: User-Agent, Accept, Host, Connection, Content-Type, Content-Length
         // curl sends: User-Agent, Host, Accept, Content-Length, Content-Type
         if ( 'POST' !== $request_method ) {
+            // Not HTTP/POST
             return false;
         }
 
@@ -346,9 +352,8 @@ final class O1_Bad_Request {
         // User agent HTTP header
         if ( empty( $_SERVER['HTTP_USER_AGENT'] ) ) {
             return 'bad_request_post_user_agent_empty';
-        } else {
-            $user_agent = $_SERVER['HTTP_USER_AGENT'];
         }
+        $user_agent = $_SERVER['HTTP_USER_AGENT'];
 
         // Accept HTTP header
         // IE9, wget and curl sends only "*/*"
@@ -388,6 +393,7 @@ final class O1_Bad_Request {
 
         // Check requests only for wp-login.php
         if ( ! $this->is_wplogin ) {
+            // Not wp-login
             return false;
         }
 
@@ -395,7 +401,6 @@ final class O1_Bad_Request {
         // is_wplogin
 
         // wp-login methods
-        $wp_login_methods = array( 'GET', 'POST' );
         if ( false === in_array( $request_method, $wp_login_methods ) ) {
             return 'bad_request_wplogin_http_method';
         }
@@ -450,15 +455,14 @@ final class O1_Bad_Request {
         if ( ! empty( $request_query ) ) {
             $queries = $this->parse_query( $request_query );
 
-            if ( isset( $queries['action'] )
-                && 'postpass' === $queries['action']
-            ) {
+            if ( isset( $queries['action'] ) && 'postpass' === $queries['action'] ) {
+                // wp-login/postpass
                 return false;
             }
         }
 
         // --------------------------- >8 ---------------------------
-        // NOT postpass
+        // NOT wp-login/postpass
 
         // Referer HTTP header
         if ( ! $this->allow_registration ) {
@@ -505,9 +509,10 @@ final class O1_Bad_Request {
             }
         }
 
-        // IE8 logins
+        // IE8 login
         if ( $this->allow_ie8_login ) {
             if ( 'Mozilla/4.0 (compatible; MSIE 8.0;' === substr( $user_agent, 0, 34 ) ) {
+                // Allow IE8
                 return false;
             }
         }
@@ -522,7 +527,7 @@ final class O1_Bad_Request {
             return 'bad_request_wplogin_user_agent_mozilla50';
         }
 
-        // Allowed to log in
+        // OK
         return false;
     }
 
@@ -557,8 +562,10 @@ final class O1_Bad_Request {
         ob_get_level() && ob_end_clean();
         if ( $this->is_options_method ) {
             $this->disable_options_method();
+
         } elseif ( $this->is_xmlrpc ) {
             $this->fake_xmlrpc();
+
         } elseif ( ! headers_sent() ) {
             if ( $this->is_wplogin && ! empty( $_POST['log'] ) ) {
                 $this->fake_wplogin();
@@ -566,8 +573,6 @@ final class O1_Bad_Request {
                 $this->ban();
             }
         }
-
-        exit;
     }
 
     private function ban() {
@@ -680,10 +685,9 @@ final class O1_Bad_Request {
          */
         $log_destination = function_exists( 'ini_get' ) ? ini_get( 'error_log' ) : '';
         if ( ! empty( $log_destination ) ) {
+            $referer = '';
             if ( isset( $_SERVER['HTTP_REFERER'] ) ) {
                 $referer = sprintf( ', referer:%s', $this->esc_log( $_SERVER['HTTP_REFERER'] ) );
-            } else {
-                $referer = '';
             }
 
             $error_msg = sprintf( '[%s] [client %s:%s] %s%s',
@@ -763,8 +767,6 @@ final class O1_Bad_Request {
         return false;
     }
 }
-
-new O1_Bad_Request();
 
 /* @TODO
 - How to restrict AJAX content type?
