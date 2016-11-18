@@ -1,7 +1,7 @@
 <?php
 /*
 Plugin Name: WordPress Fail2ban (MU)
-Version: 4.10.5
+Version: 4.11.0
 Description: Stop WordPress related attacks and trigger Fail2ban.
 Plugin URI: https://github.com/szepeviktor/wordpress-fail2ban
 License: The MIT License (MIT)
@@ -10,6 +10,8 @@ GitHub Plugin URI: https://github.com/szepeviktor/wordpress-fail2ban
 Options: O1_WP_FAIL2BAN_DISABLE_LOGIN
 Options: O1_WP_FAIL2BAN_ALLOW_REDIRECT
 */
+
+namespace O1;
 
 if ( ! function_exists( 'add_filter' ) ) {
     error_log( 'Break-in attempt detected: wpf2b_mu_direct_access '
@@ -38,7 +40,7 @@ if ( ! function_exists( 'add_filter' ) ) {
  * @package wordpress-fail2ban
  * @see     README.md
  */
-final class O1_WP_Fail2ban_MU {
+final class WP_Fail2ban_MU {
 
     private $prefix = 'Malicious traffic detected: ';
     private $prefix_instant = 'Break-in attempt detected: ';
@@ -660,7 +662,7 @@ final class O1_WP_Fail2ban_MU {
     }
 }
 
-new O1_WP_Fail2ban_MU();
+new WP_Fail2ban_MU();
 
 /*
 - non-attack 404:

@@ -1,6 +1,6 @@
 # WordPress Fail2ban
 
-Trigger banning on malicious requests by the Fail2ban daemon running on a server.  
+Trigger banning on malicious HTTP requests by the Fail2ban daemon running on your server.  
 Shared hosting has no server-wide banning (because of security reasons)
 but you can install it without Fail2ban to stop attacks by using one of the Miniban methods.
 
@@ -9,20 +9,20 @@ Your WordPress (really HTTP) security consists of:
 1. Use HTTPS
 1. Have daily backup
 1. Blocking known *shadow nets*
-1. Have Fail2ban installed which controlls the firewall
+1. Have Fail2ban installed (controls the firewall)
 1. Maintain your website + use strict Fail2ban filters which ban at the first attack instantly
-1. Deny access to core WordPress files, themes and plugins
+1. Deny direct access to core WordPress files, themes and plugins
 1. WordPress Fail2ban (this project)
-1. Leanmail which filters notification emails
+1. Leanmail (filters notification emails)
 
-See the security and webserver folder in my `debian-server-tools` repo.
+See the security and webserver folders in my `debian-server-tools` repo.
 
-### O1_Bad_Request class
+### Bad_Request class
 
-Examines every HTTP header in a login requests and triggers Fail2ban accordingly.
+Examines every header in an HTTP requests and triggers Fail2ban accordingly.
 
-To install copy `wp-fail2ban-bad-request-instant.inc.php`
-beside your `wp-config.php` and copy this line in top of `wp-config.php`:
+To install it copy `wp-fail2ban-bad-request-instant.inc.php`
+beside your `wp-config.php` and copy these two lines in top of `wp-config.php`:
 
 ```php
 require_once __DIR__ . '/wp-fail2ban-bad-request-instant.inc.php';
@@ -31,7 +31,7 @@ new O1\Bad_Request();
 
 Or – in a worse case – install it as an MU plugin.
 
-### O1_WP_Fail2ban_MU class
+### WP_Fail2ban_MU class
 
 It is an MU plugin that triggers Fail2ban on various attack types. Login is only logged, use
 O1_Bad_Request class for handling that.
@@ -39,7 +39,7 @@ O1_Bad_Request class for handling that.
 To install copy `wp-fail2ban-mu.php` into your `wp-content/mu-plugins/` directory.
 You may have to create the `mu-plugins` directory. It activates automatically.
 
-### non-wp-projects folder
+### Non-wp-projects folder
 
 Triggers Fail2ban on WordPress login probes.
 
