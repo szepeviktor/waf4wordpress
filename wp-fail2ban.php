@@ -3,7 +3,7 @@
 Plugin Name: WordPress fail2ban
 Plugin URI: https://github.com/szepeviktor/wordpress-fail2ban
 Description: Reports 404s and various attacks in error.log for fail2ban
-Version: 0.9.1
+Version: 0.9.2
 Upstream: based on WordPress fail2ban MU v2.5
 License: The MIT License (MIT)
 Author: Viktor Szépe
@@ -22,7 +22,7 @@ if ( ! function_exists( 'add_filter' ) ) {
 
 class O1_ErrorLog404 {
 
-    private $prefix = 'Malicious traffic detected by wpf2b: ';
+    private $prefix = 'Malicious traffic detected: ';
     private $wp_die_ajax_handler;
     private $wp_die_xmlrpc_handler;
     private $wp_die_handler;

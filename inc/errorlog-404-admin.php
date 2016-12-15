@@ -1,7 +1,7 @@
 <?php
 
 if ( ! defined( 'ABSPATH' ) ) {
-    error_log( 'Malicious traffic detected by wpf2b: wpf2badmin_direct_access ' . $_SERVER['REQUEST_URI'] );
+    error_log( 'Malicious traffic detected: wpf2badmin_direct_access ' . $_SERVER['REQUEST_URI'] );
     header( 'Status: 403 Forbidden' );
     header( 'HTTP/1.1 403 Forbidden' );
     exit();
@@ -88,7 +88,7 @@ class O1_Errorlog_404_admin {
                     'desc' => __( 'The constant part of <code>failregex</code> in the fail2ban filter. Error codes will be appended to this string.', 'o1' ),
                     'type' => 'text',
                     'size' => 30,
-                    'default' => 'Malicious traffic detected by wpf2b:'
+                    'default' => 'Malicious traffic detected:'
                 ),
                 array(
                     'id' => 'maxretry',

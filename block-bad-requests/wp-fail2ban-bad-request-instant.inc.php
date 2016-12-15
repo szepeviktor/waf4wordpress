@@ -27,6 +27,7 @@ namespace O1;
  * Require it from the top of your wp-config.php:
  *
  *     require_once __DIR__ . '/wp-fail2ban-bad-request-instant.inc.php';
+ *     new O1\Bad_Request();
  *
  * @package wordpress-fail2ban
  * @see     README.md
@@ -767,14 +768,3 @@ final class Bad_Request {
         return false;
     }
 }
-
-/* @TODO
-- How to restrict AJAX content type?
-- Block CDN attacks by another method
-- check POST: no more, no less variables
-    a:5:{s:11:"redirect_to";s:28:"http://domain.com/wp-admin/";s:10:"testcookie";s:1:"1";s:3:"log";s:5:"admin";s:3:"pwd";s:6:"123456";s:9:"wp-submit";s:6:"Log In";}
-- order of headers to identify attackers
-- wp-login POST: login, postpass, resetpass, lostpassword, register
-- wp-login GET: logout, rp, lostpassword
-- non-login POST-s: comment, trackback, pingback, XML-RPC, WP-API, plugin POST-s
-*/
