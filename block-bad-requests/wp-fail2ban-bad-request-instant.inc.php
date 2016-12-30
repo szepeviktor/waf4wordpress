@@ -1,7 +1,7 @@
 <?php
 /*
 Plugin Name: Block Bad Requests (required from wp-config or MU plugin)
-Version: 2.15.0
+Version: 2.15.1
 Description: Stop various HTTP attacks and trigger Fail2ban.
 Plugin URI: https://github.com/szepeviktor/wordpress-fail2ban
 License: The MIT License (MIT)
@@ -541,7 +541,7 @@ final class Bad_Request {
 
         // Trigger miniban
         if ( class_exists( 'Miniban' ) && $this->instant_trigger ) {
-            if ( true !== Miniban::ban() ) {
+            if ( true !== \Miniban::ban() ) {
                 error_log( 'Miniban operation failed.' );
             }
         }

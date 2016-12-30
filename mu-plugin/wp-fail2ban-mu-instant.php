@@ -1,7 +1,7 @@
 <?php
 /*
 Plugin Name: WordPress Fail2ban (MU)
-Version: 4.11.0
+Version: 4.11.1
 Description: Stop WordPress related attacks and trigger Fail2ban.
 Plugin URI: https://github.com/szepeviktor/wordpress-fail2ban
 License: The MIT License (MIT)
@@ -153,7 +153,7 @@ final class WP_Fail2ban_MU {
 
         // Trigger Miniban at first
         if ( class_exists( 'Miniban' ) ) {
-            if ( true !== Miniban::ban() ) {
+            if ( true !== \Miniban::ban() ) {
                 $this->enhanced_error_log( 'Miniban operation failed.' );
             }
         }
@@ -195,7 +195,7 @@ final class WP_Fail2ban_MU {
 
         // Report to Sucuri Scan
         if ( class_exists( 'SucuriScanEvent' ) ) {
-            if ( true !== SucuriScanEvent::report_critical_event( $error_msg ) ) {
+            if ( true !== \SucuriScanEvent::report_critical_event( $error_msg ) ) {
                 error_log( 'Sucuri Scan report event failure.' );
             }
         }
@@ -211,9 +211,9 @@ final class WP_Fail2ban_MU {
                 $context['_server_http_user_agent'] = $this->esc_log( $_SERVER['HTTP_USER_AGENT'] );
             }
             if ( ! class_exists( 'SimpleLogger' ) ) {
-                SimpleHistory::get_instance()->load_loggers();
+                \SimpleHistory::get_instance()->load_loggers();
             }
-            SimpleLogger()->log( $simple_level, $error_msg, $context );
+            \SimpleLogger()->log( $simple_level, $error_msg, $context );
         }
 
     }
