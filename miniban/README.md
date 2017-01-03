@@ -12,7 +12,7 @@ Miniban::init(
     __DIR__ . '/.htaccess',
     // These IP addresses and IP ranges will get whitelisted.
     array( '127.0.0.0/8', 'SERVER-IP', '66.249.64.0/19' ),
-    array( 'header' => 'Remote_Addr' )
+    array( 'header' => 'Remote_Addr', 'autounban' => true )
 );
 ```
 

@@ -158,11 +158,11 @@ abstract class Miniban_Base {
         return ( ( $ip_decimal & $netmask_decimal ) === ( $range_decimal & $netmask_decimal ) );
     }
 }
-
+<?php
 /**
  * Htaccess Miniban method
  *
- * @version    0.1.2
+ * @version    0.1.3
  * @package    miniban
  * @link       https://github.com/szepeviktor/wordpress-fail2ban
  * @author     Viktor Szépe
@@ -221,6 +221,7 @@ class Miniban extends Miniban_Base {
         }
 
         // Prepare .htaccess rule
+        $parameters = array( 'operation' => 'add' );
         $expires = time() + $ban_time;
         $ban_line = sprintf( 'SetEnvIf %s "^%s$" mini_ban #%s',
             parent::$extra_config['header'],
@@ -228,9 +229,9 @@ class Miniban extends Miniban_Base {
             $expires
         );
 
-        return parent::alter_config( 'static::insert_with_markers',
-            array( 'contents' => $ban_line, 'operation' => 'add' ), 'r+'
-        );
+        $parameters['contents'] = $ban_line;
+
+        return parent::alter_config( 'static::insert_with_markers', $parameters, 'r+' );
     }
 
     public static function unban( $unban_ip = null ) {
@@ -246,7 +247,7 @@ class Miniban extends Miniban_Base {
         $parameters = array( 'operation' => 'del' );
 
         if ( $unban_ip ) {
-            // One IP
+            // Unban one IP
             $ban_line = sprintf( 'SetEnvIf %s "^%s$" mini_ban',
                 parent::$extra_config['header'],
                 preg_quote( $unban_ip )
@@ -274,6 +275,9 @@ class Miniban extends Miniban_Base {
         }
         $output = array();
         $foundit = false;
+        // For auto unban
+        $now = time();
+        $ban_line_start = sprintf( 'SetEnvIf %s "^', parent::$extra_config['header'] );
 
         if ( ! empty( $contents ) ) {
             $foreign = true;
@@ -283,28 +287,44 @@ class Miniban extends Miniban_Base {
                 if ( false !== strpos( $markerline, '# BEGIN MINIBAN' ) ) {
                     $foreign = false;
                 }
+
                 // # END
                 if ( false === $foreign && false !== strpos( $markerline, '# END MINIBAN' ) ) {
                     $foundit = true;
                     $foreign = true;
                     if ( 'add' === $operation ) {
+                        // Ban
                         $output[] = $parameters['contents'];
                     }
                 }
 
-                // Ban
                 if ( 'add' === $operation ) {
-                    $output[] = $markerline;
-
+                    if ( isset( parent::$extra_config['autounban'] ) ) {
+                        // Automatically unban expired ones
+                        if ( true === $foreign
+                            || false === strpos( $markerline, '#' )
+                            || ! ( list( $marker_rule, $marker_expires ) = explode( '#', $markerline ) )
+                            || false === strpos( $marker_rule, $ban_line_start )
+                            || ( is_numeric( $marker_expires )
+                                && (int) $marker_expires > $now
+                            )
+                        ) {
+                            $output[] = $markerline;
+                        }
+                    } else {
+                        // Keep old lines
+                        $output[] = $markerline;
+                    }
                 } elseif ( 'del' === $operation ) {
                     // Unban one IP or all expired
-                    // Inside our makers?
-                    //     Contains "#"?
-                    //     Parse line - not a condition
-                    //     Rule matches?
-                    //     Time provided? -> check expiration
-                    //         Valid timestamp
-                    //         Not yet expired
+                    /* Inside our makers?
+                     *     Contains "#"?
+                     *     Parse line - not a condition
+                     *     Rule matches?
+                     *     Time provided? -> check expiration
+                     *         Valid timestamp
+                     *         Not yet expired
+                     */
                     if ( true === $foreign
                         || false === strpos( $markerline, '#' )
                         || ! ( list( $marker_rule, $marker_expires ) = explode( '#', $markerline ) )
@@ -316,9 +336,9 @@ class Miniban extends Miniban_Base {
                     ) {
                         $output[] = $markerline;
                     }
-                }
-            }
-        }
+                } // End if().
+            } // End foreach().
+        } // End if().
 
         if ( ! $foundit ) {
             $output[] = '';
@@ -340,7 +360,3 @@ class Miniban extends Miniban_Base {
         return fwrite( $handle, $output_lines );
     }
 }
-
-/* @TODO
-- Add auto unban on ban
-*/

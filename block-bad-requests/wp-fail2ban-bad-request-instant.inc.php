@@ -197,7 +197,7 @@ final class Bad_Request {
 
         // Don't ban on local access and on install or upgrade
         // WP_INSTALLING is available even before wp-config.php
-        if ( php_sapi_name() === 'cli'
+        if ( 'cli' === php_sapi_name()
             || $_SERVER['REMOTE_ADDR'] === $_SERVER['SERVER_ADDR']
             || ( defined( 'WP_INSTALLING' ) && WP_INSTALLING )
         ) {
