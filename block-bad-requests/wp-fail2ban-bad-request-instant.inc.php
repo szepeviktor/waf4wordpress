@@ -1,7 +1,7 @@
 <?php
 /*
 Plugin Name: Block Bad Requests (required from wp-config or MU plugin)
-Version: 2.15.1
+Version: 2.15.2
 Description: Stop various HTTP attacks and trigger Fail2ban.
 Plugin URI: https://github.com/szepeviktor/wordpress-fail2ban
 License: The MIT License (MIT)
@@ -58,6 +58,7 @@ final class Bad_Request {
         'internet',
         'login',
         'master',
+        'marketing',
         'number',
         'office',
         'pass',
