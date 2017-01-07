@@ -12,7 +12,7 @@ Miniban::init(
     __DIR__ . '/.htaccess',
     // These IP addresses and IP ranges will get whitelisted.
     array( '127.0.0.0/8', 'SERVER-IP', '66.249.64.0/19' ),
-    array( 'header' => 'Remote_Addr', 'autounban' => true )
+    array( 'autounban' => true )
 );
 ```
 
@@ -21,7 +21,7 @@ Miniban::init(
 Set up daily cron job to unban old bans.
 
 ```
-php -r 'require "/PATH/TO/wp-miniban-htaccess.inc.php"; Miniban::unban();'
+php -r 'require "/PATH/TO/wp-miniban-htaccess.inc.php";Miniban::init("/DOC-ROOT/.htaccess");Miniban::unban();'
 ```
 
 The best place to run Miniban is the PHP directive `auto_prepend_file`.
