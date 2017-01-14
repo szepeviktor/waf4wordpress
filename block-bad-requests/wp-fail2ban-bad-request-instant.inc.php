@@ -1,13 +1,14 @@
 <?php
 /*
 Plugin Name: Block Bad Requests (required from wp-config or MU plugin)
-Version: 2.15.2
+Version: 2.15.3
 Description: Stop various HTTP attacks and trigger Fail2ban.
 Plugin URI: https://github.com/szepeviktor/wordpress-fail2ban
 License: The MIT License (MIT)
 Author: Viktor Szépe
 GitHub Plugin URI: https://github.com/szepeviktor/wordpress-fail2ban
 Options: O1_BAD_REQUEST_INSTANT
+Options: O1_BAD_REQUEST_PROXY_HOME_URL
 Options: O1_BAD_REQUEST_MAX_LOGIN_REQUEST_SIZE
 Options: O1_BAD_REQUEST_CDN_HEADERS
 Options: O1_BAD_REQUEST_ALLOW_REG
@@ -27,7 +28,7 @@ namespace O1;
  * Require it from the top of your wp-config.php:
  *
  *     require_once __DIR__ . '/wp-fail2ban-bad-request-instant.inc.php';
- *     new O1\Bad_Request();
+ *     new \O1\Bad_Request();
  *
  * @package wordpress-fail2ban
  * @see     README.md
@@ -80,7 +81,7 @@ final class Bad_Request {
     private $blacklist = array(
         '../', // path traversal
         '/..', // path traversal
-        'wp-config', // WP core
+        'wp-config', // WP configuration
         '/brake/wp-admin/', // from fake_wplogin()
         'allow_url_include', // PHP directive
         'auto_prepend_file', // PHP directive
@@ -89,6 +90,7 @@ final class Bad_Request {
         'bigdump.php', // Staggered MySQL Dump Importer
         'wso.php', // Web Shell
         'w00tw00t', // DFind Scanner
+        'configuration.php', // Joomla configuration
         '/administrator', // Joomla Administrator
         'connector.asp', // Joomla FCKeditor 2.x File Manager Connector for ASP
         '/HNAP1', // D-Link routers
@@ -99,6 +101,7 @@ final class Bad_Request {
         'htaccess', // Apache httpd configuration
         'web.config', // IIS configuration
     );
+    private $relative_request_uri;
     private $cdn_headers;
     private $allow_registration = false;
     private $allow_ie8_login = false;
@@ -118,6 +121,15 @@ final class Bad_Request {
         // Options
         if ( defined( 'O1_BAD_REQUEST_INSTANT' ) && false === O1_BAD_REQUEST_INSTANT ) {
             $this->instant_trigger = false;
+        }
+
+        $this->relative_request_uri = $_SERVER['REQUEST_URI'];
+        // O1_BAD_REQUEST_PROXY_HOME_URL should not contain a trailing slash
+        if ( defined( 'O1_BAD_REQUEST_PROXY_HOME_URL' ) ) {
+            $home_url_length = strlen( O1_BAD_REQUEST_PROXY_HOME_URL );
+            if ( O1_BAD_REQUEST_PROXY_HOME_URL === substr( $_SERVER['REQUEST_URI'], 0, $home_url_length ) ) {
+                $this->relative_request_uri = substr( $_SERVER['REQUEST_URI'], $home_url_length );
+            }
         }
 
         if ( defined( 'O1_BAD_REQUEST_MAX_LOGIN_REQUEST_SIZE' ) ) {
@@ -209,10 +221,10 @@ final class Bad_Request {
         $request_method = strtoupper( $_SERVER['REQUEST_METHOD'] );
         $wp_methods = array( 'HEAD', 'GET', 'POST' );
         $wp_login_methods = array( 'GET', 'POST' );
-        $request_path = parse_url( $_SERVER['REQUEST_URI'], PHP_URL_PATH );
+        $request_path = parse_url( $this->relative_request_uri, PHP_URL_PATH );
         $request_query = isset( $_SERVER['QUERY_STRING'] )
             ? $_SERVER['QUERY_STRING']
-            : parse_url( $_SERVER['REQUEST_URI'], PHP_URL_QUERY );
+            : parse_url( $this->relative_request_uri, PHP_URL_QUERY );
         $server_name = isset( $_SERVER['SERVER_NAME'] )
             ? $_SERVER['SERVER_NAME']
             : $_SERVER['HTTP_HOST'];
@@ -236,6 +248,8 @@ final class Bad_Request {
 
         // Too big HTTP request URI
         // Apache: LimitRequestLine directive
+        // By standard: HTTP/414 Request-URI Too Long
+        // https://tools.ietf.org/html/rfc2616#section-10.4.15
         if ( strlen( $_SERVER['REQUEST_URI'] ) > 2000 ) {
             return 'bad_request_uri_length';
         }
@@ -262,7 +276,7 @@ final class Bad_Request {
         }
 
         // Request URI does not begin with forward slash (may begin with URL scheme)
-        if ( '/' !== substr( $_SERVER['REQUEST_URI'], 0, 1 ) ) {
+        if ( '/' !== substr( $this->relative_request_uri, 0, 1 ) ) {
             return 'bad_request_uri_slash';
         }
 
@@ -279,6 +293,12 @@ final class Bad_Request {
             || false !== strpos( $_SERVER['REQUEST_URI'], '#' )
             || 1 === preg_match( "/[^%:\/?\[\]@!$&'()*+,;=A-Za-z0-9._~-]/", $_SERVER['REQUEST_URI'] )
         ) {
+            /* @TODO IE{8,9,10,11} may send UTF-8 encoded query string
+                "^Mozilla/5\.0 (Windows NT [0-9.]*;.* Trident/7\.0; rv:11\.0) like Gecko"
+                "^Mozilla/5\.0 (compatible; MSIE 10\.0; Windows NT [0-9.]*;.* Trident/6\.0"
+                "^Mozilla/5\.0 (compatible; MSIE 9\.0; Windows NT [0-9.]*;.* Trident/5\.0"
+                "^Mozilla/4\.0 (compatible; MSIE 8\.0; Windows NT [0-9.]*;.* Trident/4\.0"
+            */
             $this->instant_trigger = false;
             return 'bad_request_uri_encoding';
         }
@@ -294,8 +314,8 @@ final class Bad_Request {
         }
 
         // robots.txt probing in a subdirectory
-        if ( false !== stripos( $_SERVER['REQUEST_URI'], 'robots.txt' )
-            && '/robots.txt' !== $_SERVER['REQUEST_URI']
+        if ( false !== stripos( $this->relative_request_uri, 'robots.txt' )
+            && '/robots.txt' !== $this->relative_request_uri
         ) {
             return 'bad_request_robots_probe';
         }
@@ -317,7 +337,7 @@ final class Bad_Request {
             return false;
         }
 
-        // --------------------------- >8 ---------------------------
+        // --------------------------- %< ---------------------------
         // is_post
 
         if ( defined( 'XMLRPC_REQUEST' ) && XMLRPC_REQUEST ) {
@@ -337,6 +357,7 @@ final class Bad_Request {
                         $files['type'] = array( $files['type'] );
                     }
                 }
+                // @TODO Block Flash upload .swf application/x-shockwave-flash
                 foreach ( $files['name'] as $index => $notused ) {
                     if ( false !== stripos( $files['name'][ $index ], '.php' )
                         || (
@@ -399,7 +420,7 @@ final class Bad_Request {
             return false;
         }
 
-        // --------------------------- >8 ---------------------------
+        // --------------------------- %< ---------------------------
         // is_wplogin
 
         // wp-login methods
@@ -463,7 +484,7 @@ final class Bad_Request {
             }
         }
 
-        // --------------------------- >8 ---------------------------
+        // --------------------------- %< ---------------------------
         // NOT wp-login/postpass
 
         // Referer HTTP header
