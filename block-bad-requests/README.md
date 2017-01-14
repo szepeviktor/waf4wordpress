@@ -8,7 +8,7 @@ To install copy `wp-fail2ban-bad-request-instant.inc.php` beside your `wp-config
 
 ```php
 require_once dirname( __FILE__ ) . '/wp-fail2ban-bad-request-instant.inc.php';
-new O1\Bad_Request();
+new \O1\Bad_Request();
 ```
 
 Or – in a worse case – install it as an mu-plugin.
