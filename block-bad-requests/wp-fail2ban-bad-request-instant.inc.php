@@ -129,6 +129,9 @@ final class Bad_Request {
             $home_url_length = strlen( O1_BAD_REQUEST_PROXY_HOME_URL );
             if ( O1_BAD_REQUEST_PROXY_HOME_URL === substr( $_SERVER['REQUEST_URI'], 0, $home_url_length ) ) {
                 $this->relative_request_uri = substr( $_SERVER['REQUEST_URI'], $home_url_length );
+                // FIXME Fix request URI
+                // https://core.trac.wordpress.org/ticket/39586
+                //$_SERVER['REQUEST_URI'] = $this->relative_request_uri;
             }
         }
 
