@@ -1,7 +1,7 @@
 <?php
 /*
 Plugin Name: WordPress Fail2ban (MU)
-Version: 4.11.1
+Version: 4.11.2
 Description: Stop WordPress related attacks and trigger Fail2ban.
 Plugin URI: https://github.com/szepeviktor/wordpress-fail2ban
 License: The MIT License (MIT)
@@ -391,7 +391,7 @@ final class WP_Fail2ban_MU {
             $this->trigger_instant( 'wpf2b_login_disabled_banned_username', $username );
         }
 
-        $user = new WP_Error( 'invalidcombo', __( '<strong>NOTICE</strong>: Login is disabled for now.' ) );
+        $user = new \WP_Error( 'invalidcombo', __( '<strong>NOTICE</strong>: Login is disabled for now.' ) );
         $this->trigger( 'wpf2b_login_disabled', $username );
 
         return $user;
