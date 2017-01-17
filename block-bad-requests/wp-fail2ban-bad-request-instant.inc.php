@@ -1,7 +1,7 @@
 <?php
 /*
 Plugin Name: Block Bad Requests (required from wp-config or MU plugin)
-Version: 2.15.3
+Version: 2.15.4
 Description: Stop various HTTP attacks and trigger Fail2ban.
 Plugin URI: https://github.com/szepeviktor/wordpress-fail2ban
 License: The MIT License (MIT)
@@ -100,6 +100,7 @@ final class Bad_Request {
         'error-log', // PHP error log
         'htaccess', // Apache httpd configuration
         'web.config', // IIS configuration
+        'etc/passwd', // Linux password file
     );
     private $relative_request_uri;
     private $cdn_headers;
@@ -253,7 +254,8 @@ final class Bad_Request {
         // Apache: LimitRequestLine directive
         // By standard: HTTP/414 Request-URI Too Long
         // https://tools.ietf.org/html/rfc2616#section-10.4.15
-        if ( strlen( $_SERVER['REQUEST_URI'] ) > 2000 ) {
+        // 2500 bytes ~ deletion of 50 spam comments (GET form)
+        if ( strlen( $_SERVER['REQUEST_URI'] ) > 2500 ) {
             return 'bad_request_uri_length';
         }
 
