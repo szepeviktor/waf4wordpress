@@ -58,8 +58,8 @@ final class Bad_Request {
         'information',
         'internet',
         'login',
-        'master',
         'marketing',
+        'master',
         'number',
         'office',
         'pass',
@@ -261,7 +261,7 @@ final class Bad_Request {
 
         // Too big user agent
         if ( isset( $_SERVER['HTTP_USER_AGENT'] )
-            && strlen( $_SERVER['HTTP_USER_AGENT'] ) > 400
+            && strlen( $_SERVER['HTTP_USER_AGENT'] ) > 472
         ) {
             return 'bad_request_user_agent_length';
         }
