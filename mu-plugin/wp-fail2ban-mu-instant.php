@@ -64,6 +64,7 @@ final class WP_Fail2ban_MU {
         'information',
         'internet',
         'login',
+        'marketing',
         'master',
         'number',
         'office',
