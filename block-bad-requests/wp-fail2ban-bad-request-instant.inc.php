@@ -1,7 +1,7 @@
 <?php
 /*
 Plugin Name: Block Bad Requests (required from wp-config or MU plugin)
-Version: 2.15.4
+Version: 2.16.0
 Description: Stop various HTTP attacks and trigger Fail2ban.
 Plugin URI: https://github.com/szepeviktor/wordpress-fail2ban
 License: The MIT License (MIT)
@@ -102,7 +102,7 @@ final class Bad_Request {
         'web.config', // IIS configuration
         'etc/passwd', // Linux password file
     );
-    private $relative_request_uri;
+    private $relative_request_uri = '';
     private $cdn_headers;
     private $allow_registration = false;
     private $allow_ie8_login = false;
@@ -119,12 +119,23 @@ final class Bad_Request {
      */
     public function __construct() {
 
+        // Don't run on local access and on install or upgrade
+        // WP_INSTALLING is available even before wp-config.php
+        if ( 'cli' === php_sapi_name()
+            || $_SERVER['REMOTE_ADDR'] === $_SERVER['SERVER_ADDR']
+            || ( defined( 'WP_INSTALLING' ) && WP_INSTALLING )
+        ) {
+            return;
+        }
+
         // Options
         if ( defined( 'O1_BAD_REQUEST_INSTANT' ) && false === O1_BAD_REQUEST_INSTANT ) {
             $this->instant_trigger = false;
         }
 
-        $this->relative_request_uri = $_SERVER['REQUEST_URI'];
+        if ( isset( $_SERVER['REQUEST_URI'] ) ) {
+            $this->relative_request_uri = $_SERVER['REQUEST_URI']
+        }
         // O1_BAD_REQUEST_PROXY_HOME_URL should not contain a trailing slash
         if ( defined( 'O1_BAD_REQUEST_PROXY_HOME_URL' ) ) {
             $home_url_length = strlen( O1_BAD_REQUEST_PROXY_HOME_URL );
@@ -210,16 +221,6 @@ final class Bad_Request {
 
                 return $headers;
             }
-        }
-
-        // Don't ban on local access and on install or upgrade
-        // WP_INSTALLING is available even before wp-config.php
-        if ( 'cli' === php_sapi_name()
-            || $_SERVER['REMOTE_ADDR'] === $_SERVER['SERVER_ADDR']
-            || ( defined( 'WP_INSTALLING' ) && WP_INSTALLING )
-        ) {
-            // Local access
-            return false;
         }
 
         $request_method = strtoupper( $_SERVER['REQUEST_METHOD'] );
