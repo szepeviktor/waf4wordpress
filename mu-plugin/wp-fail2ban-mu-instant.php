@@ -1,12 +1,13 @@
 <?php
 /*
 Plugin Name: WordPress Fail2ban (MU)
-Version: 4.11.2
+Version: 4.11.3
 Description: Stop WordPress related attacks and trigger Fail2ban.
 Plugin URI: https://github.com/szepeviktor/wordpress-fail2ban
 License: The MIT License (MIT)
 Author: Viktor Szépe
 GitHub Plugin URI: https://github.com/szepeviktor/wordpress-fail2ban
+Options: O1_WP_FAIL2BAN_DISABLE_REST_API
 Options: O1_WP_FAIL2BAN_DISABLE_LOGIN
 Options: O1_WP_FAIL2BAN_ALLOW_REDIRECT
 */
@@ -99,6 +100,11 @@ final class WP_Fail2ban_MU {
         // Prevent usage as a normal plugin in wp-content/plugins
         if ( did_action( 'muplugins_loaded' ) ) {
             $this->exit_with_instructions();
+        }
+
+        // Disable REST API
+        if ( defined( 'O1_WP_FAIL2BAN_DISABLE_REST_API' ) && O1_WP_FAIL2BAN_DISABLE_REST_API ) {
+            add_action( 'parse_request', array( $this, 'rest_api_disabled' ), 11 );
         }
 
         // Don't redirect to admin
@@ -367,6 +373,13 @@ final class WP_Fail2ban_MU {
         }
     }
 
+    public function rest_api_disabled() {
+
+        if ( defined( 'REST_REQUEST' ) && REST_REQUEST ) {
+            $this->trigger( 'wpf2b_rest_api_disabled', $_SERVER['REQUEST_URI'], 'notice' );
+        }
+    }
+
     public function redirect( $redirect_url, $requested_url ) {
 
         if ( false === $this->is_redirect ) {
@@ -501,7 +514,9 @@ final class WP_Fail2ban_MU {
     public function wp_die_ajax_handler( $message, $title, $args ) {
 
         // wp-admin/includes/ajax-actions.php returns -1 on security breach
-        if ( ! is_scalar( $message ) || (int) $message < 0 ) {
+        if ( ! ( is_scalar( $message ) || $this->is_whitelisted_error( $message ) )
+            || (int) $message < 0
+        ) {
             $this->trigger( 'wpf2b_wpdie_ajax', $message );
         }
 
@@ -543,6 +558,26 @@ final class WP_Fail2ban_MU {
 
         // Call previous handler
         call_user_func( $this->wp_die_handler, $message, $title, $args );
+    }
+
+    private function is_whitelisted_error( $error ) {
+
+        if ( ! is_wp_error( $error ) ) {
+            return false;
+        }
+
+        $whitelist = array(
+            'themes_api_failed',
+            'plugins_api_failed',
+            'translations_api_failed',
+        );
+        $code = $error->get_error_code();
+
+        if ( in_array( $code, $whitelist ) ) {
+            return true;
+        }
+
+        return false;
     }
 
     public function hook_all_action() {
