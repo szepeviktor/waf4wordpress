@@ -1,7 +1,7 @@
 <?php
 /*
 Plugin Name: WordPress Fail2ban (MU)
-Version: 4.11.3
+Version: 4.11.4
 Description: Stop WordPress related attacks and trigger Fail2ban.
 Plugin URI: https://github.com/szepeviktor/wordpress-fail2ban
 License: The MIT License (MIT)
@@ -104,7 +104,7 @@ final class WP_Fail2ban_MU {
 
         // Disable REST API
         if ( defined( 'O1_WP_FAIL2BAN_DISABLE_REST_API' ) && O1_WP_FAIL2BAN_DISABLE_REST_API ) {
-            add_action( 'parse_request', array( $this, 'rest_api_disabled' ), 11 );
+            add_filter( 'rest_enabled', array( $this, 'rest_api_disabled' ), 99999 );
         }
 
         // Don't redirect to admin
@@ -373,11 +373,13 @@ final class WP_Fail2ban_MU {
         }
     }
 
-    public function rest_api_disabled() {
+    public function rest_api_disabled( $enabled ) {
 
         if ( defined( 'REST_REQUEST' ) && REST_REQUEST ) {
             $this->trigger( 'wpf2b_rest_api_disabled', $_SERVER['REQUEST_URI'], 'notice' );
         }
+
+        return false;
     }
 
     public function redirect( $redirect_url, $requested_url ) {
