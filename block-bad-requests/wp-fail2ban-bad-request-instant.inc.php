@@ -252,7 +252,7 @@ final class Bad_Request {
         }
 
         // Too big HTTP request URI
-        // Apache: LimitRequestLine directive
+        // Apache: LimitRequestLine directive defaults to 8190
         // By standard: HTTP/414 Request-URI Too Long
         // https://tools.ietf.org/html/rfc2616#section-10.4.15
         // 2500 bytes ~ deletion of 50 spam comments (GET form)
