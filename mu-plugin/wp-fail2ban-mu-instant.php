@@ -138,6 +138,7 @@ final class WP_Fail2ban_MU {
         // Robot and human 404
         add_action( 'plugins_loaded', array( $this, 'robot_403' ), 0 );
         add_action( 'template_redirect', array( $this, 'wp_404' ) );
+        add_filter( 'rest_post_dispatch', array( $this, 'rest_40x' ), 0, 3 );
 
         // Non-empty wp_die messages
         add_filter( 'wp_die_ajax_handler', array( $this, 'wp_die_ajax' ), 1 );
@@ -364,6 +365,28 @@ final class WP_Fail2ban_MU {
         $this->trigger( 'wpf2b_404', $_SERVER['REQUEST_URI'], 'info' );
     }
 
+    public function rest_40x( $response, $instance, $request ) {
+
+        if ( $response instanceof \WP_HTTP_Response ) {
+            $status = $response->get_status();
+            switch ( $status ) {
+                case '403':
+                case '404':
+                    $data = $response->get_data();
+                    $method = $request->get_method();
+                    $route = $request->get_route();
+                    $message = sprintf( '%s <%s:%s', $data['code'], $method, $route );
+                    $this->trigger( 'wpf2b_rest_error', $message );
+                    break;
+            }
+        } else {
+            // @TODO Handle non-WP_HTTP_Response errors
+            $this->trigger( 'wpf2b_rest_error', 'Not a REST response but a ' . get_class( $response ) );
+        }
+
+        return $response;
+    }
+
     public function url_hack() {
 
         if ( '//' === substr( $_SERVER['REQUEST_URI'], 0, 2 ) ) {
@@ -586,11 +609,11 @@ final class WP_Fail2ban_MU {
 
         // Don't slow down everything
         if ( ! empty( $_REQUEST['action'] ) ) {
-            add_action( 'all', array( $this, 'all_action' ), 0 );
+            add_action( 'all', array( $this, 'unknown_action' ), 0 );
         }
     }
 
-    public function all_action( $tag ) {
+    public function unknwon_action( $tag ) {
 
         // Check tag first to speed things up
         if ( 'wp_ajax_' === substr( $tag, 0, 8 )
