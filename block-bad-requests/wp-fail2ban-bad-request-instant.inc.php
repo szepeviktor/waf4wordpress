@@ -134,7 +134,7 @@ final class Bad_Request {
         }
 
         if ( isset( $_SERVER['REQUEST_URI'] ) ) {
-            $this->relative_request_uri = $_SERVER['REQUEST_URI']
+            $this->relative_request_uri = $_SERVER['REQUEST_URI'];
         }
         // O1_BAD_REQUEST_PROXY_HOME_URL should not contain a trailing slash
         if ( defined( 'O1_BAD_REQUEST_PROXY_HOME_URL' ) ) {
