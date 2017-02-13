@@ -613,7 +613,7 @@ final class WP_Fail2ban_MU {
         }
     }
 
-    public function unknwon_action( $tag ) {
+    public function unknown_action( $tag ) {
 
         // Check tag first to speed things up
         if ( 'wp_ajax_' === substr( $tag, 0, 8 )
