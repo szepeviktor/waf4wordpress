@@ -88,9 +88,11 @@ abstract class Miniban_Base {
         return true;
     }
 
-    abstract public static function ban( $ban_ip, $ban_time );
+    public static function ban( $ban_ip, $ban_time ) {
+    }
 
-    abstract public static function unban( $unban_ip = null );
+    public static function unban( $unban_ip = null ) {
+    }
 
     final protected static function alter_config( $function, $parameters = array(), $fmode = 'c+' ) {
 
@@ -158,7 +160,7 @@ abstract class Miniban_Base {
         return ( ( $ip_decimal & $netmask_decimal ) === ( $range_decimal & $netmask_decimal ) );
     }
 }
-<?php
+
 /**
  * Htaccess Miniban method
  *
