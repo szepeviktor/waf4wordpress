@@ -1,8 +1,8 @@
 <?php
 /*
-Plugin Name: Proactive security with Fail2ban
-Version: 1.0.0
-Description: Prevent and ban various attacks.
+Plugin Name: Proactive security
+Version: 0.1.0
+Description: Prevent and ban general web and WordPress specific attacks.
 Plugin URI: https://github.com/szepeviktor/wordpress-fail2ban
 Author: Viktor Szépe
 */

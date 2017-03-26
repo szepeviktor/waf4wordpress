@@ -1,7 +1,7 @@
 <?php
 /*
 Plugin Name: Block Bad Requests (required from wp-config or MU plugin)
-Version: 2.16.0
+Version: 2.17.0
 Description: Stop various HTTP attacks and trigger Fail2ban.
 Plugin URI: https://github.com/szepeviktor/wordpress-fail2ban
 License: The MIT License (MIT)
@@ -38,9 +38,12 @@ final class Bad_Request {
     private $prefix = 'Malicious traffic detected: ';
     private $prefix_instant = 'Break-in attempt detected: ';
     private $instant_trigger = true;
+    // Default rest_url_prefix value
+    private $rest_url_prefix = '/wp-json/';
     private $max_login_request_size = 4000;
     private $is_wplogin = false;
     private $is_xmlrpc = false;
+    private $is_rest = false;
     private $is_options_method = false;
     private $names2ban = array(
         'access',
@@ -226,6 +229,8 @@ final class Bad_Request {
         $request_method = strtoupper( $_SERVER['REQUEST_METHOD'] );
         $wp_methods = array( 'HEAD', 'GET', 'POST' );
         $wp_login_methods = array( 'GET', 'POST' );
+        $wp_rest_methods = array( 'GET', 'POST', 'PUT', 'DELETE', 'OPTIONS' );
+        $write_methods = array( 'POST', 'PUT', 'DELETE' );
         $request_path = parse_url( $this->relative_request_uri, PHP_URL_PATH );
         $request_query = isset( $_SERVER['QUERY_STRING'] )
             ? $_SERVER['QUERY_STRING']
@@ -233,6 +238,13 @@ final class Bad_Request {
         $server_name = isset( $_SERVER['SERVER_NAME'] )
             ? $_SERVER['SERVER_NAME']
             : $_SERVER['HTTP_HOST'];
+        if ( defined( 'XMLRPC_REQUEST' ) && XMLRPC_REQUEST ) {
+            $this->is_xmlrpc = true;
+        } elseif ( false !== strpos( $request_path, '/wp-login.php' ) ) {
+            $this->is_wplogin = true;
+        } elseif ( false !== strpos( $request_path, $this->rest_url_prefix ) ) {
+            $this->is_rest = true;
+        }
 
         // Block non-static requests from CDN but allow robots.txt
         if ( ! empty( $this->cdn_headers ) && '/robots.txt' !== $request_path ) {
@@ -272,16 +284,24 @@ final class Bad_Request {
         // Microsoft Office Protocol Discovery does it also
         // Windows Explorer (Microsoft-WebDAV-MiniRedir) also
         // https://tools.ietf.org/html/rfc2616#section-9.2
-        if ( 'OPTIONS' === $request_method ) {
+        if ( ! $this->is_rest && 'OPTIONS' === $request_method ) {
             $this->is_options_method = true;
             $this->instant_trigger = false;
             return 'bad_request_http_options_method';
         }
-        if ( false === in_array( $request_method, $wp_methods ) ) {
+        if ( ! $this->is_wplogin && ! $this->is_rest
+            && false === in_array( $request_method, $wp_methods )
+        ) {
             return 'bad_request_http_method';
         }
+        if ( $this->is_wplogin && false === in_array( $request_method, $wp_login_methods ) ) {
+            return 'bad_request_wplogin_http_method';
+        }
+        if ( $this->is_rest && false === in_array( $request_method, $wp_rest_methods ) ) {
+            return 'bad_request_rest_http_method';
+        }
 
-        // Request URI does not begin with forward slash (may begin with URL scheme)
+        // Request URI does not begin with forward slash (maybe with URL scheme)
         if ( '/' !== substr( $this->relative_request_uri, 0, 1 ) ) {
             return 'bad_request_uri_slash';
         }
@@ -327,7 +347,7 @@ final class Bad_Request {
         }
 
         // WordPress author sniffing
-        // Except on post listing by author on wp-admin
+        // Except on post listing by author on wp-admin @TODO REST API exclusion?
         if ( false === strpos( $request_path, '/wp-admin/' )
             && isset( $_REQUEST['author'] )
             && is_numeric( $_REQUEST['author'] )
@@ -335,22 +355,16 @@ final class Bad_Request {
             return 'bad_request_wp_author_sniffing';
         }
 
-        // Check HTTP POST requests only
-        // wget sends: User-Agent, Accept, Host, Connection, Content-Type, Content-Length
-        // curl sends: User-Agent, Host, Accept, Content-Length, Content-Type
-        if ( 'POST' !== $request_method ) {
-            // Not HTTP/POST
+        // Check write-type method requests only
+        if ( false === in_array( $request_method, $write_methods ) ) {
+            // Not a write-type method
             return false;
         }
 
         // --------------------------- %< ---------------------------
-        // is_post
-
-        if ( defined( 'XMLRPC_REQUEST' ) && XMLRPC_REQUEST ) {
-            $this->is_xmlrpc = true;
-        } elseif ( false !== strpos( $request_path, '/wp-login.php' ) ) {
-            $this->is_wplogin = true;
-        }
+        // is_write_method
+        // wget POST-s: User-Agent, Accept, Host, Connection, Content-Type, Content-Length
+        // curl POST-s: User-Agent, Host, Accept, Content-Length, Content-Type
 
         // PHP file upload
         if ( ! empty( $_FILES ) ) {
@@ -400,7 +414,7 @@ final class Bad_Request {
             return 'bad_request_post_content_length';
         }
 
-        // Content-Type HTTP header (for login, XML-RPC and AJAX)
+        // Content-Type HTTP header (for login, XML-RPC, REST and AJAX)
         if ( '0' !== $_SERVER['CONTENT_LENGTH']
             && ( empty( $_SERVER['CONTENT_TYPE'] )
                 || ( $this->is_wplogin
@@ -427,37 +441,7 @@ final class Bad_Request {
         }
 
         // --------------------------- %< ---------------------------
-        // is_wplogin
-
-        // wp-login methods
-        if ( false === in_array( $request_method, $wp_login_methods ) ) {
-            return 'bad_request_wplogin_http_method';
-        }
-
-        // Login request with non-empty username
-        if ( ! empty( $_POST['log'] ) ) {
-            $username = trim( $_POST['log'] );
-
-            // Banned usernames
-            if ( in_array( strtolower( $username ), $this->names2ban ) ) {
-                return 'bad_request_wplogin_username_banned';
-            }
-
-            // Attackers try usernames with "TwoCapitals"
-            if ( ! $this->allow_two_capitals ) {
-                if ( 1 === preg_match( '/^[A-Z][a-z]+[A-Z][a-z]+$/', $username ) ) {
-                    return 'bad_request_wplogin_username_twocapitals';
-                }
-            }
-        }
-
-        // Maximum HTTP request size for logins
-        $request_size = strlen( http_build_query( apache_request_headers() ) )
-            + strlen( $_SERVER['REQUEST_URI'] )
-            + strlen( http_build_query( $_POST ) );
-        if ( $request_size > $this->max_login_request_size ) {
-            return 'bad_request_wplogin_request_size';
-        }
+        // is_write_method && is_wplogin
 
         // Accept-Language HTTP header
         if ( empty( $_SERVER['HTTP_ACCEPT_LANGUAGE'] )
@@ -480,6 +464,31 @@ final class Bad_Request {
             }
         }
 
+        // Maximum HTTP request size for logins
+        $request_size = strlen( http_build_query( apache_request_headers() ) )
+            + strlen( $_SERVER['REQUEST_URI'] )
+            + strlen( http_build_query( $_POST ) );
+        if ( $request_size > $this->max_login_request_size ) {
+            return 'bad_request_wplogin_request_size';
+        }
+
+        // Login request with non-empty username
+        if ( ! empty( $_POST['log'] ) ) {
+            $username = trim( $_POST['log'] );
+
+            // Banned usernames
+            if ( in_array( strtolower( $username ), $this->names2ban ) ) {
+                return 'bad_request_wplogin_username_banned';
+            }
+
+            // Attackers try usernames with "TwoCapitals"
+            if ( ! $this->allow_two_capitals ) {
+                if ( 1 === preg_match( '/^[A-Z][a-z]+[A-Z][a-z]+$/', $username ) ) {
+                    return 'bad_request_wplogin_username_twocapitals';
+                }
+            }
+        }
+
         // Skip following checks on post password
         if ( ! empty( $request_query ) ) {
             $queries = $this->parse_query( $request_query );
@@ -491,14 +500,7 @@ final class Bad_Request {
         }
 
         // --------------------------- %< ---------------------------
-        // NOT wp-login/postpass
-
-        // Referer HTTP header
-        if ( ! $this->allow_registration ) {
-            if ( false === strpos( parse_url( $referer, PHP_URL_PATH ), '/wp-login.php' ) ) {
-                return 'bad_request_wplogin_referer_path';
-            }
-        }
+        // NOT wp-login/postpass (registered user)
 
         // HTTP protocol version
         if ( ! $this->allow_old_proxies ) {
@@ -509,33 +511,11 @@ final class Bad_Request {
             }
         }
 
-        // Connection HTTP header (keep alive)
-        if ( ! $this->allow_connection_empty ) {
-            if ( empty( $_SERVER['HTTP_CONNECTION'] ) ) {
-                return 'bad_request_wplogin_connection_empty';
-            }
-
-            if ( ! $this->allow_connection_close ) {
-                if ( false === stripos( $_SERVER['HTTP_CONNECTION'], 'keep-alive' ) ) {
-                    return 'bad_request_wplogin_connection';
-                }
-            }
-        }
-
         // Accept-Encoding HTTP header
         if ( empty( $_SERVER['HTTP_ACCEPT_ENCODING'] )
             || false === strpos( $_SERVER['HTTP_ACCEPT_ENCODING'], 'gzip' )
         ) {
             return 'bad_request_wplogin_accept_encoding';
-        }
-
-        // WordPress test cookie
-        if ( ! $this->allow_registration ) {
-            if ( empty( $_SERVER['HTTP_COOKIE'] )
-                || false === strpos( $_SERVER['HTTP_COOKIE'], 'wordpress_test_cookie' )
-            ) {
-                return 'bad_request_wplogin_test_cookie';
-            }
         }
 
         // IE8 login
@@ -554,6 +534,35 @@ final class Bad_Request {
         // Modern browser user agents
         if ( 'Mozilla/5.0' !== substr( $user_agent, 0, 11 ) ) {
             return 'bad_request_wplogin_user_agent_mozilla50';
+        }
+
+        // WordPress test cookie
+        if ( ! $this->allow_registration ) {
+            if ( empty( $_SERVER['HTTP_COOKIE'] )
+                || false === strpos( $_SERVER['HTTP_COOKIE'], 'wordpress_test_cookie' )
+            ) {
+                return 'bad_request_wplogin_test_cookie';
+            }
+        }
+
+        // Connection HTTP header (keep alive)
+        if ( ! $this->allow_connection_empty ) {
+            if ( empty( $_SERVER['HTTP_CONNECTION'] ) ) {
+                return 'bad_request_wplogin_connection_empty';
+            }
+
+            if ( ! $this->allow_connection_close ) {
+                if ( false === stripos( $_SERVER['HTTP_CONNECTION'], 'keep-alive' ) ) {
+                    return 'bad_request_wplogin_connection';
+                }
+            }
+        }
+
+        // Referer HTTP header
+        if ( ! $this->allow_registration ) {
+            if ( false === strpos( parse_url( $referer, PHP_URL_PATH ), '/wp-login.php' ) ) {
+                return 'bad_request_wplogin_referer_path';
+            }
         }
 
         // OK
