@@ -1,4 +1,4 @@
-# WordPress fail2ban MU
+# WordPress Fail2ban MU plugin
 
 This is the Must Use (mu-plugin) version of *WordPress fail2ban* plugin.
 The code is commented, so you may understand it by looking at the code only.
@@ -67,13 +67,13 @@ Helps learning attack internals. Insert this code after `wp_logout();` in `trigg
         ) );
 ```
 
-### Set up the fail2ban filters
+### Set up the Fail2ban filters
 
 See: https://github.com/szepeviktor/debian-server-tools/tree/master/security/fail2ban-conf
 
 Please examine the latest filter `failregexp`-s in
 [fail2ban GitHub repository](https://github.com/fail2ban/fail2ban/blob/master/config/filter.d).
 It worth to combine every webserver related regexp-s in one custom filter.
-You can customize the fail2ban trigger string in the `$prefix` property of `O1_WP_Fail2ban_MU` class.
+You can customize the fail2ban trigger string in the `$prefix` property of `WP_Fail2ban_MU` class.
 
 **All the best wishes to you!**

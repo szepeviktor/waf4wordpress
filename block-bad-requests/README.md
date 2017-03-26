@@ -50,7 +50,9 @@ wp option get "active_plugins"
 
 The list is in order of appearance, `*` means it can be disabled by an option below.
 
-`grep -o "return '.*';" wp-fail2ban-bad-request-instant.inc.php`
+```bash
+grep -o "return '.*';" wp-fail2ban-bad-request-instant.inc.php
+```
 
 ### Options
 
@@ -67,11 +69,13 @@ To blocks non-static requests from Amazon CloudFront copy this to your wp-config
 define( 'O1_BAD_REQUEST_CDN_HEADERS', 'HTTP_X_FORWARDED_FOR:HTTP_X_AMZ_CF_ID:HTTP_VIA' );
 ```
 
-TODO Identify CloudFlare in PHP application by HTTP headers
+Restrict access to CloudFlare only: `mod_remoteip`
 
-```
-HTTP_CF_CONNECTING_IP:HTTP_X_FORWARDED_FOR:HTTP_CF_RAY
-```
+- HTTP_CF_CONNECTING_IP
+- HTTP_X_FORWARDED_FOR
+- HTTP_CF_RAY
+
+Constant list
 
 - (boolean) `O1_BAD_REQUEST_POST_LOGGING` enable logging of all POST requests, even normal ones
 - (integer) `O1_BAD_REQUEST_COUNT` fail2ban trigger limit, `maxretry`

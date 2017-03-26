@@ -1,19 +1,19 @@
 #!/bin/bash
 #
-# Test all fail2ban triggers in O1_Bad_Request.
-# Set all variables below. Stop the webserver and use `nc -l -p 80` to grab values.
-# Test then COMMENT out "local access" check in O1_Bad_Request class.
+# Test all fail2ban triggers in Bad_Request.
 #
-# VERSION       :0.1
+# VERSION       :0.1.1
 # DATE          :2014-08-16
 # AUTHOR        :Viktor Szépe <viktor@szepe.net>
 # LICENSE       :The MIT License (MIT)
 # URL           :https://github.com/szepeviktor/wordpress-plugin-construction
 # BASH-VERSION  :4.2+
-# DEPENDS       :apt-get install netcat-traditional
+# DEPENDS       :apt-get install netcat-openbsd
+#
+# Set all variables below. Stop the webserver and use `nc -l -p 80` to grab values.
+# Test then COMMENT out "local access" check in Bad_Request class.
 
-
-HOST="subdir.wp"
+HOST="subtwo.wp"
 PORT="80"
 REQUEST="/sb/wp-login.php"
 WP_ADMIN="/sb/wp-admin/"
@@ -86,7 +86,7 @@ wp_login() {
     #( sleep $RESPONSE_WAIT; killall -9 nc &> /dev/null; ) &
 
     # For IPv6 use `nc6`
-    nc.traditional -w $RESPONSE_WAIT $HOST $PORT > "$FILE"
+    nc.openbsd -w $RESPONSE_WAIT $HOST $PORT > "$FILE"
 
     if check_response "$FILE" "$HTTP_STATUS"; then
         echo "OK: $NAME"
