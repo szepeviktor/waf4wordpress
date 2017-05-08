@@ -1,6 +1,6 @@
 <?php
 /*
-Snippet Name: Trigger fail2ban on HTTP/403 responses in any CMS.
+Snippet Name: Trigger Fail2ban on HTTP/403 responses in any CMS.
 Version: 0.1.2
 Snippet URI: https://github.com/szepeviktor/wordpress-fail2ban
 License: The MIT License (MIT)
