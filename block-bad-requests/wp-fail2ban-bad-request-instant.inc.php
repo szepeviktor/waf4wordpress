@@ -107,6 +107,7 @@ final class Bad_Request {
         'etc/passwd', // Linux password file
         'id_rsa', // SSH key file
         'id_dsa', // SSH key file
+        'muieblackcat', // vulnerability scanner
     );
     private $relative_request_uri = '';
     private $cdn_headers;
