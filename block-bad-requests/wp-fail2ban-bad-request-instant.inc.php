@@ -1,7 +1,7 @@
 <?php
 /*
 Plugin Name: Block Bad Requests (required from wp-config or MU plugin)
-Version: 2.17.1
+Version: 2.18.0
 Description: Stop various HTTP attacks and trigger Fail2ban.
 Plugin URI: https://github.com/szepeviktor/wordpress-fail2ban
 License: The MIT License (MIT)
@@ -108,6 +108,7 @@ final class Bad_Request {
         'id_rsa', // SSH key file
         'id_dsa', // SSH key file
         'muieblackcat', // vulnerability scanner
+        'etc/local.xml', // Magento configuration
     );
     private $relative_request_uri = '';
     private $cdn_headers;
@@ -242,6 +243,7 @@ final class Bad_Request {
         $server_name = isset( $_SERVER['SERVER_NAME'] )
             ? $_SERVER['SERVER_NAME']
             : $_SERVER['HTTP_HOST'];
+
         if ( defined( 'XMLRPC_REQUEST' ) && XMLRPC_REQUEST ) {
             $this->is_xmlrpc = true;
         } elseif ( false !== strpos( $request_path, '/wp-login.php' ) ) {
@@ -343,6 +345,13 @@ final class Bad_Request {
             return 'bad_request_protocol_empty';
         }
 
+        // Non-existent PHP file
+        if ( isset( $_SERVER['REDIRECT_URL'] )
+            && false !== stripos( $_SERVER['REDIRECT_URL'], '.php' )
+        ) {
+            return 'bad_request_nonexistent_php';
+        }
+
         // robots.txt probing in a subdirectory
         if ( false !== stripos( $this->relative_request_uri, 'robots.txt' )
             && '/robots.txt' !== $this->relative_request_uri
@@ -366,7 +375,7 @@ final class Bad_Request {
         }
 
         // --------------------------- %< ---------------------------
-        // is_write_method
+        // @is_write_method
         // wget POST-s: User-Agent, Accept, Host, Connection, Content-Type, Content-Length
         // curl POST-s: User-Agent, Host, Accept, Content-Length, Content-Type
 
@@ -445,7 +454,7 @@ final class Bad_Request {
         }
 
         // --------------------------- %< ---------------------------
-        // is_write_method && is_wplogin
+        // @is_wplogin
 
         // Accept-Language HTTP header
         if ( empty( $_SERVER['HTTP_ACCEPT_LANGUAGE'] )
@@ -504,7 +513,8 @@ final class Bad_Request {
         }
 
         // --------------------------- %< ---------------------------
-        // NOT wp-login/postpass (registered user)
+        // @is_registered_user
+        // Other than wp-login/postpass
 
         // HTTP protocol version
         if ( ! $this->allow_old_proxies ) {
