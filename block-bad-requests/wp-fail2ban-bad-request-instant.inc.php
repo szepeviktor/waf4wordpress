@@ -1,7 +1,7 @@
 <?php
 /*
 Plugin Name: Block Bad Requests (required from wp-config or MU plugin)
-Version: 2.18.0
+Version: 2.18.1
 Description: Stop various HTTP attacks and trigger Fail2ban.
 Plugin URI: https://github.com/szepeviktor/wordpress-fail2ban
 License: The MIT License (MIT)
@@ -258,7 +258,9 @@ final class Bad_Request {
             if ( $common_headers === $this->cdn_headers ) {
                 // Log HTTP request headers
                 $cdn_combined_headers = array_merge(
-                    array( 'REQUEST_URI' => $_SERVER['REQUEST_URI'] ),
+                    array(
+                        'REQUEST_URI' => $_SERVER['REQUEST_URI'],
+                    ),
                     apache_request_headers()
                 );
                 $this->enhanced_error_log( 'HTTP headers: ' . $this->esc_log( $cdn_combined_headers ) );
@@ -346,6 +348,7 @@ final class Bad_Request {
         }
 
         // Non-existent PHP file
+        // http://httpd.apache.org/docs/current/custom-error.html#variables
         if ( isset( $_SERVER['REDIRECT_URL'] )
             && false !== stripos( $_SERVER['REDIRECT_URL'], '.php' )
         ) {
@@ -382,21 +385,30 @@ final class Bad_Request {
         // PHP file upload
         if ( ! empty( $_FILES ) ) {
             foreach ( $_FILES as $files ) {
-                // Make it look like an HTML array
-                if ( ! is_array( $files['name'] ) ) {
-                    // Only name and type are checked
-                    $files['name'] = array( $files['name'] );
+                if ( ! isset( $files['name'] ) ) {
+                    continue;
+                }
+                $types = array();
+                if ( is_array( $files['name'] ) ) {
+                    // Convert to a leaf-only array
+                    $names = $this->get_leafs( $files['name'] );
                     if ( isset( $files['type'] ) ) {
-                        $files['type'] = array( $files['type'] );
+                        $types = $this->get_leafs( $files['type'] );
+                    }
+                } else {
+                    // Make it look like an HTML array
+                    // 'name' and 'type' are enough
+                    $names = array( $files['name'] );
+                    if ( isset( $files['type'] ) ) {
+                        $types = array( $files['type'] );
                     }
                 }
                 // @TODO Block Flash upload .swf application/x-shockwave-flash
-                foreach ( $files['name'] as $index => $notused ) {
-                    if ( false !== stripos( $files['name'][ $index ], '.php' )
+                foreach ( $names as $key => $value ) {
+                    if ( false !== stripos( $value, '.php' )
                         || (
-                            isset( $files['type'] )
-                            && isset( $files['type'][ $index ] )
-                            && false !== stripos( $files['type'][ $index ], 'php' )
+                            isset( $types[ $key ] )
+                            && false !== stripos( $types[ $key ], 'php' )
                         )
                     ) {
                         return 'bad_request_post_upload_php';
@@ -817,5 +829,36 @@ final class Bad_Request {
         }
 
         return false;
+    }
+
+    /**
+     * Convert a PHP multi-dimensional array to a leaf-only array with full-depth array keys.
+     *
+     * @param array $array The multi-dimensional array.
+     *
+     * @return array       An array containing the leafs only.
+     */
+    private function get_leafs( $array ) {
+
+        $leafs = array();
+
+        if ( ! is_array( $array ) ) {
+            return $leafs;
+        }
+
+        $array_iterator = new \RecursiveArrayIterator( $array );
+        $iterator_iterator = new \RecursiveIteratorIterator( $array_iterator, \RecursiveIteratorIterator::LEAVES_ONLY );
+        foreach ( $iterator_iterator as $key => $value ) {
+            $keys = array();
+            for ( $i = 0; $i < $iterator_iterator->getDepth(); $i++ ) {
+                $keys[] = $iterator_iterator->getSubIterator( $i )->key();
+            }
+            $keys[] = $key;
+            $leaf_key = implode( ' ', $keys );
+
+            $leafs[ $leaf_key ] = $value;
+        }
+
+        return $leafs;
     }
 }
