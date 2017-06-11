@@ -234,7 +234,7 @@ final class Bad_Request {
         $request_method = strtoupper( $_SERVER['REQUEST_METHOD'] );
         $wp_methods = array( 'HEAD', 'GET', 'POST' );
         $wp_login_methods = array( 'GET', 'POST' );
-        $wp_rest_methods = array( 'GET', 'POST', 'PUT', 'DELETE', 'OPTIONS' );
+        $wp_rest_methods = array( 'GET', 'HEAD', 'POST', 'PUT', 'DELETE', 'OPTIONS' );
         $write_methods = array( 'POST', 'PUT', 'DELETE' );
         $request_path = parse_url( $this->relative_request_uri, PHP_URL_PATH );
         $request_query = isset( $_SERVER['QUERY_STRING'] )
@@ -351,6 +351,7 @@ final class Bad_Request {
         // http://httpd.apache.org/docs/current/custom-error.html#variables
         if ( isset( $_SERVER['REDIRECT_URL'] )
             && false !== stripos( $_SERVER['REDIRECT_URL'], '.php' )
+            // For old mod_fastcgi setup && $_SERVER['SCRIPT_NAME'] !== $_SERVER['REDIRECT_URL']
         ) {
             return 'bad_request_nonexistent_php';
         }
