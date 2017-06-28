@@ -1,19 +1,19 @@
 # WordPress Fail2ban
 
-Trigger banning on malicious HTTP requests by the Fail2ban daemon running on your server.  
+Stop WordPress related attacks and trigger Fail2ban running on your server.  
 Shared hosting has no server-wide banning (because of security reasons)
-but you can install it without Fail2ban to stop attacks by using one of the Miniban methods.
+but you can still install WordPress Fail2ban without Fail2ban to stop attacks by using one of the Miniban methods.
 
 Your WordPress (really HTTP) security consists of:
 
 1. Use HTTPS
 1. Have daily backup
-1. Blocking known *shadow nets*
+1. Block known *shadow nets*
 1. Have Fail2ban installed (controls the firewall)
 1. Maintain your website + use strict Fail2ban filters which ban on the first attack instantly
 1. Deny direct access to core WordPress files, themes and plugins
-1. WordPress Fail2ban (this project)
-1. Leanmail (filters notification emails)
+1. Install WordPress Fail2ban (this project)
+1. Use Leanmail (filters Fail2ban notification emails)
 
 See the security and webserver folders in my `debian-server-tools` repo.
 

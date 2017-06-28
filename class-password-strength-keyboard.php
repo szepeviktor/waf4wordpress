@@ -1,5 +1,20 @@
 <?php
 
+// First command line argument
+$pwd = $argv[1];
+// Defaults to US layout
+$psk = new Password_Strength_Keyboard();
+$pos = $psk->weakness( $pwd );
+
+if ( false === $pos ) {
+    echo 'OK: ' . $pwd;
+} else {
+    echo substr_replace( $pwd, '<', $pos + 1, 0 );
+}
+echo "\n";
+exit;
+
+
 // Hungarian layout
 $extras = array(
     "0" => array( 0, 1 ),
@@ -19,25 +34,36 @@ $map = array(
         4 => "YXCVBNM?:_",
     ),
 );
-
-//$psk = new Password_Strength_Keyboard( $map, $extras );
-$psk = new Password_Strength_Keyboard();
+// First command line argument
 $pwd = $argv[1];
+$psk = new Password_Strength_Keyboard( $map, $extras );
 $pos = $psk->weakness( $pwd );
 
-/*
-$pwds = '123456,password,12345678,qwerty,123456789,12345,1234,111111,1234567,dragon,123123,baseball,abc123,football,monkey,letmein,shadow,master,696969,mustang,666666,qwertyuiop,123321,1234567890,pussy,superman,654321,1qaz2wsx,7777777,fuckyou,qazwsx,jordan,123qwe,000000,killer,trustno1,hunter,harley,zxcvbnm,asdfgh,buster,batman,soccer,tigger,charlie,sunshine,iloveyou,fuckme,ranger,hockey,computer,starwars,asshole,pepper,klaster,112233,zxcvbn,freedom,princess,maggie,pass,ginger,11111111,131313,fuck,love,cheese,159753,summer,chelsea,dallas,biteme,matrix,yankees,6969,corvette,austin,access,thunder,merlin,secret,diamond,hello,hammer,fucker,1234qwer,silver,gfhjkm,internet,samantha,golfer,scooter,test,orange,cookie,q1w2e3r4t5,maverick,sparky,phoenix,mickey';
-foreach ( explode( ',', $pwds ) as $number => $pwd ) {
-    $pos = $psk->weakness( $pwd );
-    echo $number . '. ';
-*/
 if ( false === $pos ) {
     echo 'OK: ' . $pwd;
 } else {
     echo substr_replace( $pwd, '<', $pos + 1, 0 );
 }
 echo "\n";
-//}
+exit;
+
+
+// Most used passwords
+$pwds = '123456,password,12345678,qwerty,123456789,12345,1234,111111,1234567,dragon,123123,baseball,abc123,football,monkey,letmein,shadow,master,696969,mustang,666666,qwertyuiop,123321,1234567890,pussy,superman,654321,1qaz2wsx,7777777,fuckyou,qazwsx,jordan,123qwe,000000,killer,trustno1,hunter,harley,zxcvbnm,asdfgh,buster,batman,soccer,tigger,charlie,sunshine,iloveyou,fuckme,ranger,hockey,computer,starwars,asshole,pepper,klaster,112233,zxcvbn,freedom,princess,maggie,pass,ginger,11111111,131313,fuck,love,cheese,159753,summer,chelsea,dallas,biteme,matrix,yankees,6969,corvette,austin,access,thunder,merlin,secret,diamond,hello,hammer,fucker,1234qwer,silver,gfhjkm,internet,samantha,golfer,scooter,test,orange,cookie,q1w2e3r4t5,maverick,sparky,phoenix,mickey';
+$psk = new Password_Strength_Keyboard();
+foreach ( explode( ',', $pwds ) as $number => $pwd ) {
+    $pos = $psk->weakness( $pwd );
+    echo $number . '. ';
+
+    if ( false === $pos ) {
+        echo 'OK: ' . $pwd;
+    } else {
+        echo substr_replace( $pwd, '<', $pos + 1, 0 );
+    }
+    echo "\n";
+}
+exit;
+
 
 class Password_Strength_Keyboard {
 

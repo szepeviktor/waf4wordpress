@@ -109,6 +109,9 @@ final class Bad_Request {
         'id_dsa', // SSH key file
         'muieblackcat', // vulnerability scanner
         'etc/local.xml', // Magento configuration
+        'eval(', // Evaluate a string as PHP code
+        'order+by', // SQL injection
+        '+--+', // SQL comment
     );
     private $relative_request_uri = '';
     private $cdn_headers;
