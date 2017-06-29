@@ -1,7 +1,7 @@
 <?php
 /*
 Plugin Name: WordPress Fail2ban (MU)
-Version: 4.11.4
+Version: 4.11.5
 Description: Stop WordPress related attacks and trigger Fail2ban.
 Plugin URI: https://github.com/szepeviktor/wordpress-fail2ban
 License: The MIT License (MIT)
@@ -104,7 +104,13 @@ final class WP_Fail2ban_MU {
 
         // Disable REST API
         if ( defined( 'O1_WP_FAIL2BAN_DISABLE_REST_API' ) && O1_WP_FAIL2BAN_DISABLE_REST_API ) {
-            add_filter( 'rest_enabled', array( $this, 'rest_api_disabled' ), 99999 );
+            // Remove core actions
+            // Source: https://plugins.trac.wordpress.org/browser/disable-json-api/trunk/disable-json-api.php
+            remove_action( 'xmlrpc_rsd_apis', 'rest_output_rsd' );
+            remove_action( 'wp_head', 'rest_output_link_wp_head', 10 );
+            remove_action( 'template_redirect', 'rest_output_link_header', 11 );
+
+            add_filter( 'rest_authentication_errors', array( $this, 'rest_api_disabled' ), 99999 );
         }
 
         // Don't redirect to admin
@@ -138,6 +144,7 @@ final class WP_Fail2ban_MU {
         // Robot and human 404
         add_action( 'plugins_loaded', array( $this, 'robot_403' ), 0 );
         add_action( 'template_redirect', array( $this, 'wp_404' ) );
+        // @TODO Empty "author_url:" in every REST response
         add_filter( 'rest_post_dispatch', array( $this, 'rest_40x' ), 0, 3 );
 
         // Non-empty wp_die messages
@@ -398,11 +405,9 @@ final class WP_Fail2ban_MU {
 
     public function rest_api_disabled( $enabled ) {
 
-        if ( defined( 'REST_REQUEST' ) && REST_REQUEST ) {
-            $this->trigger( 'wpf2b_rest_api_disabled', $_SERVER['REQUEST_URI'], 'notice' );
-        }
+        $this->trigger( 'wpf2b_rest_api_disabled', $_SERVER['REQUEST_URI'], 'notice' );
 
-        return false;
+        return new \WP_Error( 'rest_no_route', __( 'No route was found matching the URL and request method' ), array( 'status' => 404 ) );
     }
 
     public function redirect( $redirect_url, $requested_url ) {
