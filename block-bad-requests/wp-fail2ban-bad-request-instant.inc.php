@@ -83,14 +83,15 @@ final class Bad_Request {
         'webmaster',
     );
     private $blacklist = array(
-        '../', // path traversal
-        '/..', // path traversal
+        '../', // Path traversal
+        '/..', // Path traversal
         'wp-config', // WP configuration
-        '/brake/wp-admin/', // from fake_wplogin()
+        '/wordpress/', // WP subdir install
+        '/brake/wp-admin/', // From fake_wplogin()
         'allow_url_include', // PHP directive
         'auto_prepend_file', // PHP directive
-        'testproxy.php', // scan for open proxies
-        'httptest.php', // scan for open proxies
+        'testproxy.php', // Scan for open proxies
+        'httptest.php', // Scan for open proxies
         'bigdump.php', // Staggered MySQL Dump Importer
         'wso.php', // Web Shell
         'w00tw00t', // DFind Scanner
@@ -100,14 +101,14 @@ final class Bad_Request {
         '/HNAP1', // D-Link routers
         '() { ', // Shell shock () { :;};
         '/cgi-bin/', // CGI folder
-        'error_log', // default PHP error log
+        'error_log', // Default PHP error log
         'error-log', // PHP error log
         'htaccess', // Apache httpd configuration
         'web.config', // IIS configuration
         'etc/passwd', // Linux password file
         'id_rsa', // SSH key file
         'id_dsa', // SSH key file
-        'muieblackcat', // vulnerability scanner
+        'muieblackcat', // Vulnerability scanner
         'etc/local.xml', // Magento configuration
         'eval(', // Evaluate a string as PHP code
         'order+by', // SQL injection
@@ -407,12 +408,14 @@ final class Bad_Request {
                         $types = array( $files['type'] );
                     }
                 }
-                // @TODO Block Flash upload .swf application/x-shockwave-flash
                 foreach ( $names as $key => $value ) {
                     if ( false !== stripos( $value, '.php' )
                         || (
                             isset( $types[ $key ] )
-                            && false !== stripos( $types[ $key ], 'php' )
+                            && (
+                                false !== stripos( $types[ $key ], 'php' )
+                                || false !== stripos( $types[ $key ], 'application/x-shockwave-flash' )
+                            )
                         )
                     ) {
                         return 'bad_request_post_upload_php';
