@@ -167,7 +167,7 @@ final class WP_Fail2ban_MU {
     private function trigger_instant( $slug, $message, $level = 'crit' ) {
 
         // Trigger Miniban at first
-        if ( class_exists( 'Miniban' ) ) {
+        if ( class_exists( '\Miniban' ) ) {
             if ( true !== \Miniban::ban() ) {
                 $this->enhanced_error_log( 'Miniban operation failed.' );
             }
@@ -209,7 +209,7 @@ final class WP_Fail2ban_MU {
         $this->enhanced_error_log( $error_msg, $level );
 
         // Report to Sucuri Scan
-        if ( class_exists( 'SucuriScanEvent' ) ) {
+        if ( class_exists( '\SucuriScanEvent' ) ) {
             if ( true !== \SucuriScanEvent::report_critical_event( $error_msg ) ) {
                 error_log( 'Sucuri Scan report event failure.' );
             }
@@ -225,7 +225,7 @@ final class WP_Fail2ban_MU {
             if ( array_key_exists( 'HTTP_USER_AGENT', $_SERVER ) ) {
                 $context['_server_http_user_agent'] = $this->esc_log( $_SERVER['HTTP_USER_AGENT'] );
             }
-            if ( ! class_exists( 'SimpleLogger' ) ) {
+            if ( ! class_exists( '\SimpleLogger' ) ) {
                 \SimpleHistory::get_instance()->load_loggers();
             }
             \SimpleLogger()->log( $simple_level, $error_msg, $context );
