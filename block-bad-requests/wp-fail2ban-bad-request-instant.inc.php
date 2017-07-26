@@ -610,7 +610,7 @@ final class Bad_Request {
     private function trigger() {
 
         // Trigger miniban
-        if ( class_exists( 'Miniban' ) && $this->instant_trigger ) {
+        if ( class_exists( '\Miniban' ) && $this->instant_trigger ) {
             if ( true !== \Miniban::ban() ) {
                 error_log( 'Miniban operation failed.' );
             }
