@@ -114,6 +114,7 @@ final class Bad_Request {
         'eval(', // Evaluate a string as PHP code
         'order+by', // SQL injection
         '+--+', // SQL comment
+        '%20--%20', // SQL comment
     );
     private $relative_request_uri = '';
     private $cdn_headers;
