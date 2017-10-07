@@ -1,23 +1,24 @@
 <?php
 /*
 Plugin Name: Block Bad Requests (required from wp-config or MU plugin)
-Version: 2.18.1
+Version: 2.19.0
 Description: Stop various HTTP attacks and trigger Fail2ban.
 Plugin URI: https://github.com/szepeviktor/wordpress-fail2ban
 License: The MIT License (MIT)
 Author: Viktor Szépe
 GitHub Plugin URI: https://github.com/szepeviktor/wordpress-fail2ban
-Options: O1_BAD_REQUEST_INSTANT
-Options: O1_BAD_REQUEST_PROXY_HOME_URL
-Options: O1_BAD_REQUEST_MAX_LOGIN_REQUEST_SIZE
-Options: O1_BAD_REQUEST_CDN_HEADERS
-Options: O1_BAD_REQUEST_ALLOW_REG
-Options: O1_BAD_REQUEST_ALLOW_IE8
-Options: O1_BAD_REQUEST_ALLOW_OLD_PROXIES
-Options: O1_BAD_REQUEST_ALLOW_CONNECTION_EMPTY
-Options: O1_BAD_REQUEST_ALLOW_CONNECTION_CLOSE
-Options: O1_BAD_REQUEST_ALLOW_TWO_CAPS
-Options: O1_BAD_REQUEST_POST_LOGGING
+Constants: O1_BAD_REQUEST_INSTANT
+Constants: O1_BAD_REQUEST_PROXY_HOME_URL
+Constants: O1_BAD_REQUEST_MAX_LOGIN_REQUEST_SIZE
+Constants: O1_BAD_REQUEST_CDN_HEADERS
+Constants: O1_BAD_REQUEST_ALLOW_REG
+Constants: O1_BAD_REQUEST_ALLOW_IE8
+Constants: O1_BAD_REQUEST_ALLOW_OLD_PROXIES
+Constants: O1_BAD_REQUEST_ALLOW_CONNECTION_EMPTY
+Constants: O1_BAD_REQUEST_ALLOW_CONNECTION_CLOSE
+Constants: O1_BAD_REQUEST_ALLOW_TWO_CAPS
+Constants: O1_BAD_REQUEST_POST_LOGGING
+Constants: O1_BAD_REQUEST_DISALLOW_TOR_LOGIN
 */
 
 namespace O1;
@@ -122,6 +123,7 @@ final class Bad_Request {
     private $allow_connection_empty = false;
     private $allow_connection_close = false;
     private $allow_two_capitals = false;
+    private $disallow_tor_login = false
     private $result = false;
 
     /**
@@ -189,6 +191,10 @@ final class Bad_Request {
 
         if ( defined( 'O1_BAD_REQUEST_ALLOW_TWO_CAPS' ) && O1_BAD_REQUEST_ALLOW_TWO_CAPS ) {
             $this->allow_two_capitals = true;
+        }
+
+        if ( defined( 'O1_BAD_REQUEST_DISALLOW_TOR_LOGIN' ) && O1_BAD_REQUEST_DISALLOW_TOR_LOGIN ) {
+            $this->disallow_tor_login = true;
         }
 
         $this->result = $this->check();
@@ -538,6 +544,7 @@ final class Bad_Request {
         // HTTP protocol version
         if ( ! $this->allow_old_proxies ) {
             if ( false === strpos( $_SERVER['SERVER_PROTOCOL'], 'HTTP/1.1' )
+                // Also matches "HTTP/2.0"
                 && false === strpos( $_SERVER['SERVER_PROTOCOL'], 'HTTP/2' )
             ) {
                 return 'bad_request_wplogin_http11_2';
@@ -595,6 +602,17 @@ final class Bad_Request {
         if ( ! $this->allow_registration ) {
             if ( false === strpos( parse_url( $referer, PHP_URL_PATH ), '/wp-login.php' ) ) {
                 return 'bad_request_wplogin_referer_path';
+            }
+        }
+
+        // Tor network
+        if ( $this->disallow_tor_login ) {
+            $exitlist_tpl = '%s.80.%s.ip-port.exitlist.torproject.org';
+            $remote_rev = implode( '.', array_reverse( explode( '.', $_SERVER['REMOTE_ADDR'] ) ) );
+            $server_rev = implode( '.', array_reverse( explode( '.', $_SERVER['SERVER_ADDR'] ) ) );
+            $exitlist_response = gethostbyname( sprintf( $exitlist_tpl, $remote_rev, $server_rev ) );
+            if ( false !== strpos( $exitlist_response, '127.0.0' ) ) {
+                    return 'bad_request_wplogin_tor';
             }
         }
 

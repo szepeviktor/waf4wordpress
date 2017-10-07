@@ -7,9 +7,9 @@ Plugin URI: https://github.com/szepeviktor/wordpress-fail2ban
 License: The MIT License (MIT)
 Author: Viktor Szépe
 GitHub Plugin URI: https://github.com/szepeviktor/wordpress-fail2ban
-Options: O1_WP_FAIL2BAN_DISABLE_REST_API
-Options: O1_WP_FAIL2BAN_DISABLE_LOGIN
-Options: O1_WP_FAIL2BAN_ALLOW_REDIRECT
+Constants: O1_WP_FAIL2BAN_DISABLE_REST_API
+Constants: O1_WP_FAIL2BAN_DISABLE_LOGIN
+Constants: O1_WP_FAIL2BAN_ALLOW_REDIRECT
 */
 
 namespace O1;
