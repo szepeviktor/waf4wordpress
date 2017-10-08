@@ -124,7 +124,7 @@ final class Bad_Request {
     private $allow_connection_empty = false;
     private $allow_connection_close = false;
     private $allow_two_capitals = false;
-    private $disallow_tor_login = false
+    private $disallow_tor_login = false;
     private $result = false;
 
     /**
