@@ -108,6 +108,7 @@ final class WP_Fail2ban_MU {
             // Source: https://plugins.trac.wordpress.org/browser/disable-json-api/trunk/disable-json-api.php
             remove_action( 'xmlrpc_rsd_apis', 'rest_output_rsd' );
             remove_action( 'wp_head', 'rest_output_link_wp_head', 10 );
+            remove_action( 'wp_head', 'wp_oembed_add_discovery_links' );
             remove_action( 'template_redirect', 'rest_output_link_header', 11 );
 
             add_filter( 'rest_authentication_errors', array( $this, 'rest_api_disabled' ), 99999 );
