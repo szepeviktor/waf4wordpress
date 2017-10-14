@@ -1,15 +1,16 @@
 <?php
 /*
 Plugin Name: WordPress Fail2ban (MU)
-Version: 4.11.5
+Version: 4.12.0
 Description: Stop WordPress related attacks and trigger Fail2ban.
 Plugin URI: https://github.com/szepeviktor/wordpress-fail2ban
 License: The MIT License (MIT)
 Author: Viktor Szépe
 GitHub Plugin URI: https://github.com/szepeviktor/wordpress-fail2ban
-Constants: O1_WP_FAIL2BAN_DISABLE_REST_API
 Constants: O1_WP_FAIL2BAN_DISABLE_LOGIN
 Constants: O1_WP_FAIL2BAN_ALLOW_REDIRECT
+Constants: O1_WP_FAIL2BAN_DISABLE_REST_API
+Constants: O1_WP_FAIL2BAN_ONLY_OEMBED
 */
 
 namespace O1;
@@ -104,14 +105,21 @@ final class WP_Fail2ban_MU {
 
         // Disable REST API
         if ( defined( 'O1_WP_FAIL2BAN_DISABLE_REST_API' ) && O1_WP_FAIL2BAN_DISABLE_REST_API ) {
-            // Remove core actions
-            // Source: https://plugins.trac.wordpress.org/browser/disable-json-api/trunk/disable-json-api.php
-            remove_action( 'xmlrpc_rsd_apis', 'rest_output_rsd' );
-            remove_action( 'wp_head', 'rest_output_link_wp_head', 10 );
-            remove_action( 'wp_head', 'wp_oembed_add_discovery_links' );
-            remove_action( 'template_redirect', 'rest_output_link_header', 11 );
+            if ( defined( 'O1_WP_FAIL2BAN_ONLY_OEMBED' ) && O1_WP_FAIL2BAN_ONLY_OEMBED ) {
+                add_filter( 'rest_pre_dispatch', array( $this, 'rest_api_only_oembed' ), 0, 3 );
+            } else {
+                // Remove core actions
+                // Source: https://plugins.trac.wordpress.org/browser/disable-json-api/trunk/disable-json-api.php
+                remove_action( 'xmlrpc_rsd_apis', 'rest_output_rsd' );
+                remove_action( 'wp_head', 'rest_output_link_wp_head', 10 );
+                remove_action( 'wp_head', 'wp_oembed_add_discovery_links' );
+                remove_action( 'template_redirect', 'rest_output_link_header', 11 );
 
-            add_filter( 'rest_authentication_errors', array( $this, 'rest_api_disabled' ), 99999 );
+                add_filter( 'rest_authentication_errors', array( $this, 'rest_api_disabled' ), 99999 );
+            }
+        } else {
+            // @TODO Empty out "author_url:" in every REST response
+            add_filter( 'rest_post_dispatch', array( $this, 'rest_40x' ), 0, 3 );
         }
 
         // Don't redirect to admin
@@ -145,8 +153,6 @@ final class WP_Fail2ban_MU {
         // Robot and human 404
         add_action( 'plugins_loaded', array( $this, 'robot_403' ), 0 );
         add_action( 'template_redirect', array( $this, 'wp_404' ) );
-        // @TODO Empty "author_url:" in every REST response
-        add_filter( 'rest_post_dispatch', array( $this, 'rest_40x' ), 0, 3 );
 
         // Non-empty wp_die messages
         add_filter( 'wp_die_ajax_handler', array( $this, 'wp_die_ajax' ), 1 );
@@ -220,7 +226,7 @@ final class WP_Fail2ban_MU {
         if ( function_exists( 'SimpleLogger' ) ) {
             $simple_level = $this->translate_apache_level( $level );
             $context = array(
-                '_security' => 'WordPress fail2ban',
+                '_security'              => 'WordPress fail2ban',
                 '_server_request_method' => $this->esc_log( $_SERVER['REQUEST_METHOD'] ),
             );
             if ( array_key_exists( 'HTTP_USER_AGENT', $_SERVER ) ) {
@@ -409,6 +415,24 @@ final class WP_Fail2ban_MU {
         $this->trigger( 'wpf2b_rest_api_disabled', $_SERVER['REQUEST_URI'], 'notice' );
 
         return new \WP_Error( 'rest_no_route', __( 'No route was found matching the URL and request method' ), array( 'status' => 404 ) );
+    }
+
+    public function rest_api_only_oembed( $null, $that, $request ) {
+
+        // Spec: https://oembed.com/#section2.2
+        if ( '/oembed/1.0/embed' === $request->get_route() ) {
+            return $null;
+        }
+
+        $this->trigger( 'wpf2b_rest_api_not_oembed', $_SERVER['REQUEST_URI'], 'notice' );
+
+        $response_data = array(
+            'code'    => 'rest_no_route',
+            'message' => __( 'No route was found matching the URL and request method' ),
+            'data'    => array( 'status' => 404 ),
+        );
+
+        return new \WP_REST_Response( $response_data, 404 );
     }
 
     public function redirect( $redirect_url, $requested_url ) {
@@ -730,30 +754,3 @@ final class WP_Fail2ban_MU {
 }
 
 new WP_Fail2ban_MU();
-
-/*
-- non-attack 404:
-  logsearch.sh -e wpf2b_404|sed -ne 's|.*wpf2b_404 (s:[0-9]\+:"\([^"]*\)";).*|\1|p'|grep -vx "/[a-z/-]\+/\|.*\.jpg"|sort
-  + non-ascii post slugs
-- fake Googlebot, Referer: http://www.google.com
-      grep -hi ' "[^"]*Googlebot[^"]*"$' /var/log/apache2/*access.log|grep -v "^66\.249\."
-- core: No filter for successful XMLRPC login in wp_authenticate()
-- write test.sh
-- robot requests not through `/index.php` (exclude: xmlrpc, trackback, see: wp_403())
-- append: http://plugins.svn.wordpress.org/block-bad-queries/trunk/block-bad-queries.php
-- option to immediately ban on non-WP scripts (\.php$ \.aspx?$)
-- update non-mu plugin's code
-- new: invalid user/email during registration
-- new: invalid user during lost password
-- new: invalid "lost password" token
-- robots & errors in /wp-comments-post.php (as in block-bad-requests.inc)
-- log xmlrpc? add_action( 'xmlrpc_call', function( $call ) { if ( 'pingback.ping' == $call ) {} } );
-- log proxy IP: HTTP_X_FORWARDED_FOR, HTTP_INCAP_CLIENT_IP, HTTP_CF_CONNECTING_IP (could be faked)
-- registration errors: the dirty way
-      add_filter( 'login_errors', function ( $em ) {
-          error_log( 'em:' . $em );
-          return $em;
-      }, 0 );
-- bad queries https://github.com/wp-plugins/block-bad-queries/
-- bad UAs
-*/
