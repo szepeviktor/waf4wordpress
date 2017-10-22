@@ -1,7 +1,7 @@
 <?php
 /*
 Plugin Name: Block Bad Requests (required from wp-config or MU plugin)
-Version: 2.19.0
+Version: 2.20.0
 Description: Stop various HTTP attacks and trigger Fail2ban.
 Plugin URI: https://github.com/szepeviktor/wordpress-fail2ban
 License: The MIT License (MIT)
@@ -157,8 +157,9 @@ final class Bad_Request {
             $home_url_length = strlen( O1_BAD_REQUEST_PROXY_HOME_URL );
             if ( O1_BAD_REQUEST_PROXY_HOME_URL === substr( $_SERVER['REQUEST_URI'], 0, $home_url_length ) ) {
                 $this->relative_request_uri = substr( $_SERVER['REQUEST_URI'], $home_url_length );
-                // FIXME Fix request URI
+                // Fix request URI
                 // https://core.trac.wordpress.org/ticket/39586
+                // Uncomment next line
                 //$_SERVER['REQUEST_URI'] = $this->relative_request_uri;
             }
         }
@@ -207,7 +208,7 @@ final class Bad_Request {
             exit;
         }
 
-        // @FIXME This blocks the mu-plugin's trigger!!!
+        // @FIXME This blocks the MU plugin's trigger!
         // Don't log POST requests before trigger - multi-line logging problem on mod_proxy_fcgi
         if ( defined( 'O1_BAD_REQUEST_POST_LOGGING' ) && O1_BAD_REQUEST_POST_LOGGING ) {
             if ( 'POST' === $_SERVER['REQUEST_METHOD'] ) {
@@ -326,6 +327,13 @@ final class Bad_Request {
             return 'bad_request_uri_slash';
         }
 
+        // IE{8,9,10,11} may send UTF-8 encoded query string
+        if ( ! empty( $request_query )
+            && ! empty( $_SERVER['HTTP_USER_AGENT'] )
+            && $this->is_ie( $_SERVER['HTTP_USER_AGENT'] )
+        ) {
+            $this->rebuild_query( $request_query );
+        }
         // Request URI encoding
         // https://tools.ietf.org/html/rfc3986#section-2.2
         // reserved    = gen-delims / sub-delims
@@ -339,12 +347,6 @@ final class Bad_Request {
             || false !== strpos( $_SERVER['REQUEST_URI'], '#' )
             || 1 === preg_match( "/[^%:\/?\[\]@!$&'()*+,;=A-Za-z0-9._~-]/", $_SERVER['REQUEST_URI'] )
         ) {
-            /* @TODO IE{8,9,10,11} may send UTF-8 encoded query string
-                "^Mozilla/5\.0 (Windows NT [0-9.]*;.* Trident/7\.0; rv:11\.0) like Gecko"
-                "^Mozilla/5\.0 (compatible; MSIE 10\.0; Windows NT [0-9.]*;.* Trident/6\.0"
-                "^Mozilla/5\.0 (compatible; MSIE 9\.0; Windows NT [0-9.]*;.* Trident/5\.0"
-                "^Mozilla/4\.0 (compatible; MSIE 8\.0; Windows NT [0-9.]*;.* Trident/4\.0"
-            */
             $this->instant_trigger = false;
             return 'bad_request_uri_encoding';
         }
@@ -801,6 +803,7 @@ final class Bad_Request {
      * @return array                The query as an array
      */
     private function parse_query( $query_string ) {
+
         $query = array();
         $names_values_array = explode( '&', $query_string );
 
@@ -887,5 +890,49 @@ final class Bad_Request {
         }
 
         return $leafs;
+    }
+
+    /**
+     * Detect Internet Explorer browser.
+     *
+     * @param string $ua The user agent string.
+     *
+     * @return boolean   The client it IE 8, 9, 10 or 11.
+     */
+    private function is_ie( $ua ) {
+
+        if ( 1 === preg_match( '/^Mozilla\/5\.0 \(Windows NT [0-9.]*;.* Trident\/7\.0; rv:11\.0\) like Gecko/', $ua )
+            || 1 === preg_match( '/^Mozilla\/5\.0 \(compatible; MSIE 10\.0; Windows NT [0-9.]*;.* Trident\/6\.0/', $ua )
+            || 1 === preg_match( '/^Mozilla\/5\.0 \(compatible; MSIE 9\.0; Windows NT [0-9.]*;.* Trident\/5\.0/', $ua )
+            || 1 === preg_match( '/^Mozilla\/4\.0 \(compatible; MSIE 8\.0; Windows NT [0-9.]*;.* Trident\/4\.0/', $ua )
+        ) {
+
+            return true;
+        }
+
+        return false;
+    }
+
+    /**
+     * Rebuild possibly not URL-encoded query string.
+     *
+     * @param string $request_query The query string.
+     */
+    private function rebuild_query( $request_query ) {
+
+        $rebuilt_query = array();
+        $query_lenght = strlen( $request_query );
+        $queries = $this->parse_query( $request_query );
+
+        foreach ( $queries as $key => $value ) {
+            $rebuilt_query[] = sprintf( '%s=%s',
+                urlencode( urldecode( $key ) ),
+                urlencode( urldecode( $value ) )
+            );
+        }
+
+        // Fix up REQUEST_URI
+        $_SERVER['REQUEST_URI'] = substr( $_SERVER['REQUEST_URI'], 0, -1 * $query_lenght )
+            . implode( '&', $rebuilt_query );
     }
 }
