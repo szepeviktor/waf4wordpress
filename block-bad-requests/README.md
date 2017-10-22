@@ -94,6 +94,17 @@ Constant list
 - (boolean) `O1_BAD_REQUEST_ALLOW_CONNECTION_CLOSE` allow other HTTP Connection headers than `keep-alive`
 - (boolean) `O1_BAD_REQUEST_ALLOW_TWO_CAPS` allow user names like `JohnDoe`
 
+Detect visitor IP address
+
+- HTTP_CF_CONNECTING_IP
+- HTTP_X_FORWARDED_FOR
+- HTTP_X_FORWARDED
+- HTTP_X_REAL_IP
+- HTTP_X_SUCURI_CLIENTIP
+- HTTP_INCAP_CLIENT_IP
+- HTTP_FORWARDED
+- HTTP_CLIENT_IP
+
 ### Experimental upload traffic analysis
 
 Insert this code at the end of `__construct()`.
@@ -143,9 +154,9 @@ To learn attack internals insert the code in the MU plugin's README just before 
 </methodResponse>
 ```
 
-### SPDY note
+### HTTP2 and SPDY note
 
-All connections with SPDY are persistent connections.
+All connections with HTTP2 and SPDY are persistent connections.
 
 ```php
 define( 'O1_BAD_REQUEST_ALLOW_CONNECTION_EMPTY', true );

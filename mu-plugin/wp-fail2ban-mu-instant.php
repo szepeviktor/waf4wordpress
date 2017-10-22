@@ -1,7 +1,7 @@
 <?php
 /*
 Plugin Name: WordPress Fail2ban (MU)
-Version: 4.12.0
+Version: 4.13.0
 Description: Stop WordPress related attacks and trigger Fail2ban.
 Plugin URI: https://github.com/szepeviktor/wordpress-fail2ban
 License: The MIT License (MIT)
@@ -105,16 +105,16 @@ final class WP_Fail2ban_MU {
 
         // Disable REST API
         if ( defined( 'O1_WP_FAIL2BAN_DISABLE_REST_API' ) && O1_WP_FAIL2BAN_DISABLE_REST_API ) {
+            // Remove core actions
+            // Source: https://plugins.trac.wordpress.org/browser/disable-json-api/trunk/disable-json-api.php
+            remove_action( 'xmlrpc_rsd_apis', 'rest_output_rsd' );
+            remove_action( 'wp_head', 'rest_output_link_wp_head', 10 );
+            remove_action( 'template_redirect', 'rest_output_link_header', 11 );
             if ( defined( 'O1_WP_FAIL2BAN_ONLY_OEMBED' ) && O1_WP_FAIL2BAN_ONLY_OEMBED ) {
                 add_filter( 'rest_pre_dispatch', array( $this, 'rest_api_only_oembed' ), 0, 3 );
             } else {
-                // Remove core actions
-                // Source: https://plugins.trac.wordpress.org/browser/disable-json-api/trunk/disable-json-api.php
-                remove_action( 'xmlrpc_rsd_apis', 'rest_output_rsd' );
-                remove_action( 'wp_head', 'rest_output_link_wp_head', 10 );
+                // Remove oembed core action
                 remove_action( 'wp_head', 'wp_oembed_add_discovery_links' );
-                remove_action( 'template_redirect', 'rest_output_link_header', 11 );
-
                 add_filter( 'rest_authentication_errors', array( $this, 'rest_api_disabled' ), 99999 );
             }
         } else {
@@ -129,6 +129,9 @@ final class WP_Fail2ban_MU {
         add_filter( 'pre_get_shortlink', '__return_empty_string' );
 
         // Login related
+        add_action( 'login_init', array( $this, 'login' ) );
+        add_action( 'wp_logout', array( $this, 'logout' ) );
+        add_action( 'retrieve_password', array( $this, 'lostpass' ) );
         if ( defined( 'O1_WP_FAIL2BAN_DISABLE_LOGIN' ) && O1_WP_FAIL2BAN_DISABLE_LOGIN ) {
             // Disable login
             add_action( 'login_head', array( $this, 'disable_user_login_js' ) );
@@ -141,8 +144,6 @@ final class WP_Fail2ban_MU {
             add_filter( 'authenticate', array( $this, 'before_login' ), 0, 2 );
             add_action( 'wp_login', array( $this, 'after_login' ), 99999, 2 );
         }
-        add_action( 'wp_logout', array( $this, 'logout' ) );
-        add_action( 'retrieve_password', array( $this, 'lostpass' ) );
 
         // Non-existent URLs
         add_action( 'init', array( $this, 'url_hack' ) );
@@ -492,6 +493,14 @@ final class WP_Fail2ban_MU {
         }
 
         return $user;
+    }
+
+    /**
+     * Masquerade login page as missing.
+     */
+    public function login() {
+
+        status_header( 404 );
     }
 
     public function after_login( $username, $user ) {
