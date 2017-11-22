@@ -130,8 +130,6 @@ final class Bad_Request {
 
     /**
      * Set up options, run check and trigger fail2ban on malicous HTTP request.
-     *
-     * @return null
      */
     public function __construct() {
 
@@ -220,7 +218,7 @@ final class Bad_Request {
     /**
      * Detect for malicious HTTP requests.
      *
-     * @return string|boolean  Attack type or false.
+     * @return string|boolean Attack type or false.
      */
     private function check() {
 
@@ -229,7 +227,7 @@ final class Bad_Request {
             /**
              * Fetch all HTTP request headers.
              *
-             * @return array  HTTP request headers
+             * @return array HTTP request headers
              */
             function apache_request_headers() {
 
@@ -244,19 +242,25 @@ final class Bad_Request {
             }
         }
 
+        // Request methods
         $request_method = strtoupper( $_SERVER['REQUEST_METHOD'] );
         $wp_methods = array( 'HEAD', 'GET', 'POST' );
         $wp_login_methods = array( 'GET', 'POST' );
         $wp_rest_methods = array( 'GET', 'HEAD', 'POST', 'PUT', 'DELETE', 'OPTIONS' );
         $write_methods = array( 'POST', 'PUT', 'DELETE' );
+
+        // Dissect request URI
         $request_path = parse_url( $this->relative_request_uri, PHP_URL_PATH );
         $request_query = isset( $_SERVER['QUERY_STRING'] )
             ? $_SERVER['QUERY_STRING']
             : parse_url( $this->relative_request_uri, PHP_URL_QUERY );
+
+        // Server name
         $server_name = isset( $_SERVER['SERVER_NAME'] )
             ? $_SERVER['SERVER_NAME']
             : $_SERVER['HTTP_HOST'];
 
+        // Request type
         if ( defined( 'XMLRPC_REQUEST' ) && XMLRPC_REQUEST ) {
             $this->is_xmlrpc = true;
         } elseif ( false !== strpos( $request_path, '/wp-login.php' ) ) {
@@ -394,8 +398,8 @@ final class Bad_Request {
 
         // --------------------------- %< ---------------------------
         // @is_write_method
-        // wget POST-s: User-Agent, Accept, Host, Connection, Content-Type, Content-Length
-        // curl POST-s: User-Agent, Host, Accept, Content-Length, Content-Type
+        // wget POST: User-Agent, Accept, Host, Connection, Content-Type, Content-Length
+        // curl POST: User-Agent, Host, Accept, Content-Length, Content-Type
 
         // PHP file upload
         if ( ! empty( $_FILES ) ) {
@@ -609,7 +613,7 @@ final class Bad_Request {
             }
         }
 
-        // Tor network
+        // Tor network exit node detection
         if ( $this->disallow_tor_login ) {
             $exitlist_tpl = '%s.80.%s.ip-port.exitlist.torproject.org';
             $remote_rev = implode( '.', array_reverse( explode( '.', $_SERVER['REMOTE_ADDR'] ) ) );
@@ -625,9 +629,7 @@ final class Bad_Request {
     }
 
     /**
-     * Trigger fail2ban and respond HTTP/403.
-     *
-     * @return null
+     * Trigger Fail2ban and give adequate response.
      */
     private function trigger() {
 
@@ -748,10 +750,8 @@ final class Bad_Request {
     /**
      * Send a string to error log optionally completed with client data.
      *
-     * @param string $message  The log message
-     * @param string $level    Log level (default: 'error')
-     *
-     * @return null
+     * @param string $message  The log message.
+     * @param string $level    Log level.
      *
      * @see http://httpd.apache.org/docs/trunk/mod/core.html#loglevel
      */
@@ -798,9 +798,9 @@ final class Bad_Request {
     /**
      * Parse URL query string to an array.
      *
-     * @param string $query_string  The query string
+     * @param string $query_string The query string.
      *
-     * @return array                The query as an array
+     * @return array               Array of individual queries.
      */
     private function parse_query( $query_string ) {
 
@@ -825,9 +825,9 @@ final class Bad_Request {
     /**
      * Prepare a string to safe logging
      *
-     * @param string $string  String to escape.
+     * @param string $string String to escape.
      *
-     * @return string         Escaped string in parentheses.
+     * @return string        Escaped string in parentheses.
      */
     private function esc_log( $string ) {
 
@@ -843,12 +843,12 @@ final class Bad_Request {
     }
 
     /**
-     * Whether an array contains a case-insensitive substring
+     * Whether an array contains a case-insensitive substring.
      *
-     * @param string $haystack  The haystack.
-     * @param array $needles    The needles.
+     * @param string $haystack The haystack.
+     * @param array $needles   The needles.
      *
-     * @return boolean          A needle is found.
+     * @return boolean         A needle is found.
      */
     private function strifounda( $haystack, $needles ) {
 
