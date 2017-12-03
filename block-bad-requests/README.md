@@ -22,33 +22,34 @@ wp option get "active_plugins"
 
 ### List of HTTP request parts checked
 
-- custom CDN headers `*`
-- URI length
-- User Agent length
+- Custom CDN headers `*`
+- Request URI length (2500 bytes)
+- User Agent length (472 bytes)
 - HTTP methods
-- Slash in URI, URI encoding, blacklist for the URI
-- HTTP Protocol
+- Two forward slashes in URI
+- URI encoding
+- URI blacklist
+- HTTP protocol
+- Request for non-existent PHP file
 - Request for robots.txt in a subdirectory
-- `author` query field
-- Request method to identify POST requests
-- PHP file upload
+- Request with `author` query field (author sniffing)
+- PHP and Shockwave Flash file upload
 - HTTP/POST without User Agent
 - Accept header
 - Content-Length header
 - Content-Type header
-- HTTP methods for WordPress login
-- `log` POST variable blacklist (the WordPress username) `*`
-- Request size for WordPress login `*`
 - Accept-Language header
 - Referer header `*`
-- `action` query field to allow requests for password protected posts
-- HTTP Protocol for WordPress login `*`
-- Connection header `*`
+- Request size for logins `*`
+- Login username blacklist (`log` POST variable) `*`
 - Accept-Encoding header
-- Cookie named `wordpress_test_cookie` `*`
-- User-Agent header `*`
+- IE8 and modern browser (Mozilla/5.0) login
+- Test cookie (`wordpress_test_cookie`) `*`
+- Connection header `*`
+- Login from Tor exit nodes `*`
+- Many more, altogether 34 checks
 
-The list is in order of appearance, `*` means it can be disabled by an option below.
+The list is in order of appearance, `*` means it can be disabled by a constant below.
 
 ```bash
 grep -o "return '.*';" wp-fail2ban-bad-request-instant.inc.php
@@ -93,17 +94,19 @@ Constant list
 - (boolean) `O1_BAD_REQUEST_ALLOW_CONNECTION_EMPTY` allow requests without HTTP Connection header
 - (boolean) `O1_BAD_REQUEST_ALLOW_CONNECTION_CLOSE` allow other HTTP Connection headers than `keep-alive`
 - (boolean) `O1_BAD_REQUEST_ALLOW_TWO_CAPS` allow user names like `JohnDoe`
+- (boolean) `O1_BAD_REQUEST_DISALLOW_TOR_LOGIN` to block logins from Tor exit nodes
 
 Detect visitor IP address
 
-- HTTP_CF_CONNECTING_IP
 - HTTP_X_FORWARDED_FOR
 - HTTP_X_FORWARDED
 - HTTP_X_REAL_IP
 - HTTP_X_SUCURI_CLIENTIP
+- HTTP_CF_CONNECTING_IP
 - HTTP_INCAP_CLIENT_IP
 - HTTP_FORWARDED
 - HTTP_CLIENT_IP
+- REMOTE_ADDR
 
 ### Experimental upload traffic analysis
 
@@ -154,7 +157,7 @@ To learn attack internals insert the code in the MU plugin's README just before 
 </methodResponse>
 ```
 
-### HTTP2 and SPDY note
+### HTTP2 and SPDY
 
 All connections with HTTP2 and SPDY are persistent connections.
 
