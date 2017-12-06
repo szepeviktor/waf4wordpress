@@ -1,7 +1,7 @@
 <?php
 /*
 Plugin Name: WordPress Fail2ban (MU)
-Version: 4.13.0
+Version: 4.14.0
 Description: Stop WordPress related attacks and trigger Fail2ban.
 Plugin URI: https://github.com/szepeviktor/wordpress-fail2ban
 License: The MIT License (MIT)
@@ -16,6 +16,7 @@ Constants: O1_WP_FAIL2BAN_ONLY_OEMBED
 namespace O1;
 
 if ( ! function_exists( 'add_filter' ) ) {
+    // @codingStandardsChangeSetting WordPress.PHP.DevelopmentFunctions exclude error_log
     error_log( 'Break-in attempt detected: wpf2b_mu_direct_access '
         . addslashes( isset( $_SERVER['REQUEST_URI'] ) ? $_SERVER['REQUEST_URI'] : '' )
     );
@@ -44,13 +45,13 @@ if ( ! function_exists( 'add_filter' ) ) {
  */
 final class WP_Fail2ban_MU {
 
-    private $prefix = 'Malicious traffic detected: ';
+    private $prefix         = 'Malicious traffic detected: ';
     private $prefix_instant = 'Break-in attempt detected: ';
     private $wp_die_ajax_handler;
     private $wp_die_xmlrpc_handler;
     private $wp_die_handler;
     private $is_redirect = false;
-    private $names2ban = array(
+    private $names2ban   = array(
         'access',
         'admin',
         'administrator',
@@ -135,7 +136,7 @@ final class WP_Fail2ban_MU {
         if ( defined( 'O1_WP_FAIL2BAN_DISABLE_LOGIN' ) && O1_WP_FAIL2BAN_DISABLE_LOGIN ) {
             // Disable login
             add_action( 'login_head', array( $this, 'disable_user_login_js' ) );
-            add_filter( 'authenticate', array( $this, 'authentication_disabled' ),  0, 2 );
+            add_filter( 'authenticate', array( $this, 'authentication_disabled' ), 0, 2 );
         } else {
             // Prevent registering with banned username
             add_filter( 'validate_username', array( $this, 'banned_username' ), 99999, 2 );
@@ -219,6 +220,7 @@ final class WP_Fail2ban_MU {
         // Report to Sucuri Scan
         if ( class_exists( '\SucuriScanEvent' ) ) {
             if ( true !== \SucuriScanEvent::report_critical_event( $error_msg ) ) {
+                // @codingStandardsChangeSetting WordPress.PHP.DevelopmentFunctions exclude error_log
                 error_log( 'Sucuri Scan report event failure.' );
             }
         }
@@ -226,7 +228,7 @@ final class WP_Fail2ban_MU {
         // Report to Simple History
         if ( function_exists( 'SimpleLogger' ) ) {
             $simple_level = $this->translate_apache_level( $level );
-            $context = array(
+            $context      = array(
                 '_security'              => 'WordPress fail2ban',
                 '_server_request_method' => $this->esc_log( $_SERVER['REQUEST_METHOD'] ),
             );
@@ -254,15 +256,15 @@ final class WP_Fail2ban_MU {
 
     private function fake_wplogin() {
 
-        $server_name = isset( $_SERVER['SERVER_NAME'] )
+        $server_name         = isset( $_SERVER['SERVER_NAME'] )
             ? $_SERVER['SERVER_NAME']
             : $_SERVER['HTTP_HOST'];
-        $username = trim( $_POST['log'] );
-        $expire = time() + 3600;
-        $token = substr( hash_hmac( 'sha256', rand(), 'token' ), 0, 43 );
-        $hash = hash_hmac( 'sha256', rand(), 'hash' );
-        $auth_cookie = $username . '|' . $expire . '|' . $token . '|' . $hash;
-        $authcookie_name = 'wordpress_' . md5( 'authcookie' );
+        $username            = trim( $_POST['log'] );
+        $expire              = time() + 3600;
+        $token               = substr( hash_hmac( 'sha256', rand(), 'token' ), 0, 43 );
+        $hash                = hash_hmac( 'sha256', rand(), 'hash' );
+        $auth_cookie         = $username . '|' . $expire . '|' . $token . '|' . $hash;
+        $authcookie_name     = 'wordpress_' . md5( 'authcookie' );
         $loggedincookie_name = 'wordpress_logged_in_' . md5( 'cookiehash' );
 
         header( 'Cache-Control: max-age=0, private, no-store, no-cache, must-revalidate' );
@@ -299,8 +301,8 @@ final class WP_Fail2ban_MU {
   </params>
 </methodResponse>
 ',
-            home_url( '/' ),
-            home_url( '/brake/xmlrpc.php' )
+            esc_url( home_url( '/' ) ),
+            esc_url( home_url( '/brake/xmlrpc.php' ) )
         );
     }
 
@@ -313,9 +315,9 @@ final class WP_Fail2ban_MU {
         */
 
         // Add entry point, correct when auto_prepend_file is empty
-        $included_files = get_included_files();
+        $included_files      = get_included_files();
         $first_included_file = reset( $included_files );
-        $error_msg = sprintf( '%s <%s',
+        $error_msg           = sprintf( '%s <%s',
             $message,
             $this->esc_log( sprintf( '%s:%s', $_SERVER['REQUEST_METHOD'], $first_included_file ) )
         );
@@ -342,6 +344,7 @@ final class WP_Fail2ban_MU {
             );
         }
 
+        // @codingStandardsChangeSetting WordPress.PHP.DevelopmentFunctions exclude error_log
         error_log( $error_msg );
     }
 
@@ -387,9 +390,9 @@ final class WP_Fail2ban_MU {
             switch ( $status ) {
                 case '403':
                 case '404':
-                    $data = $response->get_data();
-                    $method = $request->get_method();
-                    $route = $request->get_route();
+                    $data    = $response->get_data();
+                    $method  = $request->get_method();
+                    $route   = $request->get_route();
                     $message = sprintf( '%s <%s:%s', $data['code'], $method, $route );
                     $this->trigger( 'wpf2b_rest_error', $message );
                     break;
@@ -447,7 +450,7 @@ final class WP_Fail2ban_MU {
 
     public function banned_username( $valid, $username ) {
 
-        if ( in_array( strtolower( $username ), $this->names2ban ) ) {
+        if ( in_array( strtolower( $username ), $this->names2ban, true ) ) {
             $this->trigger( 'wpf2b_register_banned_username', $username, 'notice' );
             $valid = false;
         }
@@ -457,7 +460,7 @@ final class WP_Fail2ban_MU {
 
     public function authentication_disabled( $user, $username ) {
 
-        if ( in_array( strtolower( $username ), $this->names2ban ) ) {
+        if ( in_array( strtolower( $username ), $this->names2ban, true ) ) {
             $this->trigger_instant( 'wpf2b_login_disabled_banned_username', $username );
         }
 
@@ -484,7 +487,7 @@ final class WP_Fail2ban_MU {
      */
     public function before_login( $user, $username ) {
 
-        if ( in_array( strtolower( $username ), $this->names2ban ) ) {
+        if ( in_array( strtolower( $username ), $this->names2ban, true ) ) {
             $this->trigger_instant( 'wpf2b_banned_username', $username );
         }
 
@@ -514,7 +517,7 @@ final class WP_Fail2ban_MU {
 
         if ( is_user_logged_in() ) {
             $current_user = wp_get_current_user();
-            $user = $current_user->user_login;
+            $user         = $current_user->user_login;
         } else {
             $user = '';
         }
@@ -536,13 +539,13 @@ final class WP_Fail2ban_MU {
      */
     public function robot_403() {
 
-        $ua = array_key_exists( 'HTTP_USER_AGENT', $_SERVER ) ? $_SERVER['HTTP_USER_AGENT'] : '';
+        $ua           = array_key_exists( 'HTTP_USER_AGENT', $_SERVER ) ? $_SERVER['HTTP_USER_AGENT'] : '';
         $request_path = parse_url( $_SERVER['REQUEST_URI'], PHP_URL_PATH );
-        $admin_path = parse_url( admin_url(), PHP_URL_PATH );
-        $wp_dirs = sprintf( 'wp-admin|wp-includes|wp-content|%s', basename( WP_CONTENT_DIR ) );
-        $uploads = wp_upload_dir();
-        $uploads = basename( $uploads['baseurl'] );
-        $cache = sprintf( '%s/cache', basename( WP_CONTENT_DIR ) );
+        $admin_path   = parse_url( admin_url(), PHP_URL_PATH );
+        $wp_dirs      = sprintf( 'wp-admin|wp-includes|wp-content|%s', basename( WP_CONTENT_DIR ) );
+        $uploads      = wp_upload_dir();
+        $uploads      = basename( $uploads['baseurl'] );
+        $cache        = sprintf( '%s/cache', basename( WP_CONTENT_DIR ) );
 
         // Don't have to handle wp-includes/ms-files.php:12
         // It does SHORTINIT, no mu-plugins get loaded
@@ -609,7 +612,7 @@ final class WP_Fail2ban_MU {
     public function wp_die( $arg ) {
 
         // Remember the previous handler
-        $this->wp_die_handler = $arg;
+        $this->wp_die_handler = $arg; // WPCS: XSS ok.
 
         return array( $this, 'wp_die_handler' );
     }
@@ -635,9 +638,9 @@ final class WP_Fail2ban_MU {
             'plugins_api_failed',
             'translations_api_failed',
         );
-        $code = $error->get_error_code();
+        $code      = $error->get_error_code();
 
-        if ( in_array( $code, $whitelist ) ) {
+        if ( in_array( $code, $whitelist, true ) ) {
             return true;
         }
 
@@ -672,7 +675,7 @@ final class WP_Fail2ban_MU {
                 && array_key_exists( $tag, $wp_actions )
                 && is_array( $wp_filter )
                 && ! array_key_exists( $tag, $wp_filter )
-                && ! in_array( $tag, $whitelisted_actions )
+                && ! in_array( $tag, $whitelisted_actions, true )
             ) {
                 $this->trigger_instant( 'wpf2b_admin_action_unknown', $tag );
             }
@@ -712,7 +715,7 @@ final class WP_Fail2ban_MU {
 
     private function esc_log( $string ) {
 
-        $escaped = serialize( $string );
+        $escaped = json_encode( $string );
         // Limit length
         $escaped = mb_substr( $escaped, 0, 500, 'utf-8' );
         // New lines to "|"
@@ -754,11 +757,11 @@ final class WP_Fail2ban_MU {
             and it should not be activated as one.<br />
             Instead, <code style="font-family:Consolas,Monaco,monospace;background:rgba(0,0,0,0.07)">%s</code>
             must be copied to <code style="font-family:Consolas,Monaco,monospace;background:rgba(0,0,0,0.07)">%s</code></p>',
-            str_replace( $doc_root, '', __FILE__ ),
-            str_replace( $doc_root, '', trailingslashit( WPMU_PLUGIN_DIR ) ) . basename( __FILE__ )
+            esc_html( str_replace( $doc_root, '', __FILE__ ) ),
+            esc_html( str_replace( $doc_root, '', trailingslashit( WPMU_PLUGIN_DIR ) ) . basename( __FILE__ ) )
         );
 
-        exit( $iframe_msg );
+        exit( $iframe_msg ); // WPCS: XSS ok.
     }
 }
 

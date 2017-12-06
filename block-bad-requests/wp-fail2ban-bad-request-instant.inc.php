@@ -1,7 +1,7 @@
 <?php
 /*
 Plugin Name: Block Bad Requests (required from wp-config or MU plugin)
-Version: 2.20.0
+Version: 2.21.0
 Description: Stop various HTTP attacks and trigger Fail2ban.
 Plugin URI: https://github.com/szepeviktor/wordpress-fail2ban
 License: The MIT License (MIT)
@@ -38,17 +38,17 @@ namespace O1;
  */
 final class Bad_Request {
 
-    private $prefix = 'Malicious traffic detected: ';
-    private $prefix_instant = 'Break-in attempt detected: ';
+    private $prefix          = 'Malicious traffic detected: ';
+    private $prefix_instant  = 'Break-in attempt detected: ';
     private $instant_trigger = true;
     // Default rest_url_prefix value
-    private $rest_url_prefix = '/wp-json/';
+    private $rest_url_prefix        = '/wp-json/';
     private $max_login_request_size = 4000;
-    private $is_wplogin = false;
-    private $is_xmlrpc = false;
-    private $is_rest = false;
-    private $is_options_method = false;
-    private $names2ban = array(
+    private $is_wplogin             = false;
+    private $is_xmlrpc              = false;
+    private $is_rest                = false;
+    private $is_options_method      = false;
+    private $names2ban              = array(
         'access',
         'admin',
         'administrator',
@@ -84,7 +84,7 @@ final class Bad_Request {
         'username',
         'webmaster',
     );
-    private $blacklist = array(
+    private $blacklist              = array(
         '../', // Path traversal
         '/..', // Path traversal
         'wp-config', // WP configuration
@@ -101,7 +101,7 @@ final class Bad_Request {
         '/administrator', // Joomla Administrator
         'connector.asp', // Joomla FCKeditor 2.x File Manager Connector for ASP
         '/HNAP1', // D-Link routers
-        '() { ', // Shell shock () { :;};
+        '() { ', // Shell shock, Bash script: () { :;};
         '/cgi-bin/', // CGI folder
         'error_log', // Default PHP error log
         'error-log', // PHP error log
@@ -117,26 +117,39 @@ final class Bad_Request {
         '+--+', // SQL comment
         '%20--%20', // SQL comment
     );
-    private $relative_request_uri = '';
+    private $relative_request_uri   = '';
     private $cdn_headers;
-    private $allow_registration = false;
-    private $allow_ie8_login = false;
-    private $allow_old_proxies = false;
+    private $allow_registration     = false;
+    private $allow_ie8_login        = false;
+    private $allow_old_proxies      = false;
     private $allow_connection_empty = false;
     private $allow_connection_close = false;
-    private $allow_two_capitals = false;
-    private $disallow_tor_login = false;
-    private $result = false;
+    private $allow_two_capitals     = false;
+    private $disallow_tor_login     = false;
+    private $result                 = false;
 
     /**
      * Set up options, run check and trigger fail2ban on malicous HTTP request.
      */
     public function __construct() {
 
+        if ( empty( $_SERVER['SERVER_ADDR'] )
+            || empty( $_SERVER['REMOTE_ADDR'] )
+            || empty( $_SERVER['REMOTE_PORT'] )
+            || empty( $_SERVER['REQUEST_METHOD'] )
+            || empty( $_SERVER['REQUEST_URI'] )
+        ) {
+            $this->prefix          = 'Server configuration error: ';
+            $this->instant_trigger = false;
+            $this->result          = 'bad_request_superglobal';
+            $this->trigger();
+            exit;
+        }
+
         // Don't run on local access and on install or upgrade
         // WP_INSTALLING is available even before wp-config.php
         if ( 'cli' === php_sapi_name()
-            || $_SERVER['REMOTE_ADDR'] === $_SERVER['SERVER_ADDR']
+            || $_SERVER['REMOTE_ADDR'] === $_SERVER['SERVER_ADDR'] // WPCS: input var okay.
             || ( defined( 'WP_INSTALLING' ) && WP_INSTALLING )
         ) {
             return;
@@ -147,18 +160,19 @@ final class Bad_Request {
             $this->instant_trigger = false;
         }
 
-        if ( isset( $_SERVER['REQUEST_URI'] ) ) {
-            $this->relative_request_uri = $_SERVER['REQUEST_URI'];
-        }
+        $this->relative_request_uri = $_SERVER['REQUEST_URI'];
         // O1_BAD_REQUEST_PROXY_HOME_URL should not contain a trailing slash
         if ( defined( 'O1_BAD_REQUEST_PROXY_HOME_URL' ) ) {
             $home_url_length = strlen( O1_BAD_REQUEST_PROXY_HOME_URL );
             if ( O1_BAD_REQUEST_PROXY_HOME_URL === substr( $_SERVER['REQUEST_URI'], 0, $home_url_length ) ) {
                 $this->relative_request_uri = substr( $_SERVER['REQUEST_URI'], $home_url_length );
-                // Fix request URI
-                // https://core.trac.wordpress.org/ticket/39586
-                // Uncomment next line
-                //$_SERVER['REQUEST_URI'] = $this->relative_request_uri;
+                /**
+                 * Fix request URI
+                 *
+                 * @see https://core.trac.wordpress.org/ticket/39586
+                 *
+                 * $_SERVER['REQUEST_URI'] = $this->relative_request_uri;
+                 */
             }
         }
 
@@ -243,14 +257,14 @@ final class Bad_Request {
         }
 
         // Request methods
-        $request_method = strtoupper( $_SERVER['REQUEST_METHOD'] );
-        $wp_methods = array( 'HEAD', 'GET', 'POST' );
+        $request_method   = strtoupper( $_SERVER['REQUEST_METHOD'] );
+        $wp_methods       = array( 'HEAD', 'GET', 'POST' );
         $wp_login_methods = array( 'GET', 'POST' );
-        $wp_rest_methods = array( 'GET', 'HEAD', 'POST', 'PUT', 'DELETE', 'OPTIONS' );
-        $write_methods = array( 'POST', 'PUT', 'DELETE' );
+        $wp_rest_methods  = array( 'GET', 'HEAD', 'POST', 'PUT', 'DELETE', 'OPTIONS' );
+        $write_methods    = array( 'POST', 'PUT', 'DELETE' );
 
         // Dissect request URI
-        $request_path = parse_url( $this->relative_request_uri, PHP_URL_PATH );
+        $request_path  = parse_url( $this->relative_request_uri, PHP_URL_PATH );
         $request_query = isset( $_SERVER['QUERY_STRING'] )
             ? $_SERVER['QUERY_STRING']
             : parse_url( $this->relative_request_uri, PHP_URL_QUERY );
@@ -282,7 +296,7 @@ final class Bad_Request {
                 );
                 $this->enhanced_error_log( 'HTTP headers: ' . $this->esc_log( $cdn_combined_headers ) );
                 // Work-around to prevent edge server banning
-                $this->prefix = 'Attack through CDN: ';
+                $this->prefix          = 'Attack through CDN: ';
                 $this->instant_trigger = false;
                 return 'bad_request_cdn_attack';
             }
@@ -311,18 +325,18 @@ final class Bad_Request {
         // https://tools.ietf.org/html/rfc2616#section-9.2
         if ( ! $this->is_rest && 'OPTIONS' === $request_method ) {
             $this->is_options_method = true;
-            $this->instant_trigger = false;
+            $this->instant_trigger   = false;
             return 'bad_request_http_options_method';
         }
         if ( ! $this->is_wplogin && ! $this->is_rest
-            && false === in_array( $request_method, $wp_methods )
+            && false === in_array( $request_method, $wp_methods, true )
         ) {
             return 'bad_request_http_method';
         }
-        if ( $this->is_wplogin && false === in_array( $request_method, $wp_login_methods ) ) {
+        if ( $this->is_wplogin && false === in_array( $request_method, $wp_login_methods, true ) ) {
             return 'bad_request_wplogin_http_method';
         }
-        if ( $this->is_rest && false === in_array( $request_method, $wp_rest_methods ) ) {
+        if ( $this->is_rest && false === in_array( $request_method, $wp_rest_methods, true ) ) {
             return 'bad_request_rest_http_method';
         }
 
@@ -347,9 +361,11 @@ final class Bad_Request {
         // unreserved  = ALPHA / DIGIT / "-" / "." / "_" / "~"
         // "#" removed
         // "%" added
+        // Look for "http:" in request path
         if ( substr_count( $_SERVER['REQUEST_URI'], '?' ) > 1
             || false !== strpos( $_SERVER['REQUEST_URI'], '#' )
             || 1 === preg_match( "/[^%:\/?\[\]@!$&'()*+,;=A-Za-z0-9._~-]/", $_SERVER['REQUEST_URI'] )
+            || 1 === preg_match( '/(http|https|data):/i', $request_path )
         ) {
             $this->instant_trigger = false;
             return 'bad_request_uri_encoding';
@@ -369,7 +385,11 @@ final class Bad_Request {
         // http://httpd.apache.org/docs/current/custom-error.html#variables
         if ( isset( $_SERVER['REDIRECT_URL'] )
             && false !== stripos( $_SERVER['REDIRECT_URL'], '.php' )
-            // For old mod_fastcgi setup && $_SERVER['SCRIPT_NAME'] !== $_SERVER['REDIRECT_URL']
+            /**
+             * For old mod_fastcgi setup
+             *
+             * && $_SERVER['SCRIPT_NAME'] !== $_SERVER['REDIRECT_URL']
+             */
         ) {
             return 'bad_request_nonexistent_php';
         }
@@ -391,7 +411,7 @@ final class Bad_Request {
         }
 
         // Check write-type method requests only
-        if ( false === in_array( $request_method, $write_methods ) ) {
+        if ( false === in_array( $request_method, $write_methods, true ) ) {
             // Not a write-type method
             return false;
         }
@@ -523,7 +543,7 @@ final class Bad_Request {
             $username = trim( $_POST['log'] );
 
             // Banned usernames
-            if ( in_array( strtolower( $username ), $this->names2ban ) ) {
+            if ( in_array( strtolower( $username ), $this->names2ban, true ) ) {
                 return 'bad_request_wplogin_username_banned';
             }
 
@@ -615,9 +635,9 @@ final class Bad_Request {
 
         // Tor network exit node detection
         if ( $this->disallow_tor_login ) {
-            $exitlist_tpl = '%s.80.%s.ip-port.exitlist.torproject.org';
-            $remote_rev = implode( '.', array_reverse( explode( '.', $_SERVER['REMOTE_ADDR'] ) ) );
-            $server_rev = implode( '.', array_reverse( explode( '.', $_SERVER['SERVER_ADDR'] ) ) );
+            $exitlist_tpl      = '%s.80.%s.ip-port.exitlist.torproject.org';
+            $remote_rev        = implode( '.', array_reverse( explode( '.', $_SERVER['REMOTE_ADDR'] ) ) );
+            $server_rev        = implode( '.', array_reverse( explode( '.', $_SERVER['SERVER_ADDR'] ) ) );
             $exitlist_response = gethostbyname( sprintf( $exitlist_tpl, $remote_rev, $server_rev ) );
             if ( false !== strpos( $exitlist_response, '127.0.0' ) ) {
                     return 'bad_request_wplogin_tor';
@@ -636,6 +656,7 @@ final class Bad_Request {
         // Trigger miniban
         if ( class_exists( '\Miniban' ) && $this->instant_trigger ) {
             if ( true !== \Miniban::ban() ) {
+                // @codingStandardsChangeSetting WordPress.PHP.DevelopmentFunctions exclude error_log
                 error_log( 'Miniban operation failed.' );
             }
         }
@@ -692,15 +713,15 @@ final class Bad_Request {
 
     private function fake_wplogin() {
 
-        $server_name = isset( $_SERVER['SERVER_NAME'] )
+        $server_name         = isset( $_SERVER['SERVER_NAME'] )
             ? $_SERVER['SERVER_NAME']
             : $_SERVER['HTTP_HOST'];
-        $username = trim( $_POST['log'] );
-        $expire = time() + 3600;
-        $token = substr( hash_hmac( 'sha256', rand(), 'token' ), 0, 43 );
-        $hash = hash_hmac( 'sha256', rand(), 'hash' );
-        $auth_cookie = $username . '|' . $expire . '|' . $token . '|' . $hash;
-        $authcookie_name = 'wordpress_' . md5( 'authcookie' );
+        $username            = trim( $_POST['log'] );
+        $expire              = time() + 3600;
+        $token               = substr( hash_hmac( 'sha256', rand(), 'token' ), 0, 43 );
+        $hash                = hash_hmac( 'sha256', rand(), 'hash' );
+        $auth_cookie         = $username . '|' . $expire . '|' . $token . '|' . $hash;
+        $authcookie_name     = 'wordpress_' . md5( 'authcookie' );
         $loggedincookie_name = 'wordpress_logged_in_' . md5( 'cookiehash' );
 
         header( 'Cache-Control: max-age=0, private, no-store, no-cache, must-revalidate' );
@@ -744,7 +765,7 @@ final class Bad_Request {
 ',
             $server_name,
             $server_name
-        );
+        ); // WPCS: XSS ok.
     }
 
     /**
@@ -764,9 +785,9 @@ final class Bad_Request {
         */
 
         // Add entry point, correct when `auto_prepend_file` is empty
-        $included_files = get_included_files();
+        $included_files      = get_included_files();
         $first_included_file = reset( $included_files );
-        $error_msg = sprintf( '%s <%s',
+        $error_msg           = sprintf( '%s <%s',
             $message,
             $this->esc_log( sprintf( '%s:%s', $_SERVER['REQUEST_METHOD'], $first_included_file ) )
         );
@@ -792,6 +813,7 @@ final class Bad_Request {
             );
         }
 
+        // @codingStandardsChangeSetting WordPress.PHP.DevelopmentFunctions exclude error_log
         error_log( $error_msg );
     }
 
@@ -804,7 +826,7 @@ final class Bad_Request {
      */
     private function parse_query( $query_string ) {
 
-        $query = array();
+        $query              = array();
         $names_values_array = explode( '&', $query_string );
 
         foreach ( $names_values_array as $name_value ) {
@@ -831,7 +853,7 @@ final class Bad_Request {
      */
     private function esc_log( $string ) {
 
-        $escaped = serialize( $string );
+        $escaped = json_encode( $string );
         // Limit length
         $escaped = mb_substr( $escaped, 0, 500, 'utf-8' );
         // New lines to "|"
@@ -876,14 +898,15 @@ final class Bad_Request {
             return $leafs;
         }
 
-        $array_iterator = new \RecursiveArrayIterator( $array );
+        $array_iterator    = new \RecursiveArrayIterator( $array );
         $iterator_iterator = new \RecursiveIteratorIterator( $array_iterator, \RecursiveIteratorIterator::LEAVES_ONLY );
         foreach ( $iterator_iterator as $key => $value ) {
-            $keys = array();
-            for ( $i = 0; $i < $iterator_iterator->getDepth(); $i++ ) {
+            $keys  = array();
+            $depth = $iterator_iterator->getDepth();
+            for ( $i = 0; $i < $depth; $i++ ) {
                 $keys[] = $iterator_iterator->getSubIterator( $i )->key();
             }
-            $keys[] = $key;
+            $keys[]   = $key;
             $leaf_key = implode( ' ', $keys );
 
             $leafs[ $leaf_key ] = $value;
@@ -921,13 +944,13 @@ final class Bad_Request {
     private function rebuild_query( $request_query ) {
 
         $rebuilt_query = array();
-        $query_lenght = strlen( $request_query );
-        $queries = $this->parse_query( $request_query );
+        $query_lenght  = strlen( $request_query );
+        $queries       = $this->parse_query( $request_query );
 
         foreach ( $queries as $key => $value ) {
             $rebuilt_query[] = sprintf( '%s=%s',
-                urlencode( urldecode( $key ) ),
-                urlencode( urldecode( $value ) )
+                rawurlencode( urldecode( $key ) ),
+                rawurlencode( urldecode( $value ) )
             );
         }
 

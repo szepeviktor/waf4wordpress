@@ -46,14 +46,14 @@ Scanning for `.user.ini` must be enabled server-wide in the `user_ini.filename` 
 
 Hosts should be banned based on these HTTP headers:
 
-| Webserver / Proxy            | HTTP header           |
-| ---------------------------- | --------------------- |
-| Apache without reverse proxy | `Remote_Addr`         |
-| CloudFlare                   | `X-FORWARDED-FOR`     |
-| Incapsula                    | @TODO                 |
-| Rackspace                    | `X-CLUSTER-CLIENT-IP` |
-| Varnish                      | `X-FORWARDED-FOR`     |
-| HA proxy                     | `X-FORWARDED-FOR`     |
+| Webserver / Proxy            | HTTP header            |
+| ---------------------------- | ---------------------- |
+| Apache without reverse proxy | `Remote_Addr`          |
+| CloudFlare                   | `X-FORWARDED-FOR`      |
+| Incapsula                    | `HTTP_INCAP_CLIENT_IP` |
+| Rackspace                    | `X-CLUSTER-CLIENT-IP`  |
+| Varnish                      | `X-FORWARDED-FOR`      |
+| HA proxy                     | `X-FORWARDED-FOR`      |
 
 Sample `.htaccess` file that is generated on first ban:
 
@@ -81,7 +81,7 @@ SetEnvIf Remote_Addr "^192\.168\.1\.100$" mini_ban
 #SetEnvIf X-FORWARDED-FOR "^192\.168\.1\.100$" mini_ban
 
 # Incapsula
-#
+#SetEnvIf INCAP_CLIENT_IP "^192\.168\.1\.100$" mini_ban
 
 # Rackspace header
 #SetEnvIf X-CLUSTER-CLIENT-IP "^192\.168\.1\.100$" mini_ban
@@ -108,7 +108,7 @@ Wait for specified time and send random bytes continously.
 
 ### CloudFlare method - miniban-cloudflare.php
 
-Communicate with cloudFlare API and ban/unban hosts.
+Communicate with CloudFlare API and ban/unban hosts.
 @TODO
 
 
