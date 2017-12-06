@@ -2,7 +2,7 @@
 
 Bans commonly used user names (hardcoded in a property), blocks non-static requests from CDN,
 prevents author sniffing and examines every HTTP header in a login request.
-Then triggers fail2ban accordingly.
+Then triggers Fail2ban accordingly.
 
 To install copy `wp-fail2ban-bad-request-instant.inc.php` beside your `wp-config.php` and put this line in top of `wp-config.php`:
 
@@ -96,16 +96,17 @@ Constant list
 - (boolean) `O1_BAD_REQUEST_ALLOW_TWO_CAPS` allow user names like `JohnDoe`
 - (boolean) `O1_BAD_REQUEST_DISALLOW_TOR_LOGIN` to block logins from Tor exit nodes
 
-Detect visitor IP address
+Detect client IP address
 
-- HTTP_X_FORWARDED_FOR
+- HTTP_CF_CONNECTING_IP (Cloudflare)
+- HTTP_X_SUCURI_CLIENTIP (Sucuri)
+- HTTP_INCAP_CLIENT_IP (Incapsula)
+- HTTP_X_FORWARDED_FOR (Amazon CloudFront, can be comma delimited list of IP addresses)
 - HTTP_X_FORWARDED
 - HTTP_X_REAL_IP
-- HTTP_X_SUCURI_CLIENTIP
-- HTTP_CF_CONNECTING_IP
-- HTTP_INCAP_CLIENT_IP
-- HTTP_FORWARDED
 - HTTP_CLIENT_IP
+- HTTP_FORWARDED_FOR
+- HTTP_FORWARDED
 - REMOTE_ADDR
 
 ### Experimental upload traffic analysis
