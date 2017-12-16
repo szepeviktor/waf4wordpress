@@ -1,7 +1,7 @@
 <?php
 /*
 Plugin Name: Block Bad Requests (required from wp-config or MU plugin)
-Version: 2.21.0
+Version: 2.21.1
 Description: Stop various HTTP attacks and trigger Fail2ban.
 Plugin URI: https://github.com/szepeviktor/wordpress-fail2ban
 License: The MIT License (MIT)
@@ -48,6 +48,7 @@ final class Bad_Request {
     private $is_xmlrpc              = false;
     private $is_rest                = false;
     private $is_options_method      = false;
+    private $is_delete_method       = false;
     private $names2ban              = array(
         'access',
         'admin',
@@ -133,6 +134,15 @@ final class Bad_Request {
      */
     public function __construct() {
 
+        // Don't run on CLI
+        // Don't run on install or upgrade
+        // WP_INSTALLING is available even before wp-config.php
+        if ( 'cli' === php_sapi_name()
+            || ( defined( 'WP_INSTALLING' ) && WP_INSTALLING )
+        ) {
+            return;
+        }
+
         if ( empty( $_SERVER['SERVER_ADDR'] )
             || empty( $_SERVER['REMOTE_ADDR'] )
             || empty( $_SERVER['REMOTE_PORT'] )
@@ -146,12 +156,8 @@ final class Bad_Request {
             exit;
         }
 
-        // Don't run on local access and on install or upgrade
-        // WP_INSTALLING is available even before wp-config.php
-        if ( 'cli' === php_sapi_name()
-            || $_SERVER['REMOTE_ADDR'] === $_SERVER['SERVER_ADDR'] // WPCS: input var okay.
-            || ( defined( 'WP_INSTALLING' ) && WP_INSTALLING )
-        ) {
+        // Don't run on local access
+        if ( $_SERVER['REMOTE_ADDR'] === $_SERVER['SERVER_ADDR'] ) { // WPCS: input var okay.
             return;
         }
 
@@ -328,6 +334,9 @@ final class Bad_Request {
             $this->instant_trigger   = false;
             return 'bad_request_http_options_method';
         }
+        if ( 'DELETE' === $request_method ) {
+            $this->is_delete_method = true;
+        }
         if ( ! $this->is_wplogin && ! $this->is_rest
             && false === in_array( $request_method, $wp_methods, true )
         ) {
@@ -477,11 +486,15 @@ final class Bad_Request {
         if ( ! isset( $_SERVER['CONTENT_LENGTH'] )
             || ! is_numeric( $_SERVER['CONTENT_LENGTH'] )
         ) {
-            return 'bad_request_post_content_length';
+            // DELETE request may not have a Content-Length header
+            if ( ! $this->is_delete_method ) {
+                return 'bad_request_post_content_length';
+            }
         }
 
         // Content-Type HTTP header (for login, XML-RPC, REST and AJAX)
-        if ( '0' !== $_SERVER['CONTENT_LENGTH']
+        if ( isset( $_SERVER['CONTENT_LENGTH'] )
+            && '0' !== $_SERVER['CONTENT_LENGTH']
             && ( empty( $_SERVER['CONTENT_TYPE'] )
                 || ( $this->is_wplogin
                     && 0 !== stripos( $_SERVER['CONTENT_TYPE'], 'application/x-www-form-urlencoded' )

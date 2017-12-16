@@ -166,9 +166,19 @@ All connections with HTTP2 and SPDY are persistent connections.
 define( 'O1_BAD_REQUEST_ALLOW_CONNECTION_EMPTY', true );
 ```
 
+### Exclude a specific request
+
+```apache
+# Barion login request
+<Limit "OPTIONS">
+    RewriteCond %{QUERY_STRING} "=loginHint="
+    RewriteRule "^Home/AsyncLogin$" "https://example.com/checkout/onepage/?" [L]
+</Limit>
+```
+
 ### Other notes
 
-You can customize the fail2ban trigger string in the `$prefix` property.
+You can customize the Fail2ban trigger string in the `$prefix` property.
 
 Tests are included as a shell script: `bad-request-test.sh`
 
