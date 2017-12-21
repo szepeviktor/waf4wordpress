@@ -1,7 +1,7 @@
 <?php
 /*
 Plugin Name: Block Bad Requests (required from wp-config or MU plugin)
-Version: 2.21.1
+Version: 2.21.2
 Description: Stop various HTTP attacks and trigger Fail2ban.
 Plugin URI: https://github.com/szepeviktor/wordpress-fail2ban
 License: The MIT License (MIT)
@@ -242,26 +242,6 @@ final class Bad_Request {
      */
     private function check() {
 
-        // Declare apache_request_headers function
-        if ( ! function_exists( 'apache_request_headers' ) ) {
-            /**
-             * Fetch all HTTP request headers.
-             *
-             * @return array HTTP request headers
-             */
-            function apache_request_headers() {
-
-                $headers = array();
-                foreach ( $_SERVER as $name => $value ) {
-                    if ( 'HTTP_' === substr( $name, 0, 5 ) ) {
-                        $headers[ substr( $name, 5 ) ] = $value;
-                    }
-                }
-
-                return $headers;
-            }
-        }
-
         // Request methods
         $request_method   = strtoupper( $_SERVER['REQUEST_METHOD'] );
         $wp_methods       = array( 'HEAD', 'GET', 'POST' );
@@ -298,7 +278,7 @@ final class Bad_Request {
                     array(
                         'REQUEST_URI' => $_SERVER['REQUEST_URI'],
                     ),
-                    apache_request_headers()
+                    $this->apache_request_headers()
                 );
                 $this->enhanced_error_log( 'HTTP headers: ' . $this->esc_log( $cdn_combined_headers ) );
                 // Work-around to prevent edge server banning
@@ -544,7 +524,7 @@ final class Bad_Request {
         }
 
         // Maximum HTTP request size for logins
-        $request_size = strlen( http_build_query( apache_request_headers() ) )
+        $request_size = strlen( http_build_query( $this->apache_request_headers() ) )
             + strlen( $_SERVER['REQUEST_URI'] )
             + strlen( http_build_query( $_POST ) );
         if ( $request_size > $this->max_login_request_size ) {
@@ -828,6 +808,28 @@ final class Bad_Request {
 
         // @codingStandardsChangeSetting WordPress.PHP.DevelopmentFunctions exclude error_log
         error_log( $error_msg );
+    }
+
+    /**
+     * Fetch all HTTP request headers.
+     *
+     * @return array HTTP request headers
+     */
+    private function apache_request_headers() {
+
+        if ( function_exists( 'apache_request_headers' ) ) {
+
+            return apache_request_headers();
+        }
+
+        $headers = array();
+        foreach ( $_SERVER as $name => $value ) {
+            if ( 'HTTP_' === substr( $name, 0, 5 ) ) {
+                $headers[ substr( $name, 5 ) ] = $value;
+            }
+        }
+
+        return $headers;
     }
 
     /**

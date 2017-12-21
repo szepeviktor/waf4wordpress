@@ -9,7 +9,7 @@
 	-->
 	<config name="minimum_supported_wp_version" value="4.5"/>
 
-	<rule ref="/usr/local/wpcs/WordPress-Core">
+	<rule ref="WordPress-Core">
 		<exclude name="Generic.WhiteSpace.DisallowSpaceIndent"/>
 		<exclude name="WordPress.WP.AlternativeFunctions"/>
 	</rule>
@@ -18,12 +18,12 @@
 			<property name="strict_class_file_names" value="false"/>
 		</properties>
 	</rule>
-	<!-- <rule ref="/usr/local/wpcs/WordPress-Docs"/> -->
-	<rule ref="/usr/local/wpcs/WordPress-Extra">
+	<!-- <rule ref="WordPress-Docs"/> -->
+	<rule ref="WordPress-Extra">
 		<exclude name="WordPress.WP.AlternativeFunctions"/>
 		<exclude name="WordPress.CSRF.NonceVerification"/>
 	</rule>
-	<rule ref="/usr/local/wpcs/WordPress-VIP">
+	<rule ref="WordPress-VIP">
 		<exclude name="WordPress.VIP.SuperGlobalInputUsage"/>
 		<exclude name="WordPress.VIP.ValidatedSanitizedInput"/>
 		<exclude name="WordPress.VIP.RestrictedVariables"/>

@@ -1,6 +1,6 @@
 # WordPress Fail2ban MU plugin
 
-This is the Must Use (mu-plugin) version of *WordPress fail2ban* plugin.
+This is the Must Use (mu-plugin) version of *WordPress Fail2ban* plugin.
 The code is commented, so you may understand it by looking at the code only.
 
 ### Advantages
@@ -42,7 +42,7 @@ define( 'O1_WP_FAIL2BAN_ALLOW_REDIRECT', true );
 
 ### Disabling parts
 
-By default all parts (fail2ban triggers) are enabled. If you would like to disable any of them
+By default all parts (Fail2ban triggers) are enabled. If you would like to disable any of them
 you have to `remove_action()` or `remove_filter()` it in your own code at `init`.
 Or comment out actions/filters in the constructor.
 
@@ -72,8 +72,8 @@ Helps learning attack internals. Insert this code after `wp_logout();` in `trigg
 See: https://github.com/szepeviktor/debian-server-tools/tree/master/security/fail2ban-conf
 
 Please examine the latest filter `failregexp`-s in
-[fail2ban GitHub repository](https://github.com/fail2ban/fail2ban/blob/master/config/filter.d).
+[Fail2ban GitHub repository](https://github.com/fail2ban/fail2ban/blob/master/config/filter.d).
 It worth to combine every webserver related regexp-s in one custom filter.
-You can customize the fail2ban trigger string in the `$prefix` property of `WP_Fail2ban_MU` class.
+You can customize the Fail2ban trigger string in the `$prefix` property of `WP_Fail2ban_MU` class.
 
 **All the best wishes to you!**

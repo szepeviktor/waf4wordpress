@@ -64,13 +64,13 @@ E.g. to allow Connection header other than `keep-alive` use this:
 define( 'O1_BAD_REQUEST_ALLOW_CONNECTION_CLOSE', true );
 ```
 
-To blocks non-static requests from Amazon CloudFront copy this to your wp-config.php:
+To blocks non-static requests from Amazon CloudFront copy this to your `wp-config.php`:
 
 ```php
 define( 'O1_BAD_REQUEST_CDN_HEADERS', 'HTTP_X_FORWARDED_FOR:HTTP_X_AMZ_CF_ID:HTTP_VIA' );
 ```
 
-To blocks non-static requests from CloudFlare copy this to your wp-config.php:
+To blocks non-static requests from CloudFlare copy this to your `wp-config.php`:
 
 ```php
 define( 'O1_BAD_REQUEST_CDN_HEADERS', 'HTTP_X_FORWARDED_FOR:HTTP_CF_RAY:HTTP_CF_CONNECTING_IP' );
@@ -175,6 +175,15 @@ define( 'O1_BAD_REQUEST_ALLOW_CONNECTION_EMPTY', true );
     RewriteRule "^Home/AsyncLogin$" "https://example.com/checkout/onepage/?" [L]
 </Limit>
 ```
+
+### Set up the Fail2ban filters
+
+See: https://github.com/szepeviktor/debian-server-tools/tree/master/security/fail2ban-conf
+
+Please examine the latest filter `failregexp`-s in
+[Fail2ban GitHub repository](https://github.com/fail2ban/fail2ban/blob/master/config/filter.d).
+It worth to combine every webserver related regexp-s in one custom filter.
+You can customize the Fail2ban trigger string in the `$prefix` property of `Bad_Request` class.
 
 ### Other notes
 

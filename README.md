@@ -2,7 +2,7 @@
 
 Stop WordPress related attacks and trigger Fail2ban running on your server.  
 Shared hosting has no server-wide banning (because of trust issues)
-but you can still install WordPress Fail2ban without Fail2ban to stop attacks by using one of the Miniban methods.
+but you can still install this software without Fail2ban to stop attacks by using one of the Miniban methods.
 
 Your WordPress (really HTTP) security consists of:
 
@@ -46,7 +46,7 @@ Triggers Fail2ban on WordPress login probes.
 To install copy the fake `non-wp-projects/wp-login.php`and `non-wp-projects/xmlrpc.php`
 to your **non-WordPress** project's document root.
 
-### The normal plugin - wp-fail2ban.php
+### The normal plugin
 
 Please **DO NOT use it** because it is being designed. Use the MU plugin version from the `mu-plugin` folder.
 

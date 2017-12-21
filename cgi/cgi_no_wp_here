@@ -1,8 +1,8 @@
 #!/bin/dash
 #
-# Trigger fail2ban from a simpla CGI script.
+# Trigger Fail2ban in non-WordPress projects from a CGI script.
 #
-# VERSION       :0.2.1
+# VERSION       :0.2.2
 # DATE          :2015-10-23
 # AUTHOR        :Viktor Szépe <viktor@szepe.net>
 # URL           :https://github.com/szepeviktor/wordpress-fail2ban
@@ -30,8 +30,8 @@
 #
 # .sh extension is denied by h5bp server configuration.
 
-# Trigger fail2ban
-echo "Break-in attempt detected: no_wp_here_wplogin" >&2
+# Trigger Fail2ban
+echo "Break-in attempt detected: no_wp_here_wplogin" 1>&2
 
 # Response status code
 echo "Status: 403 Forbidden"
@@ -43,7 +43,7 @@ echo "X-Robots-Tag: noindex, nofollow"
 echo "Content-Type: text/html"
 echo "Content-Length: 0"
 
-# This newline closes headers, prevents "Premature end of script headers" error message
+# This newline closes headers and prevents "Premature end of script headers" error message
 echo
 
 exit 0
