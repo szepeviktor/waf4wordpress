@@ -1,7 +1,9 @@
 # WordPress Block Bad Requests
 
-Bans commonly used user names (hardcoded in a property), blocks non-static requests from CDN,
-prevents author sniffing and examines every HTTP header in a login request.
+Examines **every HTTP header** in all (including login) requests.
+Bans commonly used user names (hardcoded in a property),
+blocks non-static requests from CDN, prevents author sniffing.
+
 Then triggers Fail2ban accordingly.
 
 To install copy `wp-fail2ban-bad-request-instant.inc.php` beside your `wp-config.php` and put this line in top of `wp-config.php`:

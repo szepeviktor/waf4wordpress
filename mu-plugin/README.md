@@ -3,13 +3,13 @@
 This is the Must Use (mu-plugin) version of *WordPress Fail2ban* plugin.
 The code is commented, so you may understand it by looking at the code only.
 
-### Advantages
+### Advantages of MU
 
 - Early execution: Must Use plugins run before normal plugins thus banning sooner, causing less server load on DoS
 - Security: cannot be deactivated, fiddled with by WordPress administrators
 - Speed: because it is much simplier then the normal plugin with options
 
-## Parts
+## Security checks
 
 - prevent anyone logging in (disabled by default)
 - prevent redirections to admin (log in only at `/wp-admin` or `/wp-login.php`)
