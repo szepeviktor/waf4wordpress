@@ -1,7 +1,7 @@
 <?php
 /*
 Plugin Name: Block Bad Requests (required from wp-config or MU plugin)
-Version: 2.21.2
+Version: 2.21.3
 Description: Stop various HTTP attacks and trigger Fail2ban.
 Plugin URI: https://github.com/szepeviktor/wordpress-fail2ban
 License: The MIT License (MIT)
@@ -299,7 +299,7 @@ final class Bad_Request {
 
         // Too big user agent
         if ( isset( $_SERVER['HTTP_USER_AGENT'] )
-            && strlen( $_SERVER['HTTP_USER_AGENT'] ) > 472
+            && strlen( $this->fix_opera_ua( $_SERVER['HTTP_USER_AGENT'] ) ) > 472
         ) {
             return 'bad_request_user_agent_length';
         }
@@ -935,7 +935,7 @@ final class Bad_Request {
      *
      * @param string $ua The user agent string.
      *
-     * @return boolean   The client it IE 8, 9, 10 or 11.
+     * @return boolean   The client is IE 8, 9, 10 or 11.
      */
     private function is_ie( $ua ) {
 
@@ -949,6 +949,24 @@ final class Bad_Request {
         }
 
         return false;
+    }
+
+    /**
+     * Remove duplicated unique identifiers for the Opera widget.
+     *
+     * @link https://web.archive.org/web/20101219090859/http://www.opera.com/docs/changelogs/windows/1100/
+     *
+     * @param string $ua The user agent string.
+     *
+     * @return string    The reduced user agent string.
+     */
+    private function fix_opera_ua( $ua ) {
+
+        /* "A unique identifier for the widget." */ // phpcs:ignore Squiz.PHP.CommentedOutCode
+        // http://operasoftware.github.io/scope-interface/WidgetManager.html
+        $ua_reduced = preg_replace( '#(WUID=[0-9a-f]{32}; WTB=[0-9]+; )\1+#', '', $ua );
+
+        return $ua_reduced;
     }
 
     /**
