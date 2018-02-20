@@ -9,6 +9,9 @@ Author: Viktor Szépe
 GitHub Plugin URI: https://github.com/szepeviktor/wordpress-fail2ban
 */
 
+
+/* This is an idea for a new feature */
+
 add_action( 'plugins_loaded', 'wpf2b_option_scan_schedule' );
 add_action( 'wpf2b/daily', 'wpf2b_option_scan' );
 
