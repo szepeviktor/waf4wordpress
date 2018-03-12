@@ -30,8 +30,6 @@ namespace O1;
  *
  *     require_once __DIR__ . '/wp-fail2ban-bad-request-instant.inc.php';
  *     new \O1\Bad_Request();
- *     define( 'O1_WP_FAIL2BAN_DISABLE_REST_API', true );
- *     define( 'O1_WP_FAIL2BAN_ONLY_OEMBED', true );
  *
  * @package wordpress-fail2ban
  * @see     README.md

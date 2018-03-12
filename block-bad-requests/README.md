@@ -6,22 +6,6 @@ blocks non-static requests from CDN, prevents author sniffing.
 
 Then triggers Fail2ban accordingly.
 
-To install copy `wp-fail2ban-bad-request-instant.inc.php` beside your `wp-config.php` and put this line in top of `wp-config.php`:
-
-```php
-require_once dirname( __FILE__ ) . '/wp-fail2ban-bad-request-instant.inc.php';
-new \O1\Bad_Request();
-```
-
-Or – in a worse case – install it as an mu-plugin.
-It [executes very early](https://wordpress.org/plugins/whats-running/) when `require`-d from `wp-config.php`.
-As an mu-plugin WordPress loads before it executes.
-You can find out plugin execution order by this simple wp-cli command:
-
-```
-wp option get "active_plugins"
-```
-
 ### List of HTTP request parts checked
 
 - Custom CDN headers `*`
@@ -55,6 +39,26 @@ The list is in order of appearance, `*` means it can be disabled by a constant b
 
 ```bash
 grep -o "return '.*';" wp-fail2ban-bad-request-instant.inc.php
+```
+
+### Usage
+
+To install copy `wp-fail2ban-bad-request-instant.inc.php`
+beside your `wp-config.php` and copy these two lines in top of `wp-config.php`:
+
+```php
+require_once __DIR__ . '/wp-fail2ban-bad-request-instant.inc.php';
+new \O1\Bad_Request();
+```
+
+It [executes very early](https://wordpress.org/plugins/whats-running/) when `require`-d from `wp-config.php`.
+In a worse case install it as an mu-plugin.
+Mu-plugins are loaded by WordPress before it executes.
+
+You can find out normal plugin execution order by this simple WP-CLI command:
+
+```
+wp option get "active_plugins"
 ```
 
 ### Options
