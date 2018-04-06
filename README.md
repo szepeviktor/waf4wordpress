@@ -15,7 +15,8 @@ Your WordPress (really HTTP) security consists of:
 1. Install WordPress Fail2ban (this project)
 1. Use Leanmail (filters Fail2ban notification emails)
 
-See the security and webserver folders in my [`debian-server-tools` repo](https://github.com/szepeviktor/debian-server-tools).
+See the [Block WordPress attack vectors](https://github.com/szepeviktor/debian-server-tools/blob/master/webserver/WordPress-security.md)
+note in my other repository for an overview of the topic.
 
 ### Bad_Request class
 

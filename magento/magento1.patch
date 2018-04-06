@@ -19,6 +19,15 @@
          }
 
          // Too big user agent
+@@ -445,8 +445,6 @@
+             && ( empty( $_SERVER['CONTENT_TYPE'] )
+                 || ( $this->is_wplogin
+                     && 0 !== stripos( $_SERVER['CONTENT_TYPE'], 'application/x-www-form-urlencoded' )
++                    && 0 !== stripos( $_SERVER['CONTENT_TYPE'], 'multipart/form-data' )
++                    && 0 !== stripos( $_SERVER['CONTENT_TYPE'], 'application/zip' )
+                 )
+                 || ( $this->is_xmlrpc
+                     && 0 !== stripos( $_SERVER['CONTENT_TYPE'], 'text/xml' )
 @@ -498,8 +499,10 @@
          }
 
