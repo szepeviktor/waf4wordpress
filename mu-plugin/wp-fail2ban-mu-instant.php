@@ -544,7 +544,7 @@ final class WP_Fail2ban_MU {
         $admin_path   = parse_url( admin_url(), PHP_URL_PATH );
         $wp_dirs      = sprintf( 'wp-admin|wp-includes|wp-content|%s', basename( WP_CONTENT_DIR ) );
         $uploads      = wp_upload_dir();
-        $uploads      = basename( $uploads['baseurl'] );
+        $uploads_base = basename( $uploads['baseurl'] );
         $cache        = sprintf( '%s/cache', basename( WP_CONTENT_DIR ) );
 
         // Don't have to handle wp-includes/ms-files.php:12
@@ -557,7 +557,7 @@ final class WP_Fail2ban_MU {
             // Exclude missing media files
             //      and stale cache items
             //  but not `*.pHp*`
-            && ( ( false === strstr( $request_path, $uploads )
+            && ( ( false === strstr( $request_path, $uploads_base )
                     && false === strstr( $request_path, $cache )
                 )
                 || false !== stristr( $request_path, '.php' )
