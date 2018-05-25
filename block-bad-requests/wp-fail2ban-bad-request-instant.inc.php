@@ -1,12 +1,13 @@
 <?php
 /*
 Plugin Name: Block Bad Requests (required from wp-config or MU plugin)
-Version: 2.21.4
+Version: 2.21.5
 Description: Stop various HTTP attacks and trigger Fail2ban.
 Plugin URI: https://github.com/szepeviktor/wordpress-fail2ban
 License: The MIT License (MIT)
 Author: Viktor Szépe
 GitHub Plugin URI: https://github.com/szepeviktor/wordpress-fail2ban
+Constants: O1_BAD_REQUEST_POST_LOGGING
 Constants: O1_BAD_REQUEST_INSTANT
 Constants: O1_BAD_REQUEST_PROXY_HOME_URL
 Constants: O1_BAD_REQUEST_MAX_LOGIN_REQUEST_SIZE
@@ -17,7 +18,6 @@ Constants: O1_BAD_REQUEST_ALLOW_OLD_PROXIES
 Constants: O1_BAD_REQUEST_ALLOW_CONNECTION_EMPTY
 Constants: O1_BAD_REQUEST_ALLOW_CONNECTION_CLOSE
 Constants: O1_BAD_REQUEST_ALLOW_TWO_CAPS
-Constants: O1_BAD_REQUEST_POST_LOGGING
 Constants: O1_BAD_REQUEST_DISALLOW_TOR_LOGIN
 */
 
@@ -127,6 +127,7 @@ final class Bad_Request {
     private $allow_two_capitals     = false;
     private $disallow_tor_login     = false;
     private $result                 = false;
+    private $debug                  = false;
 
     /**
      * Set up options, run check and trigger fail2ban on malicous HTTP request.
@@ -216,6 +217,9 @@ final class Bad_Request {
         if ( defined( 'O1_BAD_REQUEST_DISALLOW_TOR_LOGIN' ) && O1_BAD_REQUEST_DISALLOW_TOR_LOGIN ) {
             $this->disallow_tor_login = true;
         }
+        if ( defined( 'O1_BAD_REQUEST_POST_LOGGING' ) && O1_BAD_REQUEST_POST_LOGGING ) {
+            $this->debug = true;
+        }
 
         $this->result = $this->check();
 
@@ -223,14 +227,6 @@ final class Bad_Request {
         if ( false !== $this->result ) {
             $this->trigger();
             exit;
-        }
-
-        // @FIXME This blocks the MU plugin's trigger!
-        // Don't log POST requests before trigger - multi-line logging problem on mod_proxy_fcgi
-        if ( defined( 'O1_BAD_REQUEST_POST_LOGGING' ) && O1_BAD_REQUEST_POST_LOGGING ) {
-            if ( 'POST' === $_SERVER['REQUEST_METHOD'] ) {
-                $this->enhanced_error_log( 'HTTP POST: ' . $this->esc_log( $_POST ), 'notice' );
-            }
         }
     }
 
@@ -258,6 +254,31 @@ final class Bad_Request {
         $server_name = isset( $_SERVER['SERVER_NAME'] )
             ? $_SERVER['SERVER_NAME']
             : $_SERVER['HTTP_HOST'];
+
+        // Log requests to a file
+        if ( true === $this->debug
+            // Sample conditions
+            && 'POST' === $request_method
+            && false !== strpos( $request_path, '/customer/account/createpost' )
+        ) {
+            if ( empty( $_POST ) ) {
+                // phpcs:ignore WordPress.VIP.RestrictedFunctions
+                $request_data = file_get_contents( 'php://input' );
+            } else {
+                $request_data = $_POST;
+            }
+            $dump_file = sprintf( '%s/request-at-%s-from-%s.json',
+                ini_get( 'upload_tmp_dir' ),
+                time(),
+                $_SERVER['REMOTE_ADDR']
+            );
+            $dump      = json_encode( array(
+                'request' => $request_data,
+                'headers' => apache_request_headers(),
+            ), JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE );
+            // phpcs:ignore WordPress.VIP.FileSystemWritesDisallow
+            file_put_contents( $dump_file, $dump, FILE_APPEND | LOCK_EX );
+        }
 
         // Request type
         if ( defined( 'XMLRPC_REQUEST' ) && XMLRPC_REQUEST ) {
@@ -648,7 +669,7 @@ final class Bad_Request {
         // Trigger miniban
         if ( class_exists( '\Miniban' ) && $this->instant_trigger ) {
             if ( true !== \Miniban::ban() ) {
-                // @codingStandardsChangeSetting WordPress.PHP.DevelopmentFunctions exclude error_log
+                // phpcs:set WordPress.PHP.DevelopmentFunctions exclude error_log
                 error_log( 'Miniban operation failed.' );
             }
         }
@@ -770,6 +791,7 @@ final class Bad_Request {
      */
     private function enhanced_error_log( $message = '', $level = 'error' ) {
 
+        // phpcs:ignore Squiz.PHP.CommentedOutCode
         /*
         // log_errors directive does not actually disable logging.
         $log_enabled = ( '1' === ini_get( 'log_errors' ) );
@@ -805,7 +827,7 @@ final class Bad_Request {
             );
         }
 
-        // @codingStandardsChangeSetting WordPress.PHP.DevelopmentFunctions exclude error_log
+        // phpcs:set WordPress.PHP.DevelopmentFunctions exclude error_log
         error_log( $error_msg );
     }
 
@@ -961,7 +983,8 @@ final class Bad_Request {
      */
     private function fix_opera_ua( $ua ) {
 
-        /* "A unique identifier for the widget." */ // phpcs:ignore Squiz.PHP.CommentedOutCode
+        // phpcs:ignore Squiz.PHP.CommentedOutCode
+        // "A unique identifier for the widget."
         // http://operasoftware.github.io/scope-interface/WidgetManager.html
         $ua_reduced = preg_replace( '#(WUID=[0-9a-f]{32}; WTB=[0-9]+; )\1+#', '', $ua );
 
@@ -976,7 +999,7 @@ final class Bad_Request {
     private function rebuild_query( $request_query ) {
 
         $rebuilt_query = array();
-        $query_lenght  = strlen( $request_query );
+        $query_length  = strlen( $request_query );
         $queries       = $this->parse_query( $request_query );
 
         foreach ( $queries as $key => $value ) {
@@ -987,7 +1010,7 @@ final class Bad_Request {
         }
 
         // Fix up REQUEST_URI
-        $_SERVER['REQUEST_URI'] = substr( $_SERVER['REQUEST_URI'], 0, -1 * $query_lenght )
+        $_SERVER['REQUEST_URI'] = substr( $_SERVER['REQUEST_URI'], 0, -1 * $query_length )
             . implode( '&', $rebuilt_query );
     }
 }
