@@ -1,7 +1,7 @@
 <?php
 /*
 Plugin Name: WordPress Fail2ban (MU)
-Version: 4.14.0
+Version: 4.14.1
 Description: Stop WordPress related attacks and trigger Fail2ban.
 Plugin URI: https://github.com/szepeviktor/wordpress-fail2ban
 License: The MIT License (MIT)
@@ -11,6 +11,8 @@ Constants: O1_WP_FAIL2BAN_DISABLE_LOGIN
 Constants: O1_WP_FAIL2BAN_ALLOW_REDIRECT
 Constants: O1_WP_FAIL2BAN_DISABLE_REST_API
 Constants: O1_WP_FAIL2BAN_ONLY_OEMBED
+Constants: O1_WP_FAIL2BAN_MSNBOT
+Constants: O1_WP_FAIL2BAN_GOOGLEBOT
 */
 
 namespace O1;
@@ -364,7 +366,17 @@ final class WP_Fail2ban_MU {
         // Don't run 404 template for robots
         if ( $this->is_robot( $ua ) && ! is_user_logged_in() ) {
 
-            $this->trigger( 'wpf2b_robot_404', $_SERVER['REQUEST_URI'], 'info' );
+            if ( defined( 'O1_WP_FAIL2BAN_MSNBOT' ) && O1_WP_FAIL2BAN_MSNBOT
+                && is_msnbot( $ua, $_SERVER['REMOTE_ADDR'] )
+            ) {
+                $this->trigger( 'wpf2b_msnbot_404', $_SERVER['REQUEST_URI'], 'notice', 'Bingbot 404: ' );
+            } elseif ( defined( 'O1_WP_FAIL2BAN_GOOGLEBOT' ) && O1_WP_FAIL2BAN_GOOGLEBOT
+                && is_googlebot( $ua, $_SERVER['REMOTE_ADDR'] )
+            ) {
+                $this->trigger( 'wpf2b_msnbot_404', $_SERVER['REQUEST_URI'], 'notice', 'Googlebot 404: ' );
+            } else {
+                $this->trigger( 'wpf2b_robot_404', $_SERVER['REQUEST_URI'], 'info' );
+            }
 
             ob_get_level() && ob_end_clean();
             if ( ! headers_sent() ) {
@@ -711,6 +723,50 @@ final class WP_Fail2ban_MU {
             && ( 'Mozilla/4.0 (compatible; MSIE 7.0;' !== substr( $ua, 0, 34 ) )
             && ( 'Opera/9.80' !== substr( $ua, 0, 10 ) )
         );
+    }
+
+    /**
+     * Verify Bingbot.
+     *
+     * @link: https://www.bing.com/webmaster/help/how-to-verify-bingbot-3905dc26
+     */
+    private function is_msnbot( $ua, $ip ) {
+
+        if ( false === strpos( $ua, 'bingbot' ) ) {
+            return false;
+        }
+
+        $host = gethostbyaddr( $ip );
+        if ( false === $host || '.search.msn.com' !== substr( $host, -15 ) ) {
+            return false;
+        }
+        $rev_ip   = gethostbyname( $host );
+        $verified = ( $rev_ip === $ip );
+
+        return $verified;
+    }
+
+    /**
+     * Verify Googlebot.
+     *
+     * @link: https://support.google.com/webmasters/answer/80553
+     */
+    private function is_googlebot( $ua, $ip ) {
+
+        if ( false === strpos( $ua, 'Googlebot' ) ) {
+            return false;
+        }
+
+        $host = gethostbyaddr( $ip );
+        if ( false === $host
+            || ( '.googlebot.com' !== substr( $host, -14 ) && '.google.com' !== substr( $host, -11 ) )
+        ) {
+            return false;
+        }
+        $rev_ip   = gethostbyname( $host );
+        $verified = ( $rev_ip === $ip );
+
+        return $verified;
     }
 
     private function esc_log( $string ) {
