@@ -369,11 +369,11 @@ final class WP_Fail2ban_MU {
             if ( defined( 'O1_WP_FAIL2BAN_MSNBOT' ) && O1_WP_FAIL2BAN_MSNBOT
                 && is_msnbot( $ua, $_SERVER['REMOTE_ADDR'] )
             ) {
-                $this->trigger( 'wpf2b_msnbot_404', $_SERVER['REQUEST_URI'], 'notice', 'Bingbot 404: ' );
+                $this->trigger( 'wpf2b_msnbot_404', $_SERVER['REQUEST_URI'], 'info', 'Bingbot 404: ' );
             } elseif ( defined( 'O1_WP_FAIL2BAN_GOOGLEBOT' ) && O1_WP_FAIL2BAN_GOOGLEBOT
                 && is_googlebot( $ua, $_SERVER['REMOTE_ADDR'] )
             ) {
-                $this->trigger( 'wpf2b_msnbot_404', $_SERVER['REQUEST_URI'], 'notice', 'Googlebot 404: ' );
+                $this->trigger( 'wpf2b_googlebot_404', $_SERVER['REQUEST_URI'], 'info', 'Googlebot 404: ' );
             } else {
                 $this->trigger( 'wpf2b_robot_404', $_SERVER['REQUEST_URI'], 'info' );
             }
@@ -714,7 +714,7 @@ final class WP_Fail2ban_MU {
      *
      * Robots are everyone except modern browsers.
      *
-     * @see: http://www.useragentstring.com/pages/Browserlist/
+     * @see http://www.useragentstring.com/pages/Browserlist/
      */
     private function is_robot( $ua ) {
 
@@ -728,7 +728,7 @@ final class WP_Fail2ban_MU {
     /**
      * Verify Bingbot.
      *
-     * @link: https://www.bing.com/webmaster/help/how-to-verify-bingbot-3905dc26
+     * @see https://www.bing.com/webmaster/help/how-to-verify-bingbot-3905dc26
      */
     private function is_msnbot( $ua, $ip ) {
 
@@ -749,7 +749,7 @@ final class WP_Fail2ban_MU {
     /**
      * Verify Googlebot.
      *
-     * @link: https://support.google.com/webmasters/answer/80553
+     * @see https://support.google.com/webmasters/answer/80553
      */
     private function is_googlebot( $ua, $ip ) {
 
