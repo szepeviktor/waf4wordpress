@@ -1,7 +1,7 @@
 <?php
 /*
 Plugin Name: Block Bad Requests (required from wp-config or MU plugin)
-Version: 2.21.5
+Version: 2.21.6
 Description: Stop various HTTP attacks and trigger Fail2ban.
 Plugin URI: https://github.com/szepeviktor/wordpress-fail2ban
 License: The MIT License (MIT)
@@ -273,8 +273,9 @@ final class Bad_Request {
                 $_SERVER['REMOTE_ADDR']
             );
             $dump      = json_encode( array(
+                'headers' => $this->apache_request_headers(),
                 'request' => $request_data,
-                'headers' => apache_request_headers(),
+                'files'   => $_FILES,
             ), JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE );
             // phpcs:ignore WordPress.VIP.FileSystemWritesDisallow
             file_put_contents( $dump_file, $dump, FILE_APPEND | LOCK_EX );
@@ -679,13 +680,6 @@ final class Bad_Request {
             $this->enhanced_error_log( $this->prefix_instant . $this->result, 'crit' );
         } else {
             $this->enhanced_error_log( $this->prefix . $this->result );
-        }
-
-        // Log POST requests after trigger - multi-line logging problem on mod_proxy_fcgi
-        if ( defined( 'O1_BAD_REQUEST_POST_LOGGING' ) && O1_BAD_REQUEST_POST_LOGGING ) {
-            if ( 'POST' === $_SERVER['REQUEST_METHOD'] ) {
-                $this->enhanced_error_log( 'HTTP POST: ' . $this->esc_log( $_POST ), 'notice' );
-            }
         }
 
         ob_get_level() && ob_end_clean();
