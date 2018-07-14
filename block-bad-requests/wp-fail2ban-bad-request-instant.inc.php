@@ -260,6 +260,7 @@ final class Bad_Request {
             // Sample conditions
             && 'POST' === $request_method
             && false !== strpos( $request_path, '/customer/account/createpost' )
+            && isset( $_SERVER['HTTP_CF_RAY'] ) // Cloudflare request
         ) {
             if ( empty( $_POST ) ) {
                 // phpcs:ignore WordPress.VIP.RestrictedFunctions
@@ -268,7 +269,7 @@ final class Bad_Request {
                 $request_data = $_POST;
             }
             $dump_file = sprintf( '%s/request-at-%s-from-%s.json',
-                ini_get( 'upload_tmp_dir' ),
+                sys_get_temp_dir(),
                 time(),
                 $_SERVER['REMOTE_ADDR']
             );

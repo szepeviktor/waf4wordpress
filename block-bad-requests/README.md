@@ -80,13 +80,16 @@ To blocks non-static requests from CloudFlare copy this to your `wp-config.php`:
 
 ```php
 define( 'O1_BAD_REQUEST_CDN_HEADERS', 'HTTP_X_FORWARDED_FOR:HTTP_CF_RAY:HTTP_CF_CONNECTING_IP' );
+// mod_remoteip removes HTTP_CF_CONNECTING_IP
+define( 'O1_BAD_REQUEST_CDN_HEADERS', 'HTTP_X_FORWARDED_FOR:HTTP_CF_RAY:HTTP_CF_VISITOR' );
 ```
 
 Restrict access to CloudFlare only: `mod_remoteip`
 
-- HTTP_CF_CONNECTING_IP
-- HTTP_X_FORWARDED_FOR
-- HTTP_CF_RAY
+- `HTTP_CF_CONNECTING_IP` - mod_remoteip removes this
+- `HTTP_X_FORWARDED_FOR`
+- `HTTP_CF_RAY`
+- `HTTP_CF_VISITOR`
 
 Constant list
 
