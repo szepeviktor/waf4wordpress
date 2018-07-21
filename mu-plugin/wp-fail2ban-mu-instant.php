@@ -168,8 +168,8 @@ final class WP_Fail2ban_MU {
         add_action( 'admin_init', array( $this, 'hook_all_action' ) );
 
         // Ban spammers (Contact Form 7 Robot Trap)
-        add_action( 'robottrap_hiddenfield', array( $this, 'wpcf7_spam_hiddenfield' ) );
-        add_action( 'robottrap_mx', array( $this, 'wpcf7_spam_mx' ) );
+        add_action( 'robottrap_hiddenfield', array( $this, 'spam_hiddenfield' ) );
+        add_action( 'robottrap_mx', array( $this, 'spam_mx' ) );
 
         // Ban bad robots (Nofollow Robot Trap)
         add_action( 'nofollow_robot_trap', array( $this, 'nfrt_robot_trap' ) );
@@ -694,14 +694,14 @@ final class WP_Fail2ban_MU {
         }
     }
 
-    public function wpcf7_spam_hiddenfield( $text ) {
+    public function spam_hiddenfield( $text ) {
 
-        $this->trigger_instant( 'wpf2b_wpcf7_spam_hiddenfield', $text );
+        $this->trigger_instant( 'wpf2b_spam_hiddenfield', $text );
     }
 
-    public function wpcf7_spam_mx( $domain ) {
+    public function spam_mx( $domain ) {
 
-        $this->trigger( 'wpf2b_wpcf7_spam_mx', $domain, 'warn' );
+        $this->trigger( 'wpf2b_spam_mx', $domain, 'warn' );
     }
 
     public function nfrt_robot_trap( $message ) {
