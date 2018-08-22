@@ -366,17 +366,7 @@ final class WP_Fail2ban_MU {
         // Don't run 404 template for robots
         if ( $this->is_robot( $ua ) && ! is_user_logged_in() ) {
 
-            if ( defined( 'O1_WP_FAIL2BAN_MSNBOT' ) && O1_WP_FAIL2BAN_MSNBOT
-                && is_msnbot( $ua, $_SERVER['REMOTE_ADDR'] )
-            ) {
-                $this->trigger( 'wpf2b_msnbot_404', $_SERVER['REQUEST_URI'], 'info', 'Bingbot 404: ' );
-            } elseif ( defined( 'O1_WP_FAIL2BAN_GOOGLEBOT' ) && O1_WP_FAIL2BAN_GOOGLEBOT
-                && is_googlebot( $ua, $_SERVER['REMOTE_ADDR'] )
-            ) {
-                $this->trigger( 'wpf2b_googlebot_404', $_SERVER['REQUEST_URI'], 'info', 'Googlebot 404: ' );
-            } else {
-                $this->trigger( 'wpf2b_robot_404', $_SERVER['REQUEST_URI'], 'info' );
-            }
+            $this->trigger( 'wpf2b_robot_404', $_SERVER['REQUEST_URI'], 'info' );
 
             ob_get_level() && ob_end_clean();
             if ( ! headers_sent() ) {
@@ -391,8 +381,20 @@ final class WP_Fail2ban_MU {
             exit;
         }
 
-        // Humans
-        $this->trigger( 'wpf2b_404', $_SERVER['REQUEST_URI'], 'info' );
+        // Humans and web crawling bots
+        if ( defined( 'O1_WP_FAIL2BAN_MSNBOT' ) && O1_WP_FAIL2BAN_MSNBOT
+            && $this->is_msnbot( $ua, $_SERVER['REMOTE_ADDR'] )
+        ) {
+            //  Identified Bingbot
+            $this->trigger( 'wpf2b_msnbot_404', $_SERVER['REQUEST_URI'], 'info', 'Bingbot 404: ' );
+        } elseif ( defined( 'O1_WP_FAIL2BAN_GOOGLEBOT' ) && O1_WP_FAIL2BAN_GOOGLEBOT
+            && $this->is_googlebot( $ua, $_SERVER['REMOTE_ADDR'] )
+        ) {
+            //  Identified Googlebot
+            $this->trigger( 'wpf2b_googlebot_404', $_SERVER['REQUEST_URI'], 'info', 'Googlebot 404: ' );
+        } else {
+            $this->trigger( 'wpf2b_404', $_SERVER['REQUEST_URI'], 'info' );
+        }
     }
 
     public function rest_40x( $response, $instance, $request ) {
