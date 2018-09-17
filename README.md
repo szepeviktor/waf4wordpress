@@ -32,7 +32,7 @@ new \O1\Bad_Request();
 
 Or – in a worse case – install it as an MU plugin.
 
-### WP_Fail2ban_MU class
+### WP_Fail2ban class
 
 It is an MU plugin that triggers Fail2ban on various attack types. Login is only logged, use
 Bad_Request class for handling that.

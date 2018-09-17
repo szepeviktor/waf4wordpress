@@ -1,4 +1,4 @@
-# phpstan analyse -l 7 -c phpstan.neon wp-fail2ban-bad-request-instant.inc.php
+# phpstan analyse -l max -c phpstan.neon wp-fail2ban-bad-request-instant.inc.php
 
 parameters:
     autoload_files:

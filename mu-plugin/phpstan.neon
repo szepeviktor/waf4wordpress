@@ -1,0 +1,9 @@
+# phpstan analyse -l max -c phpstan.neon wp-fail2ban-mu-instant.php
+
+parameters:
+    autoload_files:
+        - '%currentWorkingDirectory%/wp-fail2ban-mu-instant.php'
+        - '%currentWorkingDirectory%/../miniban/wp-miniban-htaccess.inc.php'
+    ignoreErrors:
+        - '#^Constant [A-Z0-9_]+ not found\.$#'
+        - '#^Function [a-z0-9_]+ not found\.$#'

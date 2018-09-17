@@ -74,6 +74,6 @@ See: https://github.com/szepeviktor/debian-server-tools/tree/master/security/fai
 Please examine the latest filter `failregexp`-s in
 [Fail2ban GitHub repository](https://github.com/fail2ban/fail2ban/blob/master/config/filter.d).
 It worth to combine every webserver related regexp-s in one custom filter.
-You can customize the Fail2ban trigger string in the `$prefix` property of `WP_Fail2ban_MU` class.
+You can customize the Fail2ban trigger string in the `$prefix` property of `WP_Fail2ban` class.
 
 **All the best wishes to you!**

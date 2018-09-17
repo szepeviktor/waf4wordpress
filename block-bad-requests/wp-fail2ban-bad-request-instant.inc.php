@@ -117,6 +117,7 @@ final class Bad_Request {
         '+--+', // SQL comment
         '%20--%20', // SQL comment
     );
+    private $botnet_pattern         = '/Firefox\/1|bot|spider|crawl|user-agent|random|"|\\\\/i';
     private $relative_request_uri   = '';
     private $cdn_headers;
     private $allow_registration     = false;
@@ -610,7 +611,7 @@ final class Bad_Request {
         }
 
         // Botnet user agents
-        if ( 1 === preg_match( '/Firefox\/1|bot|spider|crawl|user-agent|random|"|\\\\/i', $user_agent ) ) {
+        if ( 1 === preg_match( $this->botnet_pattern, $user_agent ) ) {
             return 'bad_request_wplogin_user_agent_botnet';
         }
 
@@ -726,17 +727,17 @@ final class Bad_Request {
             : $_SERVER['HTTP_HOST'];
         $username            = trim( $_POST['log'] );
         $expire              = time() + 3600;
-        $token               = substr( hash_hmac( 'sha256', rand(), 'token' ), 0, 43 );
-        $hash                = hash_hmac( 'sha256', rand(), 'hash' );
+        $token               = substr( hash_hmac( 'sha256', (string) rand(), 'token' ), 0, 43 );
+        $hash                = hash_hmac( 'sha256', (string) rand(), 'hash' );
         $auth_cookie         = $username . '|' . $expire . '|' . $token . '|' . $hash;
         $authcookie_name     = 'wordpress_' . md5( 'authcookie' );
         $loggedincookie_name = 'wordpress_logged_in_' . md5( 'cookiehash' );
 
         header( 'Cache-Control: max-age=0, private, no-store, no-cache, must-revalidate' );
         header( 'X-Robots-Tag: noindex, nofollow' );
-        setcookie( $authcookie_name, $auth_cookie, $expire, '/brake/wp_content/plugins', false, false, true );
-        setcookie( $authcookie_name, $auth_cookie, $expire, '/brake/wp-admin', false, false, true );
-        setcookie( $loggedincookie_name, $auth_cookie, $expire, '/', false, false, true );
+        setcookie( $authcookie_name, $auth_cookie, $expire, '/brake/wp_content/plugins', '', false, true );
+        setcookie( $authcookie_name, $auth_cookie, $expire, '/brake/wp-admin', '', false, true );
+        setcookie( $loggedincookie_name, $auth_cookie, $expire, '/', '', false, true );
 
         header( 'Location: http://' . $server_name . '/brake/wp-admin/' );
     }
@@ -835,7 +836,7 @@ final class Bad_Request {
 
         if ( function_exists( 'apache_request_headers' ) ) {
 
-            return apache_request_headers();
+            return (array) apache_request_headers();
         }
 
         $headers = array();
@@ -885,6 +886,10 @@ final class Bad_Request {
     private function esc_log( $string ) {
 
         $escaped = json_encode( $string );
+        if ( false === $escaped ) {
+            return ' ';
+        }
+
         // Limit length
         $escaped = mb_substr( $escaped, 0, 500, 'utf-8' );
         // New lines to "|"

@@ -1,7 +1,7 @@
 <?php
 /*
 Plugin Name: WordPress Fail2ban (MU)
-Version: 4.14.1
+Version: 4.14.2
 Description: Stop WordPress related attacks and trigger Fail2ban.
 Plugin URI: https://github.com/szepeviktor/wordpress-fail2ban
 License: The MIT License (MIT)
@@ -32,7 +32,7 @@ if ( ! function_exists( 'add_filter' ) ) {
 }
 
 /**
- * WordPress fail2ban Must-Use part.
+ * WordPress Fail2ban Must-Use part.
  *
  * To disable login completely copy this into your wp-config.php:
  *
@@ -45,7 +45,7 @@ if ( ! function_exists( 'add_filter' ) ) {
  * @package wordpress-fail2ban
  * @see     README.md
  */
-final class WP_Fail2ban_MU {
+final class WP_Fail2ban {
 
     private $prefix         = 'Malicious traffic detected: ';
     private $prefix_instant = 'Break-in attempt detected: ';
@@ -263,17 +263,17 @@ final class WP_Fail2ban_MU {
             : $_SERVER['HTTP_HOST'];
         $username            = trim( $_POST['log'] );
         $expire              = time() + 3600;
-        $token               = substr( hash_hmac( 'sha256', rand(), 'token' ), 0, 43 );
-        $hash                = hash_hmac( 'sha256', rand(), 'hash' );
+        $token               = substr( hash_hmac( 'sha256', (string) rand(), 'token' ), 0, 43 );
+        $hash                = hash_hmac( 'sha256', (string) rand(), 'hash' );
         $auth_cookie         = $username . '|' . $expire . '|' . $token . '|' . $hash;
         $authcookie_name     = 'wordpress_' . md5( 'authcookie' );
         $loggedincookie_name = 'wordpress_logged_in_' . md5( 'cookiehash' );
 
         header( 'Cache-Control: max-age=0, private, no-store, no-cache, must-revalidate' );
         header( 'X-Robots-Tag: noindex, nofollow' );
-        setcookie( $authcookie_name, $auth_cookie, $expire, '/brake/wp_content/plugins', false, false, true );
-        setcookie( $authcookie_name, $auth_cookie, $expire, '/brake/wp-admin', false, false, true );
-        setcookie( $loggedincookie_name, $auth_cookie, $expire, '/', false, false, true );
+        setcookie( $authcookie_name, $auth_cookie, $expire, '/brake/wp_content/plugins', '', false, true );
+        setcookie( $authcookie_name, $auth_cookie, $expire, '/brake/wp-admin', '', false, true );
+        setcookie( $loggedincookie_name, $auth_cookie, $expire, '/', '', false, true );
         header( 'Location: ' . home_url( '/brake/wp-admin/' ) );
     }
 
@@ -774,6 +774,10 @@ final class WP_Fail2ban_MU {
     private function esc_log( $string ) {
 
         $escaped = json_encode( $string );
+        if ( false === $escaped ) {
+            return ' ';
+        }
+
         // Limit length
         $escaped = mb_substr( $escaped, 0, 500, 'utf-8' );
         // New lines to "|"
@@ -823,4 +827,4 @@ final class WP_Fail2ban_MU {
     }
 }
 
-new WP_Fail2ban_MU();
+new WP_Fail2ban();
