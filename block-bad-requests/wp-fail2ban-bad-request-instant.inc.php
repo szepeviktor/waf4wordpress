@@ -1,7 +1,7 @@
 <?php
 /*
 Plugin Name: Block Bad Requests (required from wp-config or MU plugin)
-Version: 2.21.6
+Version: 2.21.7
 Description: Stop various HTTP attacks and trigger Fail2ban.
 Plugin URI: https://github.com/szepeviktor/wordpress-fail2ban
 License: The MIT License (MIT)
@@ -386,6 +386,12 @@ final class Bad_Request {
         // URL path and query string blacklist
         if ( true === $this->strifounda( $_SERVER['REQUEST_URI'], $this->blacklist ) ) {
             return 'bad_request_uri_blacklist';
+        }
+
+        // Query string arrays with hash indices
+        // @see https://core.trac.wordpress.org/ticket/17737
+        if ( false !== strpos( $request_query, '[%23' ) ) {
+            return 'bad_request_uri_array_hash';
         }
 
         // HTTP protocol name
