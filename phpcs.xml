@@ -9,31 +9,34 @@
 	-->
 	<config name="minimum_supported_wp_version" value="4.5"/>
 
+	<rule ref="WordPress">
+		<exclude name="WordPress.Security.ValidatedSanitizedInput"/>
+		<exclude name="WordPress.Security.NonceVerification"/>
+	</rule>
+
 	<rule ref="WordPress-Core">
+		<!-- I use spaces -->
 		<exclude name="Generic.WhiteSpace.DisallowSpaceIndent"/>
-		<exclude name="WordPress.WP.AlternativeFunctions"/>
 	</rule>
 	<rule ref="WordPress.Files.FileName">
 		<properties>
 			<property name="strict_class_file_names" value="false"/>
 		</properties>
 	</rule>
-	<!-- <rule ref="WordPress-Docs"/> -->
+
 	<rule ref="WordPress-Extra">
 		<exclude name="WordPress.WP.AlternativeFunctions"/>
 		<exclude name="WordPress.CSRF.NonceVerification"/>
 	</rule>
-	<rule ref="WordPress-VIP">
-		<exclude name="WordPress.VIP.SuperGlobalInputUsage"/>
-		<exclude name="WordPress.VIP.ValidatedSanitizedInput"/>
-		<exclude name="WordPress.VIP.RestrictedVariables"/>
-		<exclude name="WordPress.VIP.RestrictedFunctions.cookies_setcookie"/>
-	</rule>
-
 	<rule ref="WordPress.PHP.DiscouragedPHPFunctions">
 		<!-- From "VIP": The obfuscation group is excluded as there are plenty of legitimate uses for the base64 functions. -->
 		<properties>
 			<property name="exclude" value="obfuscation"/>
 		</properties>
+	</rule>
+
+	<!-- Exclude whole WordPress-Docs -->
+	<rule ref="WordPress-Docs">
+		<exclude name="WordPress-Docs"/>
 	</rule>
 </ruleset>
