@@ -1,7 +1,7 @@
 <?php
 /*
 Plugin Name: Block Bad Requests (required from wp-config or MU plugin)
-Version: 2.21.7
+Version: 2.21.8
 Description: Stop various HTTP attacks and trigger Fail2ban.
 Plugin URI: https://github.com/szepeviktor/wordpress-fail2ban
 License: The MIT License (MIT)
@@ -101,6 +101,7 @@ final class Bad_Request {
         '/administrator', // Joomla Administrator
         'connector.asp', // Joomla FCKeditor 2.x File Manager Connector for ASP
         '/HNAP1', // D-Link routers
+        // phpcs:ignore Squiz.PHP.CommentedOutCode
         '() { ', // Shell shock, Bash script: () { :;};
         '/cgi-bin/', // CGI folder
         'error_log', // Default PHP error log
@@ -113,11 +114,12 @@ final class Bad_Request {
         'muieblackcat', // Vulnerability scanner
         'etc/local.xml', // Magento configuration
         'eval(', // Evaluate a string as PHP code
+        '=die(', // "z!ax" PHP vulnerability probe
         'order+by', // SQL injection
         '+--+', // SQL comment
         '%20--%20', // SQL comment
     );
-    private $botnet_pattern         = '/Firefox\/1|bot|spider|crawl|user-agent|random|"|\\\\/i';
+    private $botnet_pattern         = '#Firefox/1|bot|spider|crawl|user-agent|random|"|\\\\#i';
     private $relative_request_uri   = '';
     private $cdn_headers;
     private $allow_registration     = false;
@@ -274,11 +276,14 @@ final class Bad_Request {
                 time(),
                 $_SERVER['REMOTE_ADDR']
             );
-            $dump      = json_encode( array(
-                'headers' => $this->apache_request_headers(),
-                'request' => $request_data,
-                'files'   => $_FILES,
-            ), JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE );
+            $dump      = json_encode(
+                array(
+                    'headers' => $this->apache_request_headers(),
+                    'request' => $request_data,
+                    'files'   => $_FILES,
+                ),
+                JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE
+            );
             // phpcs:ignore WordPress.VIP.FileSystemWritesDisallow
             file_put_contents( $dump_file, $dump, FILE_APPEND | LOCK_EX );
         }
@@ -390,7 +395,9 @@ final class Bad_Request {
 
         // Query string arrays with hash indices
         // @see https://core.trac.wordpress.org/ticket/17737
-        if ( false !== strpos( $request_query, '[%23' ) ) {
+        if ( false !== strpos( $request_query, '[%23' )
+            || false !== stripos( $request_query, '%5B%23' )
+        ) {
             return 'bad_request_uri_array_hash';
         }
 
@@ -857,6 +864,8 @@ final class Bad_Request {
 
     /**
      * Parse URL query string to an array.
+     *
+     * Arrays are not supported.
      *
      * @param string $query_string The query string.
      *
