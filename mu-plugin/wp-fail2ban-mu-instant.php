@@ -1,7 +1,7 @@
 <?php
 /*
 Plugin Name: WordPress Fail2ban (MU)
-Version: 4.14.2
+Version: 4.14.3
 Description: Stop WordPress related attacks and trigger Fail2ban.
 Plugin URI: https://github.com/szepeviktor/wordpress-fail2ban
 License: The MIT License (MIT)
@@ -13,6 +13,7 @@ Constants: O1_WP_FAIL2BAN_DISABLE_REST_API
 Constants: O1_WP_FAIL2BAN_ONLY_OEMBED
 Constants: O1_WP_FAIL2BAN_MSNBOT
 Constants: O1_WP_FAIL2BAN_GOOGLEBOT
+Constants: O1_WP_FAIL2BAN_YANDEXBOT
 */
 
 namespace O1;
@@ -392,6 +393,11 @@ final class WP_Fail2ban {
         ) {
             //  Identified Googlebot
             $this->trigger( 'wpf2b_googlebot_404', $_SERVER['REQUEST_URI'], 'info', 'Googlebot 404: ' );
+        } elseif ( defined( 'O1_WP_FAIL2BAN_YANDEXBOT' ) && O1_WP_FAIL2BAN_YANDEXBOT
+            && $this->is_yandexbot( $ua, $_SERVER['REMOTE_ADDR'] )
+        ) {
+            //  Identified Yandexbot
+            $this->trigger( 'wpf2b_googlebot_404', $_SERVER['REQUEST_URI'], 'info', 'Yandexbot 404: ' );
         } else {
             $this->trigger( 'wpf2b_404', $_SERVER['REQUEST_URI'], 'info' );
         }
@@ -738,6 +744,7 @@ final class WP_Fail2ban {
             return false;
         }
 
+        // No dot at end of host name!
         $host = gethostbyaddr( $ip );
         if ( false === $host || '.search.msn.com' !== substr( $host, -15 ) ) {
             return false;
@@ -759,9 +766,37 @@ final class WP_Fail2ban {
             return false;
         }
 
+        // No dot at end of host name!
         $host = gethostbyaddr( $ip );
         if ( false === $host
             || ( '.googlebot.com' !== substr( $host, -14 ) && '.google.com' !== substr( $host, -11 ) )
+        ) {
+            return false;
+        }
+        $rev_ip   = gethostbyname( $host );
+        $verified = ( $rev_ip === $ip );
+
+        return $verified;
+    }
+
+    /**
+     * Verify YandexBot.
+     *
+     * @see https://yandex.com/support/webmaster/robot-workings/check-yandex-robots.html
+     */
+    private function is_yandexbot( $ua, $ip ) {
+
+        if ( false === strpos( $ua, 'Yandex' ) ) {
+            return false;
+        }
+
+        // No dot at end of host name!
+        $host = gethostbyaddr( $ip );
+        if ( false === $host
+            || ( '.yandex.ru' !== substr( $host, -10 )
+                && '.yandex.net' !== substr( $host, -11 )
+                && '.yandex.com' !== substr( $host, -11 )
+            )
         ) {
             return false;
         }

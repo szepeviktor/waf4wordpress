@@ -54,18 +54,7 @@ In that case don't activate the normal plugin.
 
 ### Learning attack internals
 
-Helps learning attack internals. Insert this code after `wp_logout();` in `trigger_instant()`.
-
-```php
-        $request_data = $_REQUEST;
-        if ( empty( $request_data ) ) {
-            $request_data = file_get_contents( 'php://input' );
-        }
-        $this->enhanced_error_log( sprintf( 'HTTP REQUEST: %s:%s',
-            $this->esc_log( $_SERVER['REQUEST_METHOD'] ),
-            $this->esc_log( $request_data )
-        ) );
-```
+To log requests set `O1_BAD_REQUEST_POST_LOGGING` to true in `Bad_Request` and custumize its conditions.
 
 ### Set up the Fail2ban filters
 

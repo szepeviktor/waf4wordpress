@@ -2,8 +2,19 @@
 
 parameters:
     autoload_files:
+        - '%currentWorkingDirectory%/phpstan-bootstrap.php'
         - '%currentWorkingDirectory%/wp-fail2ban-mu-instant.php'
         - '%currentWorkingDirectory%/../miniban/wp-miniban-htaccess.inc.php'
     ignoreErrors:
-        - '#^Constant [A-Z0-9_]+ not found\.$#'
-        - '#^Function [a-z0-9_]+ not found\.$#'
+        - '#^Constant (ABSPATH|WP_CONTENT_DIR|WPMU_PLUGIN_DIR) not found\.$#'
+        - '#^Function (__|add_action|admin_url|did_action|esc_html|esc_url|home_url|is_404|is_user_logged_in|is_wp_error|nocache_headers|remove_action|status_header|trailingslashit|wp_get_current_user|wp_logout|wp_upload_dir) not found\.$#'
+        - '#^Class WP_HTTP_Response not found\.$#'
+        - '#^Call to method get_status\(\) on an unknown class WP_HTTP_Response\.$#'
+        - '#^Call to method get_data\(\) on an unknown class WP_HTTP_Response\.$#'
+        - '#^Instantiated class WP_Error not found\.$#'
+        - '#^Instantiated class WP_REST_Response not found\.$#'
+        - '#^Instantiated class WP_Error not found\.$#'
+        # Plugins
+        - '#^Call to static method report_critical_event\(\) on an unknown class SucuriScanEvent\.$#'
+        - '#^Call to static method get_instance\(\) on an unknown class SimpleHistory\.$#'
+        - '#^Function SimpleLogger not found\.$#'

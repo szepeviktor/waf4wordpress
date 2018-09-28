@@ -682,7 +682,7 @@ final class Bad_Request {
      */
     private function trigger() {
 
-        // Trigger miniban
+        // Trigger Miniban
         if ( class_exists( '\Miniban' ) && $this->instant_trigger ) {
             if ( true !== \Miniban::ban() ) {
                 // phpcs:set WordPress.PHP.DevelopmentFunctions exclude error_log
