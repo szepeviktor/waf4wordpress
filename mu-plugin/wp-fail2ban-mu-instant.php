@@ -808,7 +808,7 @@ final class WP_Fail2ban {
 
     private function esc_log( $string ) {
 
-        $escaped = json_encode( $string );
+        $escaped = json_encode( $string, JSON_UNESCAPED_SLASHES );
         if ( false === $escaped ) {
             return ' ';
         }

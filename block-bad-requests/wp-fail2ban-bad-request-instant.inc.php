@@ -900,7 +900,7 @@ final class Bad_Request {
      */
     private function esc_log( $string ) {
 
-        $escaped = json_encode( $string );
+        $escaped = json_encode( $string, JSON_UNESCAPED_SLASHES );
         if ( false === $escaped ) {
             return ' ';
         }
