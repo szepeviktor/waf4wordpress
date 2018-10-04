@@ -14,6 +14,7 @@ Constants: O1_WP_FAIL2BAN_ONLY_OEMBED
 Constants: O1_WP_FAIL2BAN_MSNBOT
 Constants: O1_WP_FAIL2BAN_GOOGLEBOT
 Constants: O1_WP_FAIL2BAN_YANDEXBOT
+Constants: O1_WP_FAIL2BAN_GOOGLEPROXY
 */
 
 namespace O1;
@@ -388,16 +389,25 @@ final class WP_Fail2ban {
         ) {
             //  Identified Bingbot
             $this->trigger( 'wpf2b_msnbot_404', $_SERVER['REQUEST_URI'], 'info', 'Bingbot 404: ' );
+
         } elseif ( defined( 'O1_WP_FAIL2BAN_GOOGLEBOT' ) && O1_WP_FAIL2BAN_GOOGLEBOT
             && $this->is_googlebot( $ua, $_SERVER['REMOTE_ADDR'] )
         ) {
             //  Identified Googlebot
             $this->trigger( 'wpf2b_googlebot_404', $_SERVER['REQUEST_URI'], 'info', 'Googlebot 404: ' );
+
         } elseif ( defined( 'O1_WP_FAIL2BAN_YANDEXBOT' ) && O1_WP_FAIL2BAN_YANDEXBOT
             && $this->is_yandexbot( $ua, $_SERVER['REMOTE_ADDR'] )
         ) {
             //  Identified Yandexbot
             $this->trigger( 'wpf2b_googlebot_404', $_SERVER['REQUEST_URI'], 'info', 'Yandexbot 404: ' );
+
+        } elseif ( defined( 'O1_WP_FAIL2BAN_GOOGLEPROXY' ) && O1_WP_FAIL2BAN_GOOGLEPROXY
+            && $this->is_google_proxy( $ua, $_SERVER['REMOTE_ADDR'] )
+        ) {
+            //  Identified GoogleProxy
+            $this->trigger( 'wpf2b_googleproxy_404', $_SERVER['REQUEST_URI'], 'info', 'Googleproxy 404: ' );
+
         } else {
             $this->trigger( 'wpf2b_404', $_SERVER['REQUEST_URI'], 'info' );
         }
@@ -798,6 +808,28 @@ final class WP_Fail2ban {
                 && '.yandex.com' !== substr( $host, -11 )
             )
         ) {
+            return false;
+        }
+        $rev_ip   = gethostbyname( $host );
+        $verified = ( $rev_ip === $ip );
+
+        return $verified;
+    }
+
+    /**
+     * Verify Google image proxy
+     *
+     * @see https://gmail.googleblog.com/2013/12/images-now-showing.html
+     */
+    private function is_google_proxy( $ua, $ip ) {
+
+        if ( false === strpos( $ua, 'via ggpht.com GoogleImageProxy' ) ) {
+            return false;
+        }
+
+        // No dot at end of host name!
+        $host = gethostbyaddr( $ip );
+        if ( false === $host || 1 !== preg_match( '/^google-proxy-[0-9-]+\.google\.com$/', $host ) ) {
             return false;
         }
         $rev_ip   = gethostbyname( $host );
