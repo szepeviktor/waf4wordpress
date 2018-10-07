@@ -1,6 +1,9 @@
-# phpstan analyse -l max .
+#$ phpstan analyse
 
 parameters:
+    level: max
+    paths:
+        - %currentWorkingDirectory%/
     autoload_files:
         - %currentWorkingDirectory%/wp-fail2ban-bad-request-instant.inc.php
         - %currentWorkingDirectory%/../miniban/wp-miniban-htaccess.inc.php

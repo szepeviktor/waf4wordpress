@@ -1,11 +1,15 @@
-# phpstan analyse -l max .
+#$ phpstan analyse
 
 parameters:
+    level: max
+    paths:
+        - %currentWorkingDirectory%/
     autoload_files:
         - %currentWorkingDirectory%/phpstan-bootstrap.php
-        - %currentWorkingDirectory%/wp-fail2ban-mu-instant.php
         - %currentWorkingDirectory%/../miniban/wp-miniban-htaccess.inc.php
+        - %currentWorkingDirectory%/wp-fail2ban-mu-instant.php
     ignoreErrors:
+        # Core
         - '#^Constant (ABSPATH|WP_CONTENT_DIR|WPMU_PLUGIN_DIR) not found\.$#'
         - '#^Function (__|add_action|admin_url|did_action|esc_html|esc_url|home_url|is_404|is_user_logged_in|is_wp_error|nocache_headers|remove_action|status_header|trailingslashit|wp_get_current_user|wp_logout|wp_upload_dir) not found\.$#'
         - '#^Class WP_HTTP_Response not found\.$#'

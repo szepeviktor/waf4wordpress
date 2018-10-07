@@ -435,7 +435,7 @@ final class Bad_Request {
             return 'bad_request_wp_author_sniffing';
         }
 
-        // Check write-type method requests only
+        // Check write-type requests only
         if ( false === in_array( $request_method, $write_methods, true ) ) {
             // Not a write-type method
             return false;
@@ -824,7 +824,7 @@ final class Bad_Request {
         if ( ! empty( $log_destination ) ) {
             $referer = '';
             if ( isset( $_SERVER['HTTP_REFERER'] ) ) {
-                $referer = sprintf( ', referer:%s', $this->esc_log( $_SERVER['HTTP_REFERER'] ) );
+                $referer = sprintf( ', referer: %s', $this->esc_log( $_SERVER['HTTP_REFERER'] ) );
             }
 
             $error_msg = sprintf( '[%s] [client %s:%s] %s%s',
@@ -902,17 +902,17 @@ final class Bad_Request {
 
         $escaped = json_encode( $string, JSON_UNESCAPED_SLASHES );
         if ( false === $escaped ) {
-            return ' ';
+            return 'JSON n/a';
         }
 
         // Limit length
         $escaped = mb_substr( $escaped, 0, 500, 'utf-8' );
-        // New lines to "|"
-        $escaped = str_replace( array( "\n", "\r" ), '|', $escaped );
-        // Replace non-printables with "¿"
-        $escaped = preg_replace( '/[^\P{C}]+/u', "\xC2\xBF", $escaped );
+        // Change new lines and tabs to "|"
+        $escaped = str_replace( array( "\n", "\r", "\t" ), '|', $escaped );
+        // Replace non-printables with "?"
+        $escaped = preg_replace( '/[^\P{C}]+/u', '?', $escaped );
 
-        return sprintf( ' (%s)', $escaped );
+        return sprintf( '(%s)', $escaped );
     }
 
     /**
