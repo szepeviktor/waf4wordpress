@@ -92,6 +92,7 @@ final class Bad_Request {
         '/brake/wp-admin/', // From fake_wplogin()
         'allow_url_include', // PHP directive
         'auto_prepend_file', // PHP directive
+        'file_put_contents', // PHP write to a file
         'testproxy.php', // Scan for open proxies
         'httptest.php', // Scan for open proxies
         'bigdump.php', // Staggered MySQL Dump Importer

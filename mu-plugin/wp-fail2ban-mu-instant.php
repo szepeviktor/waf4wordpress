@@ -1,7 +1,7 @@
 <?php
 /*
 Plugin Name: WordPress Fail2ban (MU)
-Version: 4.14.3
+Version: 4.15.0
 Description: Stop WordPress related attacks and trigger Fail2ban.
 Plugin URI: https://github.com/szepeviktor/wordpress-fail2ban
 License: The MIT License (MIT)
@@ -158,7 +158,8 @@ final class WP_Fail2ban {
 
         // Robot and human 404
         add_action( 'plugins_loaded', array( $this, 'robot_403' ), 0 );
-        add_action( 'template_redirect', array( $this, 'wp_404' ) );
+        // BuddyPress fiddles with is_404 at priority 10
+        add_action( 'template_redirect', array( $this, 'wp_404' ), 11 );
 
         // Non-empty wp_die messages
         add_filter( 'wp_die_ajax_handler', array( $this, 'wp_die_ajax' ), 1 );
@@ -600,10 +601,10 @@ final class WP_Fail2ban {
         }
     }
 
-    public function wp_die_ajax( $arg ) {
+    public function wp_die_ajax( $function ) {
 
         // Remember the previous handler
-        $this->wp_die_ajax_handler = $arg;
+        $this->wp_die_ajax_handler = $function;
 
         return array( $this, 'wp_die_ajax_handler' );
     }
@@ -621,10 +622,10 @@ final class WP_Fail2ban {
         call_user_func( $this->wp_die_ajax_handler, $message, $title, $args );
     }
 
-    public function wp_die_xmlrpc( $arg ) {
+    public function wp_die_xmlrpc( $function ) {
 
         // Remember the previous handler
-        $this->wp_die_xmlrpc_handler = $arg;
+        $this->wp_die_xmlrpc_handler = $function;
 
         return array( $this, 'wp_die_xmlrpc_handler' );
     }
@@ -639,10 +640,10 @@ final class WP_Fail2ban {
         call_user_func( $this->wp_die_xmlrpc_handler, $message, $title, $args );
     }
 
-    public function wp_die( $arg ) {
+    public function wp_die( $function ) {
 
         // Remember the previous handler
-        $this->wp_die_handler = $arg; // WPCS: XSS ok.
+        $this->wp_die_handler = $function; // WPCS: XSS ok.
 
         return array( $this, 'wp_die_handler' );
     }

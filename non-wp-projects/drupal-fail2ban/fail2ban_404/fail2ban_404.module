@@ -1,12 +1,12 @@
 <?php
 /**
  * @file
- * fail2ban, a one-function module to trigger fail2ban.
- * Trigger on HTTP/403 and 404.
+ * fail2ban, a one-function module to trigger Fail2ban.
+ * Trigger on HTTP/403 and 404 and login failure.
  */
 
 /**
- * Hook watchdog to get 403/404 requests
+ * Hook watchdog to get 403/404/failed login requests
  * @see drupal_deliver_html_page
  * includes/common.php:2601
  */
@@ -21,6 +21,11 @@ function fail2ban_404_watchdog( $log_entry ) {
             break;
         case 'access denied':
             $slug = '403_forbidden';
+            break;
+        case 'user':
+            if ( substr( $log_entry['message'], 0, 25 ) === 'Login attempt failed for ' ) {
+                $slug = 'login_failed';
+            }
             break;
     }
 
