@@ -7,7 +7,6 @@ Plugin URI: https://github.com/szepeviktor/wordpress-fail2ban
 License: The MIT License (MIT)
 Author: Viktor Szépe
 GitHub Plugin URI: https://github.com/szepeviktor/wordpress-fail2ban
-Constants: O1_BAD_REQUEST_POST_LOGGING
 Constants: O1_BAD_REQUEST_INSTANT
 Constants: O1_BAD_REQUEST_PROXY_HOME_URL
 Constants: O1_BAD_REQUEST_MAX_LOGIN_REQUEST_SIZE
@@ -19,6 +18,7 @@ Constants: O1_BAD_REQUEST_ALLOW_CONNECTION_EMPTY
 Constants: O1_BAD_REQUEST_ALLOW_CONNECTION_CLOSE
 Constants: O1_BAD_REQUEST_ALLOW_TWO_CAPS
 Constants: O1_BAD_REQUEST_DISALLOW_TOR_LOGIN
+Constants: O1_BAD_REQUEST_POST_LOGGING
 */
 
 namespace O1;
@@ -165,13 +165,28 @@ final class Bad_Request {
             return;
         }
 
-        // Options
+        $this->read_constants();
+
+        $this->result = $this->check();
+
+        // "false" means there were no bad requests
+        if ( false !== $this->result ) {
+            $this->trigger();
+            exit;
+        }
+    }
+
+    /**
+     * Set properties based on defined constants.
+     */
+    private function read_constants() {
+
         if ( defined( 'O1_BAD_REQUEST_INSTANT' ) && false === O1_BAD_REQUEST_INSTANT ) {
             $this->instant_trigger = false;
         }
 
         $this->relative_request_uri = $_SERVER['REQUEST_URI'];
-        // O1_BAD_REQUEST_PROXY_HOME_URL should not contain a trailing slash
+        // O1_BAD_REQUEST_PROXY_HOME_URL should not have a trailing slash
         if ( defined( 'O1_BAD_REQUEST_PROXY_HOME_URL' ) ) {
             $home_url_length = strlen( O1_BAD_REQUEST_PROXY_HOME_URL );
             if ( O1_BAD_REQUEST_PROXY_HOME_URL === substr( $_SERVER['REQUEST_URI'], 0, $home_url_length ) ) {
@@ -221,16 +236,9 @@ final class Bad_Request {
         if ( defined( 'O1_BAD_REQUEST_DISALLOW_TOR_LOGIN' ) && O1_BAD_REQUEST_DISALLOW_TOR_LOGIN ) {
             $this->disallow_tor_login = true;
         }
+
         if ( defined( 'O1_BAD_REQUEST_POST_LOGGING' ) && O1_BAD_REQUEST_POST_LOGGING ) {
             $this->debug = true;
-        }
-
-        $this->result = $this->check();
-
-        // "false" means there were no bad requests
-        if ( false !== $this->result ) {
-            $this->trigger();
-            exit;
         }
     }
 
@@ -560,9 +568,9 @@ final class Bad_Request {
             }
         }
 
-        // Maximum HTTP request size for logins
-        $request_size = strlen( http_build_query( $this->apache_request_headers() ) )
-            + strlen( $_SERVER['REQUEST_URI'] )
+        // Maximum HTTP request size for logins (request URI + headers + post parameters)
+        $request_size = strlen( $_SERVER['REQUEST_URI'] )
+            + strlen( http_build_query( $this->apache_request_headers() ) )
             + strlen( http_build_query( $_POST ) );
         if ( $request_size > $this->max_login_request_size ) {
             return 'bad_request_wplogin_request_size';

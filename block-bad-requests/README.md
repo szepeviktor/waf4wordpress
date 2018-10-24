@@ -6,6 +6,8 @@ blocks non-static requests from CDN, prevents author sniffing.
 
 Then triggers Fail2ban accordingly.
 
+Executes typically under 0.1 millisecond.
+
 ### List of HTTP request parts checked
 
 - Custom CDN headers `*`

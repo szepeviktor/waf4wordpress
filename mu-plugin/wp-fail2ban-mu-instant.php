@@ -130,9 +130,6 @@ final class WP_Fail2ban {
         // Don't redirect to admin
         remove_action( 'template_redirect', 'wp_redirect_admin_locations', 1000 );
 
-        // Don't use shortlinks which are redirected to canonical URL-s
-        add_filter( 'pre_get_shortlink', '__return_empty_string' );
-
         // Login related
         add_action( 'login_init', array( $this, 'login' ) );
         add_action( 'wp_logout', array( $this, 'logout' ) );
@@ -149,6 +146,9 @@ final class WP_Fail2ban {
             add_filter( 'authenticate', array( $this, 'before_login' ), 0, 2 );
             add_action( 'wp_login', array( $this, 'after_login' ), 99999, 2 );
         }
+
+        // Don't use shortlinks which are redirected to canonical URL-s
+        add_filter( 'pre_get_shortlink', '__return_empty_string' );
 
         // Non-existent URLs
         add_action( 'init', array( $this, 'url_hack' ) );
