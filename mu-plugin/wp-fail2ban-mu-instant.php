@@ -1,7 +1,7 @@
 <?php
 /*
 Plugin Name: WordPress Fail2ban (MU)
-Version: 4.15.0
+Version: 4.15.1
 Description: Stop WordPress related attacks and trigger Fail2ban.
 Plugin URI: https://github.com/szepeviktor/wordpress-fail2ban
 License: The MIT License (MIT)
@@ -770,10 +770,11 @@ final class WP_Fail2ban {
      * Verify Googlebot.
      *
      * @see https://support.google.com/webmasters/answer/80553
+     * @see https://support.google.com/webmasters/answer/1061943
      */
     private function is_googlebot( $ua, $ip ) {
 
-        if ( false === strpos( $ua, 'Googlebot' ) ) {
+        if ( false === strpos( $ua, 'Googlebot' ) && false === strpos( $ua, 'AdsBot-Google' ) ) {
             return false;
         }
 

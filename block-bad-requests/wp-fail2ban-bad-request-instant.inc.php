@@ -1010,7 +1010,7 @@ final class Bad_Request {
         // phpcs:ignore Squiz.PHP.CommentedOutCode
         // "A unique identifier for the widget."
         // http://operasoftware.github.io/scope-interface/WidgetManager.html
-        $ua_reduced = preg_replace( '#(WUID=[0-9a-f]{32}; WTB=[0-9]+; )\1+#', '', $ua );
+        $ua_reduced = (string) preg_replace( '#(WUID=[0-9a-f]{32}; WTB=[0-9]+; )\1+#', '', $ua );
 
         return $ua_reduced;
     }
