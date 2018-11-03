@@ -1,21 +1,24 @@
 <?php
-/*
-Plugin Name: WordPress Fail2ban (MU)
-Version: 4.15.1
-Description: Stop WordPress related attacks and trigger Fail2ban.
-Plugin URI: https://github.com/szepeviktor/wordpress-fail2ban
-License: The MIT License (MIT)
-Author: Viktor Szépe
-GitHub Plugin URI: https://github.com/szepeviktor/wordpress-fail2ban
-Constants: O1_WP_FAIL2BAN_DISABLE_LOGIN
-Constants: O1_WP_FAIL2BAN_ALLOW_REDIRECT
-Constants: O1_WP_FAIL2BAN_DISABLE_REST_API
-Constants: O1_WP_FAIL2BAN_ONLY_OEMBED
-Constants: O1_WP_FAIL2BAN_MSNBOT
-Constants: O1_WP_FAIL2BAN_GOOGLEBOT
-Constants: O1_WP_FAIL2BAN_YANDEXBOT
-Constants: O1_WP_FAIL2BAN_GOOGLEPROXY
-*/
+/**
+ * WAF for WordPress specific events.
+ *
+ * @wordpress-plugin
+ * Plugin Name: WordPress Fail2ban (MU)
+ * Version: 4.15.1
+ * Description: Stop WordPress related attacks and trigger Fail2ban.
+ * Plugin URI: https://github.com/szepeviktor/wordpress-fail2ban
+ * License: The MIT License (MIT)
+ * Author: Viktor Szépe
+ * GitHub Plugin URI: https://github.com/szepeviktor/wordpress-fail2ban
+ * Constants: O1_WP_FAIL2BAN_DISABLE_LOGIN
+ * Constants: O1_WP_FAIL2BAN_ALLOW_REDIRECT
+ * Constants: O1_WP_FAIL2BAN_DISABLE_REST_API
+ * Constants: O1_WP_FAIL2BAN_ONLY_OEMBED
+ * Constants: O1_WP_FAIL2BAN_MSNBOT
+ * Constants: O1_WP_FAIL2BAN_GOOGLEBOT
+ * Constants: O1_WP_FAIL2BAN_YANDEXBOT
+ * Constants: O1_WP_FAIL2BAN_GOOGLEPROXY
+ */
 
 namespace O1;
 

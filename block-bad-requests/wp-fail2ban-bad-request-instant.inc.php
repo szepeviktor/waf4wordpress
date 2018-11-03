@@ -1,25 +1,28 @@
 <?php
-/*
-Plugin Name: Block Bad Requests (required from wp-config or MU plugin)
-Version: 2.21.8
-Description: Stop various HTTP attacks and trigger Fail2ban.
-Plugin URI: https://github.com/szepeviktor/wordpress-fail2ban
-License: The MIT License (MIT)
-Author: Viktor Szépe
-GitHub Plugin URI: https://github.com/szepeviktor/wordpress-fail2ban
-Constants: O1_BAD_REQUEST_INSTANT
-Constants: O1_BAD_REQUEST_PROXY_HOME_URL
-Constants: O1_BAD_REQUEST_MAX_LOGIN_REQUEST_SIZE
-Constants: O1_BAD_REQUEST_CDN_HEADERS
-Constants: O1_BAD_REQUEST_ALLOW_REG
-Constants: O1_BAD_REQUEST_ALLOW_IE8
-Constants: O1_BAD_REQUEST_ALLOW_OLD_PROXIES
-Constants: O1_BAD_REQUEST_ALLOW_CONNECTION_EMPTY
-Constants: O1_BAD_REQUEST_ALLOW_CONNECTION_CLOSE
-Constants: O1_BAD_REQUEST_ALLOW_TWO_CAPS
-Constants: O1_BAD_REQUEST_DISALLOW_TOR_LOGIN
-Constants: O1_BAD_REQUEST_POST_LOGGING
-*/
+/**
+ * HTTP analyzer part of WAF for WordPress.
+ *
+ * @wordpress-plugin
+ * Plugin Name: Block Bad Requests (required from wp-config or MU plugin)
+ * Version: 2.21.8
+ * Description: Stop various HTTP attacks and trigger Fail2ban.
+ * Plugin URI: https://github.com/szepeviktor/wordpress-fail2ban
+ * License: The MIT License (MIT)
+ * Author: Viktor Szépe
+ * GitHub Plugin URI: https://github.com/szepeviktor/wordpress-fail2ban
+ * Constants: O1_BAD_REQUEST_INSTANT
+ * Constants: O1_BAD_REQUEST_PROXY_HOME_URL
+ * Constants: O1_BAD_REQUEST_MAX_LOGIN_REQUEST_SIZE
+ * Constants: O1_BAD_REQUEST_CDN_HEADERS
+ * Constants: O1_BAD_REQUEST_ALLOW_REG
+ * Constants: O1_BAD_REQUEST_ALLOW_IE8
+ * Constants: O1_BAD_REQUEST_ALLOW_OLD_PROXIES
+ * Constants: O1_BAD_REQUEST_ALLOW_CONNECTION_EMPTY
+ * Constants: O1_BAD_REQUEST_ALLOW_CONNECTION_CLOSE
+ * Constants: O1_BAD_REQUEST_ALLOW_TWO_CAPS
+ * Constants: O1_BAD_REQUEST_DISALLOW_TOR_LOGIN
+ * Constants: O1_BAD_REQUEST_POST_LOGGING
+ */
 
 namespace O1;
 
