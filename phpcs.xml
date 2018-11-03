@@ -10,8 +10,6 @@
 	<config name="minimum_supported_wp_version" value="4.5"/>
 
 	<rule ref="WordPress">
-		<exclude name="WordPress.Security.ValidatedSanitizedInput"/>
-		<exclude name="WordPress.Security.NonceVerification"/>
 	</rule>
 
 	<rule ref="WordPress-Core">
@@ -33,6 +31,13 @@
 		<properties>
 			<property name="exclude" value="obfuscation"/>
 		</properties>
+	</rule>
+
+	<rule ref="WordPress-VIP">
+		<exclude name="WordPress.VIP.ValidatedSanitizedInput"/>
+		<exclude name="WordPress.VIP.SuperGlobalInputUsage"/>
+		<exclude name="WordPress.VIP.RestrictedVariables"/>
+		<exclude name="WordPress.VIP.RestrictedFunctions"/>
 	</rule>
 
 	<!-- Exclude whole WordPress-Docs -->
