@@ -47,13 +47,6 @@ Triggers Fail2ban on WordPress login probes.
 To install copy the fake `non-wp-projects/wp-login.php`and `non-wp-projects/xmlrpc.php`
 to your **non-WordPress** project's document root.
 
-### The normal plugin
-
-Please **DO NOT use it** because it is being designed. Use the MU plugin version from the `mu-plugin` folder.
-
-Examines every HTTP header in a login requests and triggers Fail2ban accordingly.
-This is the normal version of the plugin with a setting page on WordPress admin.
-
 ### WordPress Fail2ban is not in WordPress.org's plugin directory
 
 After is it published on WordPress.org you can install the plugin and skip file copying.  

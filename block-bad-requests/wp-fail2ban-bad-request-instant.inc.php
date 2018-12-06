@@ -285,7 +285,8 @@ final class Bad_Request {
             } else {
                 $request_data = $_POST;
             }
-            $dump_file = sprintf( '%s/request-at-%s-from-%s.json',
+            $dump_file = sprintf(
+                '%s/request-at-%s-from-%s.json',
                 sys_get_temp_dir(),
                 time(),
                 $_SERVER['REMOTE_ADDR']
@@ -780,7 +781,8 @@ final class Bad_Request {
         header( 'X-Robots-Tag: noindex, nofollow' );
         header( 'Content-Type: text/xml; charset=UTF-8' );
 
-        printf( '<?xml version="1.0" encoding="UTF-8"?>
+        printf(
+            '<?xml version="1.0" encoding="UTF-8"?>
 <methodResponse>
   <params>
     <param>
@@ -824,7 +826,8 @@ final class Bad_Request {
         // Add entry point, correct when `auto_prepend_file` is empty
         $included_files      = get_included_files();
         $first_included_file = reset( $included_files );
-        $error_msg           = sprintf( '%s <%s',
+        $error_msg           = sprintf(
+            '%s <%s',
             $message,
             $this->esc_log( sprintf( '%s:%s', $_SERVER['REQUEST_METHOD'], $first_included_file ) )
         );
@@ -841,7 +844,8 @@ final class Bad_Request {
                 $referer = sprintf( ', referer: %s', $this->esc_log( $_SERVER['HTTP_REFERER'] ) );
             }
 
-            $error_msg = sprintf( '[%s] [client %s:%s] %s%s',
+            $error_msg = sprintf(
+                '[%s] [client %s:%s] %s%s',
                 $level,
                 $_SERVER['REMOTE_ADDR'],
                 $_SERVER['REMOTE_PORT'],
@@ -1032,7 +1036,8 @@ final class Bad_Request {
         $queries       = $this->parse_query( $request_query );
 
         foreach ( $queries as $key => $value ) {
-            $rebuilt_query[] = sprintf( '%s=%s',
+            $rebuilt_query[] = sprintf(
+                '%s=%s',
                 rawurlencode( urldecode( $key ) ),
                 rawurlencode( urldecode( $value ) )
             );

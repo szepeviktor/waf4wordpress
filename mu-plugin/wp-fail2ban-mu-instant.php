@@ -4,7 +4,7 @@
  *
  * @wordpress-plugin
  * Plugin Name: WordPress Fail2ban (MU)
- * Version: 4.15.1
+ * Version: 4.16.0
  * Description: Stop WordPress related attacks and trigger Fail2ban.
  * Plugin URI: https://github.com/szepeviktor/wordpress-fail2ban
  * License: The MIT License (MIT)
@@ -24,7 +24,8 @@ namespace O1;
 
 if ( ! function_exists( 'add_filter' ) ) {
     // @codingStandardsChangeSetting WordPress.PHP.DevelopmentFunctions exclude error_log
-    error_log( 'Break-in attempt detected: wpf2b_mu_direct_access '
+    error_log(
+        'Break-in attempt detected: wpf2b_mu_direct_access '
         . addslashes( isset( $_SERVER['REQUEST_URI'] ) ? $_SERVER['REQUEST_URI'] : '' )
     );
     ob_get_level() && ob_end_clean();
@@ -218,7 +219,8 @@ final class WP_Fail2ban {
         }
 
         // Trigger fail2ban
-        $error_msg = sprintf( '%s%s %s',
+        $error_msg = sprintf(
+            '%s%s %s',
             $prefix,
             $slug,
             $this->esc_log( $message )
@@ -290,7 +292,8 @@ final class WP_Fail2ban {
         header( 'X-Robots-Tag: noindex, nofollow' );
         header( 'Content-Type: text/xml; charset=UTF-8' );
 
-        printf( '<?xml version="1.0" encoding="UTF-8"?>
+        printf(
+            '<?xml version="1.0" encoding="UTF-8"?>
 <methodResponse>
   <params>
     <param>
@@ -316,6 +319,7 @@ final class WP_Fail2ban {
 
     private function enhanced_error_log( $message = '', $level = 'error' ) {
 
+        // phpcs:ignore Squiz.PHP.CommentedOutCode
         /*
         // log_errors PHP directive does not actually disable logging
         $log_enabled = ( '1' === ini_get( 'log_errors' ) );
@@ -325,7 +329,8 @@ final class WP_Fail2ban {
         // Add entry point, correct when auto_prepend_file is empty
         $included_files      = get_included_files();
         $first_included_file = reset( $included_files );
-        $error_msg           = sprintf( '%s <%s',
+        $error_msg           = sprintf(
+            '%s <%s',
             $message,
             $this->esc_log( sprintf( '%s:%s', $_SERVER['REQUEST_METHOD'], $first_included_file ) )
         );
@@ -343,7 +348,8 @@ final class WP_Fail2ban {
                 $referer = '';
             }
 
-            $error_msg = sprintf( '[%s] [client %s:%s] %s%s',
+            $error_msg = sprintf(
+                '[%s] [client %s:%s] %s%s',
                 $level,
                 $_SERVER['REMOTE_ADDR'],
                 $_SERVER['REMOTE_PORT'],
@@ -369,8 +375,10 @@ final class WP_Fail2ban {
             $this->trigger_instant( 'wpf2b_404_head', $_SERVER['REQUEST_URI'] );
         }
 
+        $is_crawler = $this->is_crawler( $ua );
+
         // Don't run 404 template for robots
-        if ( $this->is_robot( $ua ) && ! is_user_logged_in() ) {
+        if ( $this->is_robot( $ua ) && false === $is_crawler && ! is_user_logged_in() ) {
 
             $this->trigger( 'wpf2b_robot_404', $_SERVER['REQUEST_URI'], 'info' );
 
@@ -388,30 +396,9 @@ final class WP_Fail2ban {
         }
 
         // Humans and web crawling bots
-        if ( defined( 'O1_WP_FAIL2BAN_MSNBOT' ) && O1_WP_FAIL2BAN_MSNBOT
-            && $this->is_msnbot( $ua, $_SERVER['REMOTE_ADDR'] )
-        ) {
-            //  Identified Bingbot
-            $this->trigger( 'wpf2b_msnbot_404', $_SERVER['REQUEST_URI'], 'info', 'Bingbot 404: ' );
-
-        } elseif ( defined( 'O1_WP_FAIL2BAN_GOOGLEBOT' ) && O1_WP_FAIL2BAN_GOOGLEBOT
-            && $this->is_googlebot( $ua, $_SERVER['REMOTE_ADDR'] )
-        ) {
-            //  Identified Googlebot
-            $this->trigger( 'wpf2b_googlebot_404', $_SERVER['REQUEST_URI'], 'info', 'Googlebot 404: ' );
-
-        } elseif ( defined( 'O1_WP_FAIL2BAN_YANDEXBOT' ) && O1_WP_FAIL2BAN_YANDEXBOT
-            && $this->is_yandexbot( $ua, $_SERVER['REMOTE_ADDR'] )
-        ) {
-            //  Identified Yandexbot
-            $this->trigger( 'wpf2b_googlebot_404', $_SERVER['REQUEST_URI'], 'info', 'Yandexbot 404: ' );
-
-        } elseif ( defined( 'O1_WP_FAIL2BAN_GOOGLEPROXY' ) && O1_WP_FAIL2BAN_GOOGLEPROXY
-            && $this->is_google_proxy( $ua, $_SERVER['REMOTE_ADDR'] )
-        ) {
-            //  Identified GoogleProxy
-            $this->trigger( 'wpf2b_googleproxy_404', $_SERVER['REQUEST_URI'], 'info', 'Googleproxy 404: ' );
-
+        if ( is_string( $is_crawler ) ) {
+            // Crawler
+            $this->trigger( $is_crawler, $_SERVER['REQUEST_URI'], 'info', 'Crawler 404: ' );
         } else {
             $this->trigger( 'wpf2b_404', $_SERVER['REQUEST_URI'], 'info' );
         }
@@ -584,6 +571,9 @@ final class WP_Fail2ban {
         // Don't have to handle wp-includes/ms-files.php:12
         // It does SHORTINIT, no mu-plugins get loaded
         if ( $this->is_robot( $ua )
+
+            // Not a whitelisted crawler
+            && false === $this->is_crawler( $ua )
 
             // Request to a WordPress directory
             && 1 === preg_match( '/\/(' . $wp_dirs . ')\//i', $request_path )
@@ -843,6 +833,48 @@ final class WP_Fail2ban {
         return $verified;
     }
 
+    /**
+     * Whether the user agent is a web crawler.
+     *
+     * @param string $ua
+     *
+     * @return string|bool
+     */
+    private function is_crawler( $ua ) {
+
+        // Humans and web crawling bots
+        if ( defined( 'O1_WP_FAIL2BAN_MSNBOT' ) && O1_WP_FAIL2BAN_MSNBOT
+            && $this->is_msnbot( $ua, $_SERVER['REMOTE_ADDR'] )
+        ) {
+            // Identified Bingbot
+            return 'wpf2b_msnbot_404';
+        }
+
+        if ( defined( 'O1_WP_FAIL2BAN_GOOGLEBOT' ) && O1_WP_FAIL2BAN_GOOGLEBOT
+            && $this->is_googlebot( $ua, $_SERVER['REMOTE_ADDR'] )
+        ) {
+            // Identified Googlebot
+            return 'wpf2b_googlebot_404';
+        }
+
+        if ( defined( 'O1_WP_FAIL2BAN_YANDEXBOT' ) && O1_WP_FAIL2BAN_YANDEXBOT
+            && $this->is_yandexbot( $ua, $_SERVER['REMOTE_ADDR'] )
+        ) {
+            // Identified Yandexbot
+            return 'wpf2b_googlebot_404';
+        }
+
+        if ( defined( 'O1_WP_FAIL2BAN_GOOGLEPROXY' ) && O1_WP_FAIL2BAN_GOOGLEPROXY
+            && $this->is_google_proxy( $ua, $_SERVER['REMOTE_ADDR'] )
+        ) {
+            // Identified GoogleProxy
+            return 'wpf2b_googleproxy_404';
+        }
+
+        // Unidentified
+        return false;
+    }
+
     private function esc_log( $string ) {
 
         $escaped = json_encode( $string, JSON_UNESCAPED_SLASHES );
@@ -886,7 +918,8 @@ final class WP_Fail2ban {
 
         $doc_root = array_key_exists( 'DOCUMENT_ROOT', $_SERVER ) ? $_SERVER['DOCUMENT_ROOT'] : ABSPATH;
 
-        $iframe_msg = sprintf( '<p style="font:14px \'Open Sans\',sans-serif">
+        $iframe_msg = sprintf(
+            '<p style="font:14px \'Open Sans\',sans-serif">
             <strong style="color:#DD3D36">ERROR:</strong> This is <em>not</em> a normal plugin,
             and it should not be activated as one.<br />
             Instead, <code style="font-family:Consolas,Monaco,monospace;background:rgba(0,0,0,0.07)">%s</code>
