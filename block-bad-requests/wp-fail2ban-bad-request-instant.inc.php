@@ -46,7 +46,7 @@ final class Bad_Request {
     // Default rest_url_prefix value
     private $rest_url_prefix        = '/wp-json/';
     private $max_login_request_size = 4000;
-    private $is_wplogin             = false;
+    private $is_login               = false;
     private $is_xmlrpc              = false;
     private $is_rest                = false;
     private $is_options_method      = false;
@@ -121,8 +121,11 @@ final class Bad_Request {
         'eval(', // Evaluate a string as PHP code
         '=die(', // "z!ax" PHP vulnerability probe
         'order+by', // SQL injection
+        'order%20by', // SQL injection
         '+--+', // SQL comment
         '%20--%20', // SQL comment
+        'and+1=', // SQL injection
+        'and%201=', // SQL injection
         'bea_wls_deployment_internal', // Oracle WebLogic Server
     );
     private $botnet_pattern         = '#Firefox/1|bot|spider|crawl|user-agent|random|"|\\\\#i';
@@ -257,8 +260,8 @@ final class Bad_Request {
         // Request methods
         $request_method   = strtoupper( $_SERVER['REQUEST_METHOD'] );
         $wp_methods       = array( 'HEAD', 'GET', 'POST' );
-        $wp_login_methods = array( 'GET', 'POST' );
-        $wp_rest_methods  = array( 'GET', 'HEAD', 'POST', 'PUT', 'DELETE', 'OPTIONS' );
+        $login_methods    = array( 'GET', 'POST' );
+        $rest_methods     = array( 'GET', 'HEAD', 'POST', 'PUT', 'DELETE', 'OPTIONS' );
         $write_methods    = array( 'POST', 'PUT', 'DELETE' );
 
         // Dissect request URI
@@ -307,7 +310,7 @@ final class Bad_Request {
         if ( defined( 'XMLRPC_REQUEST' ) && XMLRPC_REQUEST ) {
             $this->is_xmlrpc = true;
         } elseif ( false !== strpos( $request_path, '/wp-login.php' ) ) {
-            $this->is_wplogin = true;
+            $this->is_login = true;
         } elseif ( false !== strpos( $request_path, $this->rest_url_prefix ) ) {
             $this->is_rest = true;
         }
@@ -360,15 +363,15 @@ final class Bad_Request {
         if ( 'DELETE' === $request_method ) {
             $this->is_delete_method = true;
         }
-        if ( ! $this->is_wplogin && ! $this->is_rest
+        if ( ! $this->is_login && ! $this->is_rest
             && false === in_array( $request_method, $wp_methods, true )
         ) {
             return 'bad_request_http_method';
         }
-        if ( $this->is_wplogin && false === in_array( $request_method, $wp_login_methods, true ) ) {
-            return 'bad_request_wplogin_http_method';
+        if ( $this->is_login && false === in_array( $request_method, $login_methods, true ) ) {
+            return 'bad_request_login_http_method';
         }
-        if ( $this->is_rest && false === in_array( $request_method, $wp_rest_methods, true ) ) {
+        if ( $this->is_rest && false === in_array( $request_method, $rest_methods, true ) ) {
             return 'bad_request_rest_http_method';
         }
 
@@ -434,7 +437,7 @@ final class Bad_Request {
             return 'bad_request_nonexistent_php';
         }
 
-        // robots.txt probing in a subdirectory
+        // robots.txt probing in a subdirectory and with query string
         if ( false !== stripos( $this->relative_request_uri, 'robots.txt' )
             && '/robots.txt' !== $this->relative_request_uri
         ) {
@@ -527,7 +530,7 @@ final class Bad_Request {
         if ( isset( $_SERVER['CONTENT_LENGTH'] )
             && '0' !== $_SERVER['CONTENT_LENGTH']
             && ( empty( $_SERVER['CONTENT_TYPE'] )
-                || ( $this->is_wplogin
+                || ( $this->is_login
                     && 0 !== stripos( $_SERVER['CONTENT_TYPE'], 'application/x-www-form-urlencoded' )
                 )
                 || ( $this->is_xmlrpc
@@ -545,24 +548,24 @@ final class Bad_Request {
         }
 
         // Check requests only for wp-login.php
-        if ( ! $this->is_wplogin ) {
-            // Not wp-login
+        if ( ! $this->is_login ) {
+            // Not login
             return false;
         }
 
         // --------------------------- %< ---------------------------
-        // @is_wplogin
+        // @is_login
 
         // Accept-Language HTTP header
         if ( empty( $_SERVER['HTTP_ACCEPT_LANGUAGE'] )
             || strlen( $_SERVER['HTTP_ACCEPT_LANGUAGE'] ) < 2
         ) {
-            return 'bad_request_wplogin_accept_language';
+            return 'bad_request_login_accept_language';
         }
 
         // Referer HTTP header
         if ( empty( $_SERVER['HTTP_REFERER'] ) ) {
-            return 'bad_request_wplogin_referer_empty';
+            return 'bad_request_login_referer_empty';
         }
 
         $referer = $_SERVER['HTTP_REFERER'];
@@ -570,7 +573,7 @@ final class Bad_Request {
         // Referer HTTP header
         if ( ! $this->allow_registration ) {
             if ( parse_url( $referer, PHP_URL_HOST ) !== $server_name ) {
-                return 'bad_request_wplogin_referer_host';
+                return 'bad_request_login_referer_host';
             }
         }
 
@@ -579,7 +582,7 @@ final class Bad_Request {
             + strlen( http_build_query( $this->apache_request_headers() ) )
             + strlen( http_build_query( $_POST ) );
         if ( $request_size > $this->max_login_request_size ) {
-            return 'bad_request_wplogin_request_size';
+            return 'bad_request_login_request_size';
         }
 
         // Login request with non-empty username
@@ -588,13 +591,13 @@ final class Bad_Request {
 
             // Banned usernames
             if ( in_array( strtolower( $username ), $this->names2ban, true ) ) {
-                return 'bad_request_wplogin_username_banned';
+                return 'bad_request_login_username_banned';
             }
 
             // Attackers try usernames with "TwoCapitals"
             if ( ! $this->allow_two_capitals ) {
                 if ( 1 === preg_match( '/^[A-Z][a-z]+[A-Z][a-z]+$/', $username ) ) {
-                    return 'bad_request_wplogin_username_twocapitals';
+                    return 'bad_request_login_username_twocapitals';
                 }
             }
         }
@@ -619,7 +622,7 @@ final class Bad_Request {
                 // Also matches "HTTP/2.0"
                 && false === strpos( $_SERVER['SERVER_PROTOCOL'], 'HTTP/2' )
             ) {
-                return 'bad_request_wplogin_http11_2';
+                return 'bad_request_login_http11_2';
             }
         }
 
@@ -627,7 +630,7 @@ final class Bad_Request {
         if ( empty( $_SERVER['HTTP_ACCEPT_ENCODING'] )
             || false === strpos( $_SERVER['HTTP_ACCEPT_ENCODING'], 'gzip' )
         ) {
-            return 'bad_request_wplogin_accept_encoding';
+            return 'bad_request_login_accept_encoding';
         }
 
         // IE8 login
@@ -640,12 +643,12 @@ final class Bad_Request {
 
         // Botnet user agents
         if ( 1 === preg_match( $this->botnet_pattern, $user_agent ) ) {
-            return 'bad_request_wplogin_user_agent_botnet';
+            return 'bad_request_login_user_agent_botnet';
         }
 
         // Modern browser user agents
         if ( 'Mozilla/5.0' !== substr( $user_agent, 0, 11 ) ) {
-            return 'bad_request_wplogin_user_agent_mozilla50';
+            return 'bad_request_login_user_agent_mozilla50';
         }
 
         // WordPress test cookie
@@ -653,19 +656,19 @@ final class Bad_Request {
             if ( empty( $_SERVER['HTTP_COOKIE'] )
                 || false === strpos( $_SERVER['HTTP_COOKIE'], 'wordpress_test_cookie' )
             ) {
-                return 'bad_request_wplogin_test_cookie';
+                return 'bad_request_login_test_cookie';
             }
         }
 
         // Connection HTTP header (keep alive)
         if ( ! $this->allow_connection_empty ) {
             if ( empty( $_SERVER['HTTP_CONNECTION'] ) ) {
-                return 'bad_request_wplogin_connection_empty';
+                return 'bad_request_login_connection_empty';
             }
 
             if ( ! $this->allow_connection_close ) {
                 if ( false === stripos( $_SERVER['HTTP_CONNECTION'], 'keep-alive' ) ) {
-                    return 'bad_request_wplogin_connection';
+                    return 'bad_request_login_connection';
                 }
             }
         }
@@ -673,7 +676,7 @@ final class Bad_Request {
         // Referer HTTP header
         if ( ! $this->allow_registration ) {
             if ( false === strpos( parse_url( $referer, PHP_URL_PATH ), '/wp-login.php' ) ) {
-                return 'bad_request_wplogin_referer_path';
+                return 'bad_request_login_referer_path';
             }
         }
 
@@ -684,7 +687,7 @@ final class Bad_Request {
             $server_rev        = implode( '.', array_reverse( explode( '.', $_SERVER['SERVER_ADDR'] ) ) );
             $exitlist_response = gethostbyname( sprintf( $exitlist_tpl, $remote_rev, $server_rev ) );
             if ( false !== strpos( $exitlist_response, '127.0.0' ) ) {
-                    return 'bad_request_wplogin_tor';
+                    return 'bad_request_login_tor';
             }
         }
 
@@ -720,7 +723,7 @@ final class Bad_Request {
             $this->fake_xmlrpc();
 
         } elseif ( ! headers_sent() ) {
-            if ( $this->is_wplogin && ! empty( $_POST['log'] ) ) {
+            if ( $this->is_login && ! empty( $_POST['log'] ) ) {
                 $this->fake_wplogin();
             } else {
                 $this->ban();

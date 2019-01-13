@@ -834,6 +834,14 @@ final class WP_Fail2ban {
     }
 
     /**
+     * Verify Facebook crawler (links sent by users)
+     *     "facebookexternalhit/1.1"
+     *     grepcidr -x -f <(whois -h whois.radb.net -- '-i origin AS32934'|sed -ne 's/^route6\?:\s\+\(\S\+\)$/\1/p')
+     *
+     * @see https://developers.facebook.com/docs/sharing/webmasters/crawler/
+     */
+
+    /**
      * Whether the user agent is a web crawler.
      *
      * @param string $ua
