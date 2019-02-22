@@ -258,11 +258,11 @@ final class Bad_Request {
     private function check() {
 
         // Request methods
-        $request_method   = strtoupper( $_SERVER['REQUEST_METHOD'] );
-        $wp_methods       = array( 'HEAD', 'GET', 'POST' );
-        $login_methods    = array( 'GET', 'POST' );
-        $rest_methods     = array( 'GET', 'HEAD', 'POST', 'PUT', 'DELETE', 'OPTIONS' );
-        $write_methods    = array( 'POST', 'PUT', 'DELETE' );
+        $request_method = strtoupper( $_SERVER['REQUEST_METHOD'] );
+        $wp_methods     = array( 'HEAD', 'GET', 'POST' );
+        $login_methods  = array( 'GET', 'POST' );
+        $rest_methods   = array( 'GET', 'HEAD', 'POST', 'PUT', 'DELETE', 'OPTIONS' );
+        $write_methods  = array( 'POST', 'PUT', 'DELETE' );
 
         // Dissect request URI
         $request_path  = parse_url( $this->relative_request_uri, PHP_URL_PATH );
@@ -703,7 +703,7 @@ final class Bad_Request {
         // Trigger Miniban
         if ( class_exists( '\Miniban' ) && $this->instant_trigger ) {
             if ( true !== \Miniban::ban() ) {
-                // phpcs:set WordPress.PHP.DevelopmentFunctions exclude error_log
+                // phpcs:set WordPress.PHP.DevelopmentFunctions exclude[] error_log
                 error_log( 'Miniban operation failed.' );
             }
         }
@@ -804,9 +804,11 @@ final class Bad_Request {
   </params>
 </methodResponse>
 ',
+            // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
             $server_name,
+            // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
             $server_name
-        ); // WPCS: XSS ok.
+        );
     }
 
     /**
@@ -857,7 +859,7 @@ final class Bad_Request {
             );
         }
 
-        // phpcs:set WordPress.PHP.DevelopmentFunctions exclude error_log
+        // phpcs:set WordPress.PHP.DevelopmentFunctions exclude[] error_log
         error_log( $error_msg );
     }
 

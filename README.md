@@ -52,11 +52,23 @@ to your **non-WordPress** project's document root.
 After is it published on WordPress.org you can install the plugin and skip file copying.  
 That way it'll be installed automatically.
 
-### Support Newsletter plugin, ALO EasyMail Newsletter plugin and PayPal IPN
+### Support PayPal IPN, Brantree and custom entry points in poorly written plugins
 
 Copy this into your in `wp-config.php`.
 
 ```php
+// Enable PayPal IPN in WooCommerce
+if ( isset( $_SERVER['REQUEST_URI'] ) ) {
+    if ( '/wc-api/WC_Gateway_Paypal/' === parse_url( $_SERVER['REQUEST_URI'], PHP_URL_PATH ) ) {
+        // PayPal IPN does not send Accept: and User-Agent: headers
+        $_SERVER['HTTP_ACCEPT'] = '*/*';
+        $_SERVER['HTTP_USER_AGENT'] = 'Mozilla/5.0 PayPal/IPN';
+    }
+}
+
+// Enable Braintree Webhooks
+new \O1\Braintree_Fix( '/braintree/webhook' );
+
 // Enable email opens in Newsletter plugin
 if ( isset( $_SERVER['REQUEST_URI'] ) ) {
     $o1_newsletter_path = parse_url( $_SERVER['REQUEST_URI'], PHP_URL_PATH );
@@ -74,16 +86,6 @@ if ( isset( $_SERVER['REQUEST_URI'] ) ) {
     if ( '/wp-content/plugins/alo-easymail/tr.php' === $o1_alo_path ) {
         // UA hack for old email clients
         $_SERVER['HTTP_USER_AGENT'] = 'Mozilla/5.0 ' . $_SERVER['HTTP_USER_AGENT'];
-    }
-}
-
-// Enable PayPal IPN in WooCommerce
-if ( isset( $_SERVER['REQUEST_URI'] ) ) {
-    $o1_wc_api_path = parse_url( $_SERVER['REQUEST_URI'], PHP_URL_PATH );
-    if ( '/wc-api/WC_Gateway_Paypal/' === $o1_wc_api_path ) {
-        // PayPal IPN does not send Accept: and User-Agent: headers
-        $_SERVER['HTTP_ACCEPT'] = '*/*';
-        $_SERVER['HTTP_USER_AGENT'] = 'Mozilla/5.0 PayPal/IPN';
     }
 }
 ```

@@ -26,7 +26,6 @@
 
 	<rule ref="WordPress-Extra">
 		<exclude name="WordPress.WP.AlternativeFunctions"/>
-		<exclude name="WordPress.CSRF.NonceVerification"/>
 	</rule>
 	<rule ref="WordPress.PHP.DiscouragedPHPFunctions">
 		<!-- From "VIP": The obfuscation group is excluded as there are plenty of legitimate uses for the base64 functions. -->

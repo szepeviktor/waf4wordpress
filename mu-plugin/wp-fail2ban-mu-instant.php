@@ -23,7 +23,7 @@
 namespace O1;
 
 if ( ! function_exists( 'add_filter' ) ) {
-    // @codingStandardsChangeSetting WordPress.PHP.DevelopmentFunctions exclude error_log
+    // phpcs:set WordPress.PHP.DevelopmentFunctions exclude[] error_log
     error_log(
         'Break-in attempt detected: wpf2b_mu_direct_access '
         . addslashes( isset( $_SERVER['REQUEST_URI'] ) ? $_SERVER['REQUEST_URI'] : '' )
@@ -230,7 +230,7 @@ final class WP_Fail2ban {
         // Report to Sucuri Scan
         if ( class_exists( '\SucuriScanEvent' ) ) {
             if ( true !== \SucuriScanEvent::report_critical_event( $error_msg ) ) {
-                // @codingStandardsChangeSetting WordPress.PHP.DevelopmentFunctions exclude error_log
+                // phpcs:set WordPress.PHP.DevelopmentFunctions exclude[] error_log
                 error_log( 'Sucuri Scan report event failure.' );
             }
         }
@@ -358,7 +358,7 @@ final class WP_Fail2ban {
             );
         }
 
-        // @codingStandardsChangeSetting WordPress.PHP.DevelopmentFunctions exclude error_log
+        // phpcs:set WordPress.PHP.DevelopmentFunctions exclude[] error_log
         error_log( $error_msg );
     }
 
@@ -633,10 +633,11 @@ final class WP_Fail2ban {
         call_user_func( $this->wp_die_xmlrpc_handler, $message, $title, $args );
     }
 
+    // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
     public function wp_die( $function ) {
 
         // Remember the previous handler
-        $this->wp_die_handler = $function; // WPCS: XSS ok.
+        $this->wp_die_handler = $function;
 
         return array( $this, 'wp_die_handler' );
     }
@@ -936,7 +937,8 @@ final class WP_Fail2ban {
             esc_html( str_replace( $doc_root, '', trailingslashit( WPMU_PLUGIN_DIR ) ) . basename( __FILE__ ) )
         );
 
-        exit( $iframe_msg ); // WPCS: XSS ok.
+        // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+        exit( $iframe_msg );
     }
 }
 
