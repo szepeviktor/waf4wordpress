@@ -128,7 +128,7 @@ final class WP_Fail2ban {
             }
         } else {
             // @TODO Empty out "author_url:" in every REST response
-            add_filter( 'rest_post_dispatch', array( $this, 'rest_40x' ), 0, 3 );
+            add_filter( 'rest_post_dispatch', array( $this, 'rest_filter' ), 0, 3 );
         }
 
         // Don't redirect to admin
@@ -404,16 +404,22 @@ final class WP_Fail2ban {
         }
     }
 
-    public function rest_40x( $response, $instance, $request ) {
+    public function rest_filter( $response, $server, $request ) {
 
         if ( $response instanceof \WP_HTTP_Response ) {
             $status = $response->get_status();
+            $method = $request->get_method();
+            $route  = $request->get_route();
+            $data   = $response->get_data();
+            // Disable any kind of user listing
+            if ( $server::READABLE === $method && '/wp/v2/users' === substr( $route, 0, 12 ) ) {
+                $message = sprintf( '<%s:%s', $method, $route );
+                $this->trigger_instant( 'wpf2b_rest_user_listing', $message );
+            }
+            // Detect HTTP/404 and 403
             switch ( $status ) {
                 case '403':
                 case '404':
-                    $data    = $response->get_data();
-                    $method  = $request->get_method();
-                    $route   = $request->get_route();
                     $message = sprintf( '%s <%s:%s', $data['code'], $method, $route );
                     $this->trigger( 'wpf2b_rest_error', $message );
                     break;
