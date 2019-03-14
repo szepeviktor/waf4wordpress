@@ -1,0 +1,10 @@
+#$ phpstan analyse -c braintree.neon
+
+includes:
+    - %currentWorkingDirectory%/vendor/phpstan/phpstan-strict-rules/rules.neon
+parameters:
+    level: max
+    paths:
+        - %currentWorkingDirectory%/Braintree.php
+    autoload_files:
+        - %currentWorkingDirectory%/Braintree.php

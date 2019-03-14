@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
-<ruleset name="WordPress Fail2ban">
-	<description>Stop WordPress related attacks and trigger Fail2ban running on your server.</description>
+<ruleset name="Waf for WordPress Coding Style">
+	<description>Stop WordPress related attacks and trigger Fail2ban.</description>
 
 	<exclude-pattern>/vendor/*</exclude-pattern>
 

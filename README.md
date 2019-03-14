@@ -1,4 +1,4 @@
-# WordPress Fail2ban
+# WAF for WordPress
 
 Stop WordPress related attacks and trigger Fail2ban running on your server.  
 Shared hosting has no server-wide banning (because of trust issues)
@@ -12,42 +12,44 @@ Your WordPress (really HTTP) security consists of:
 1. Have Fail2ban installed (controls the firewall)
 1. Maintain your website + use strict Fail2ban filters which ban on the first attack instantly
 1. Deny direct access to core WordPress files, themes and plugins
-1. Install WordPress Fail2ban (this project)
+1. Install WAF for WordPress (this project)
 1. Use Leanmail (filters Fail2ban notification emails)
 
 See the [Block WordPress attack vectors](https://github.com/szepeviktor/debian-server-tools/blob/master/webserver/WordPress-security.md)
 note in my other repository for an overview of the topic.
 
-### Bad_Request class
+### `Http_Analyzer` class
 
 Examines headers in the HTTP requests and triggers Fail2ban accordingly.
 
-To install it copy `block-bad-requests/wp-fail2ban-bad-request-instant.inc.php`
-beside your `wp-config.php` and copy these two lines in top of `wp-config.php`:
+To install it copy `http-analyzer/waf4wordpress-http-analyzer.php`
+beside your `wp-config.php` and copy these lines in top of `wp-config.php`:
 
 ```php
-require_once __DIR__ . '/wp-fail2ban-bad-request-instant.inc.php';
-new \O1\Bad_Request();
+/** Security */
+require_once __DIR__ . '/waf4wordpress-http-analyzer.php';
+new \Waf4WordPress\Http_Analyzer();
 ```
 
-Or – in a worse case – install it as an MU plugin.
+A better solution is to load it from the `auto_prepend_file` PHP directive.
+This time you have to copy the above code in the class file.
 
-### WP_Fail2ban class
+### `Core_Events` class
 
-It is an MU plugin that triggers Fail2ban on various attack types. Login is only logged, use
-Bad_Request class for handling that.
+It is an MU plugin that triggers Fail2ban on various WordPress specific attack types.
+Login is only logged, use `Http_Analyzer` class for handling that.
 
-To install copy `mu-plugin/wp-fail2ban-mu-instant.php` into your `wp-content/mu-plugins/` directory.
+To install copy `core-events/waf4wordpress-core-events.php` into your `wp-content/mu-plugins/` directory.
 You may have to create the `mu-plugins` directory. It activates automatically.
 
-### Non-wp-projects folder
+### The `non-wp-projects` folder
 
-Triggers Fail2ban on WordPress login probes.
+Triggers Fail2ban on WordPress login probes in any project.
 
 To install copy the fake `non-wp-projects/wp-login.php`and `non-wp-projects/xmlrpc.php`
 to your **non-WordPress** project's document root.
 
-### WordPress Fail2ban is not in WordPress.org's plugin directory
+### WAF for WordPress is not in WordPress.org's plugin directory
 
 After is it published on WordPress.org you can install the plugin and skip file copying.  
 That way it'll be installed automatically.
@@ -67,26 +69,28 @@ if ( isset( $_SERVER['REQUEST_URI'] ) ) {
 }
 
 // Enable Braintree Webhooks
-new \O1\Braintree_Fix( '/braintree/webhook' );
+new \Waf4WordPress\Braintree_Fix( '/braintree/webhook' );
 
 // Enable email opens in Newsletter plugin
 if ( isset( $_SERVER['REQUEST_URI'] ) ) {
-    $o1_newsletter_path = parse_url( $_SERVER['REQUEST_URI'], PHP_URL_PATH );
-    if ( '/wp-content/plugins/newsletter/statistics/open.php' === $o1_newsletter_path
-        || '/wp-content/plugins/newsletter/statistics/link.php' === $o1_newsletter_path
+    $newsletter_path = parse_url( $_SERVER['REQUEST_URI'], PHP_URL_PATH );
+    if ( '/wp-content/plugins/newsletter/statistics/open.php' === $newsletter_path
+        || '/wp-content/plugins/newsletter/statistics/link.php' === $newsletter_path
     ) {
         // UA hack for old email clients
         $_SERVER['HTTP_USER_AGENT'] = 'Mozilla/5.0 ' . $_SERVER['HTTP_USER_AGENT'];
     }
+    unset( $newsletter_path );
 }
 
 // Enable email open tracking in ALO EasyMail Newsletter plugin
 if ( isset( $_SERVER['REQUEST_URI'] ) ) {
-    $o1_alo_path = parse_url( $_SERVER['REQUEST_URI'], PHP_URL_PATH );
-    if ( '/wp-content/plugins/alo-easymail/tr.php' === $o1_alo_path ) {
+    $alo_path = parse_url( $_SERVER['REQUEST_URI'], PHP_URL_PATH );
+    if ( '/wp-content/plugins/alo-easymail/tr.php' === $alo_path ) {
         // UA hack for old email clients
         $_SERVER['HTTP_USER_AGENT'] = 'Mozilla/5.0 ' . $_SERVER['HTTP_USER_AGENT'];
     }
+    unset( $alo_path );
 }
 ```
 

@@ -3,7 +3,7 @@
  * Repel an HTTP/POST attack on Magento 1 registration.
  */
 
-// In wp-fail2ban-bad-request-instant.inc.php
+// In waf4wordpress-http-analyzer.php
 
 //            return 'bad_request_post_content_type';
 //        }

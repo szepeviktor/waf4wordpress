@@ -1,26 +1,28 @@
 <?php
 /**
- * WAF for WordPress specific events.
+ * Core events specific part of WAF for WordPress.
+ *
+ * @package Waf2wordpress
  *
  * @wordpress-plugin
- * Plugin Name: WordPress Fail2ban (MU)
- * Version: 4.16.0
+ * Plugin Name: WAF for WordPress (MU)
+ * Version:     5.0.0
  * Description: Stop WordPress related attacks and trigger Fail2ban.
- * Plugin URI: https://github.com/szepeviktor/wordpress-fail2ban
- * License: The MIT License (MIT)
- * Author: Viktor Szépe
+ * Plugin URI:  https://github.com/szepeviktor/wordpress-fail2ban
+ * License:     The MIT License (MIT)
+ * Author:      Viktor Szépe
  * GitHub Plugin URI: https://github.com/szepeviktor/wordpress-fail2ban
- * Constants: O1_WP_FAIL2BAN_DISABLE_LOGIN
- * Constants: O1_WP_FAIL2BAN_ALLOW_REDIRECT
- * Constants: O1_WP_FAIL2BAN_DISABLE_REST_API
- * Constants: O1_WP_FAIL2BAN_ONLY_OEMBED
- * Constants: O1_WP_FAIL2BAN_MSNBOT
- * Constants: O1_WP_FAIL2BAN_GOOGLEBOT
- * Constants: O1_WP_FAIL2BAN_YANDEXBOT
- * Constants: O1_WP_FAIL2BAN_GOOGLEPROXY
+ * Constants: W4WP_DISABLE_LOGIN
+ * Constants: W4WP_ALLOW_REDIRECT
+ * Constants: W4WP_DISABLE_REST_API
+ * Constants: W4WP_ONLY_OEMBED
+ * Constants: W4WP_MSNBOT
+ * Constants: W4WP_GOOGLEBOT
+ * Constants: W4WP_YANDEXBOT
+ * Constants: W4WP_GOOGLEPROXY
  */
 
-namespace O1;
+namespace Waf4WordPress;
 
 if ( ! function_exists( 'add_filter' ) ) {
     // phpcs:set WordPress.PHP.DevelopmentFunctions exclude[] error_log
@@ -38,20 +40,19 @@ if ( ! function_exists( 'add_filter' ) ) {
 }
 
 /**
- * WordPress Fail2ban Must-Use part.
+ * WAF for WordPress Must-Use part.
  *
  * To disable login completely copy this into your wp-config.php:
  *
- *     define( 'O1_WP_FAIL2BAN_DISABLE_LOGIN', true );
+ *     define( 'W4WP_DISABLE_LOGIN', true );
  *
  * To allow unlimited canonical redirections copy this into your wp-config.php:
  *
- *     define( 'O1_WP_FAIL2BAN_ALLOW_REDIRECT', true );
+ *     define( 'W4WP_ALLOW_REDIRECT', true );
  *
- * @package wordpress-fail2ban
- * @see     README.md
+ * @see README.md
  */
-final class WP_Fail2ban {
+final class Core_Events {
 
     private $prefix         = 'Malicious traffic detected: ';
     private $prefix_instant = 'Break-in attempt detected: ';
@@ -113,13 +114,13 @@ final class WP_Fail2ban {
         }
 
         // Disable REST API
-        if ( defined( 'O1_WP_FAIL2BAN_DISABLE_REST_API' ) && O1_WP_FAIL2BAN_DISABLE_REST_API ) {
+        if ( defined( 'W4WP_DISABLE_REST_API' ) && W4WP_DISABLE_REST_API ) {
             // Remove core actions
             // Source: https://plugins.trac.wordpress.org/browser/disable-json-api/trunk/disable-json-api.php
             remove_action( 'xmlrpc_rsd_apis', 'rest_output_rsd' );
             remove_action( 'wp_head', 'rest_output_link_wp_head', 10 );
             remove_action( 'template_redirect', 'rest_output_link_header', 11 );
-            if ( defined( 'O1_WP_FAIL2BAN_ONLY_OEMBED' ) && O1_WP_FAIL2BAN_ONLY_OEMBED ) {
+            if ( defined( 'W4WP_ONLY_OEMBED' ) && W4WP_ONLY_OEMBED ) {
                 add_filter( 'rest_pre_dispatch', array( $this, 'rest_api_only_oembed' ), 0, 3 );
             } else {
                 // Remove oembed core action
@@ -138,7 +139,7 @@ final class WP_Fail2ban {
         add_action( 'login_init', array( $this, 'login' ) );
         add_action( 'wp_logout', array( $this, 'logout' ) );
         add_action( 'retrieve_password', array( $this, 'lostpass' ) );
-        if ( defined( 'O1_WP_FAIL2BAN_DISABLE_LOGIN' ) && O1_WP_FAIL2BAN_DISABLE_LOGIN ) {
+        if ( defined( 'W4WP_DISABLE_LOGIN' ) && W4WP_DISABLE_LOGIN ) {
             // Disable login
             add_action( 'login_head', array( $this, 'disable_user_login_js' ) );
             add_filter( 'authenticate', array( $this, 'authentication_disabled' ), 0, 2 );
@@ -156,7 +157,7 @@ final class WP_Fail2ban {
 
         // Non-existent URLs
         add_action( 'init', array( $this, 'url_hack' ) );
-        if ( ! ( defined( 'O1_WP_FAIL2BAN_ALLOW_REDIRECT' ) && O1_WP_FAIL2BAN_ALLOW_REDIRECT ) ) {
+        if ( ! ( defined( 'W4WP_ALLOW_REDIRECT' ) && W4WP_ALLOW_REDIRECT ) ) {
             add_filter( 'redirect_canonical', array( $this, 'redirect' ), 1, 2 );
         }
 
@@ -858,28 +859,28 @@ final class WP_Fail2ban {
     private function is_crawler( $ua ) {
 
         // Humans and web crawling bots
-        if ( defined( 'O1_WP_FAIL2BAN_MSNBOT' ) && O1_WP_FAIL2BAN_MSNBOT
+        if ( defined( 'W4WP_MSNBOT' ) && W4WP_MSNBOT
             && $this->is_msnbot( $ua, $_SERVER['REMOTE_ADDR'] )
         ) {
             // Identified Bingbot
             return 'wpf2b_msnbot_404';
         }
 
-        if ( defined( 'O1_WP_FAIL2BAN_GOOGLEBOT' ) && O1_WP_FAIL2BAN_GOOGLEBOT
+        if ( defined( 'W4WP_GOOGLEBOT' ) && W4WP_GOOGLEBOT
             && $this->is_googlebot( $ua, $_SERVER['REMOTE_ADDR'] )
         ) {
             // Identified Googlebot
             return 'wpf2b_googlebot_404';
         }
 
-        if ( defined( 'O1_WP_FAIL2BAN_YANDEXBOT' ) && O1_WP_FAIL2BAN_YANDEXBOT
+        if ( defined( 'W4WP_YANDEXBOT' ) && W4WP_YANDEXBOT
             && $this->is_yandexbot( $ua, $_SERVER['REMOTE_ADDR'] )
         ) {
             // Identified Yandexbot
             return 'wpf2b_googlebot_404';
         }
 
-        if ( defined( 'O1_WP_FAIL2BAN_GOOGLEPROXY' ) && O1_WP_FAIL2BAN_GOOGLEPROXY
+        if ( defined( 'W4WP_GOOGLEPROXY' ) && W4WP_GOOGLEPROXY
             && $this->is_google_proxy( $ua, $_SERVER['REMOTE_ADDR'] )
         ) {
             // Identified GoogleProxy
@@ -948,4 +949,4 @@ final class WP_Fail2ban {
     }
 }
 
-new WP_Fail2ban();
+new Core_Events();

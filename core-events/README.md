@@ -29,7 +29,7 @@ The code is commented, so you may understand it by looking at the code only.
 To deny user login totally copy this into your `wp-config.php`
 
 ```php
-define( 'O1_WP_FAIL2BAN_DISABLE_LOGIN', true );
+define( 'W4WP_DISABLE_LOGIN', true );
 ```
 
 ### Allow unlimited redirections for sites with non-canonical links
@@ -37,7 +37,7 @@ define( 'O1_WP_FAIL2BAN_DISABLE_LOGIN', true );
 To allow unlimited canonical redirections copy this into your `wp-config.php`:
 
 ```php
-define( 'O1_WP_FAIL2BAN_ALLOW_REDIRECT', true );
+define( 'W4WP_ALLOW_REDIRECT', true );
 ```
 
 ### Disabling parts
@@ -54,7 +54,7 @@ In that case don't activate the normal plugin.
 
 ### Learning attack internals
 
-To log requests set `O1_BAD_REQUEST_POST_LOGGING` to true in `Bad_Request` and custumize its conditions.
+To log requests set `W4WP_POST_LOGGING` to true in `Http_Analyzer` and custumize its conditions.
 
 ### Set up the Fail2ban filters
 
@@ -63,6 +63,6 @@ See: https://github.com/szepeviktor/debian-server-tools/tree/master/security/fai
 Please examine the latest filter `failregexp`-s in
 [Fail2ban GitHub repository](https://github.com/fail2ban/fail2ban/blob/master/config/filter.d).
 It worth to combine every webserver related regexp-s in one custom filter.
-You can customize the Fail2ban trigger string in the `$prefix` property of `WP_Fail2ban` class.
+You can customize the Fail2ban trigger string in the `$prefix` property of `Core_Events` class.
 
 **All the best wishes to you!**

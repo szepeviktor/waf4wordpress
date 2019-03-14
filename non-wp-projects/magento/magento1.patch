@@ -1,5 +1,5 @@
---- a/wp-fail2ban-bad-request-instant.inc.php   2017-06-10 15:10:33.205984255 +0000
-+++ b/wp-fail2ban-bad-request-instant.inc.php   2017-10-02 10:30:25.526690211 +0000
+--- a/waf4wordpress-http-analyzer.php   2017-06-10 15:10:33.205984255 +0000
++++ b/waf4wordpress-http-analyzer.php   2017-10-02 10:30:25.526690211 +0000
 @@ -246,7 +246,8 @@
 
          if ( defined( 'XMLRPC_REQUEST' ) && XMLRPC_REQUEST ) {

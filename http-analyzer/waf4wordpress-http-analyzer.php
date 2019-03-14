@@ -1,44 +1,45 @@
 <?php
 /**
- * HTTP analyzer part of WAF for WordPress.
+ * HTTP request analyzer part of WAF for WordPress.
+ *
+ * @package Waf4wordpress
  *
  * @wordpress-plugin
- * Plugin Name: Block Bad Requests (required from wp-config or MU plugin)
- * Version: 2.21.9
+ * Plugin Name: WAF for WordPress (required from wp-config or started in auto_prepend_file)
+ * Version:     3.0.0
  * Description: Stop various HTTP attacks and trigger Fail2ban.
- * Plugin URI: https://github.com/szepeviktor/wordpress-fail2ban
- * License: The MIT License (MIT)
- * Author: Viktor Szépe
+ * Plugin URI:  https://github.com/szepeviktor/wordpress-fail2ban
+ * License:     The MIT License (MIT)
+ * Author:      Viktor Szépe
  * GitHub Plugin URI: https://github.com/szepeviktor/wordpress-fail2ban
- * Constants: O1_BAD_REQUEST_INSTANT
- * Constants: O1_BAD_REQUEST_PROXY_HOME_URL
- * Constants: O1_BAD_REQUEST_MAX_LOGIN_REQUEST_SIZE
- * Constants: O1_BAD_REQUEST_CDN_HEADERS
- * Constants: O1_BAD_REQUEST_ALLOW_REG
- * Constants: O1_BAD_REQUEST_ALLOW_IE8
- * Constants: O1_BAD_REQUEST_ALLOW_OLD_PROXIES
- * Constants: O1_BAD_REQUEST_ALLOW_CONNECTION_EMPTY
- * Constants: O1_BAD_REQUEST_ALLOW_CONNECTION_CLOSE
- * Constants: O1_BAD_REQUEST_ALLOW_TWO_CAPS
- * Constants: O1_BAD_REQUEST_DISALLOW_TOR_LOGIN
- * Constants: O1_BAD_REQUEST_POST_LOGGING
+ * Constants: W4WP_INSTANT
+ * Constants: W4WP_PROXY_HOME_URL
+ * Constants: W4WP_MAX_LOGIN_REQUEST_SIZE
+ * Constants: W4WP_CDN_HEADERS
+ * Constants: W4WP_ALLOW_REG
+ * Constants: W4WP_ALLOW_IE8
+ * Constants: W4WP_ALLOW_OLD_PROXIES
+ * Constants: W4WP_ALLOW_CONNECTION_EMPTY
+ * Constants: W4WP_ALLOW_CONNECTION_CLOSE
+ * Constants: W4WP_ALLOW_TWO_CAPS
+ * Constants: W4WP_DISALLOW_TOR_LOGIN
+ * Constants: W4WP_POST_LOGGING
  */
 
-namespace O1;
+namespace Waf4WordPress;
 
 /**
- * WordPress Block Bad Requests.
+ * Block bad requests and trigger Fail2ban.
  *
  * Require it from the top of your wp-config.php:
  *
- *     define( 'O1_BAD_REQUEST_ALLOW_CONNECTION_CLOSE', true ); // HTTP2
- *     require_once __DIR__ . '/wp-fail2ban-bad-request-instant.inc.php';
- *     new \O1\Bad_Request();
+ *     define( 'W4WP_ALLOW_CONNECTION_EMPTY', true ); // HTTP2
+ *     require_once __DIR__ . '/waf4wordpress-http-analyzer.php';
+ *     new \Waf4WordPress\Http_Analyzer();
  *
- * @package wordpress-fail2ban
  * @see     README.md
  */
-final class Bad_Request {
+final class Http_Analyzer {
 
     private $prefix          = 'Malicious traffic detected: ';
     private $prefix_instant  = 'Break-in attempt detected: ';
@@ -189,15 +190,15 @@ final class Bad_Request {
      */
     private function read_constants() {
 
-        if ( defined( 'O1_BAD_REQUEST_INSTANT' ) && false === O1_BAD_REQUEST_INSTANT ) {
+        if ( defined( 'W4WP_INSTANT' ) && false === W4WP_INSTANT ) {
             $this->instant_trigger = false;
         }
 
         $this->relative_request_uri = $_SERVER['REQUEST_URI'];
-        // O1_BAD_REQUEST_PROXY_HOME_URL should not have a trailing slash
-        if ( defined( 'O1_BAD_REQUEST_PROXY_HOME_URL' ) ) {
-            $home_url_length = strlen( O1_BAD_REQUEST_PROXY_HOME_URL );
-            if ( O1_BAD_REQUEST_PROXY_HOME_URL === substr( $_SERVER['REQUEST_URI'], 0, $home_url_length ) ) {
+        // W4WP_PROXY_HOME_URL should not have a trailing slash
+        if ( defined( 'W4WP_PROXY_HOME_URL' ) ) {
+            $home_url_length = strlen( W4WP_PROXY_HOME_URL );
+            if ( W4WP_PROXY_HOME_URL === substr( $_SERVER['REQUEST_URI'], 0, $home_url_length ) ) {
                 $this->relative_request_uri = substr( $_SERVER['REQUEST_URI'], $home_url_length );
                 /**
                  * Fix request URI
@@ -209,43 +210,43 @@ final class Bad_Request {
             }
         }
 
-        if ( defined( 'O1_BAD_REQUEST_MAX_LOGIN_REQUEST_SIZE' ) ) {
-            $this->max_login_request_size = intval( O1_BAD_REQUEST_MAX_LOGIN_REQUEST_SIZE );
+        if ( defined( 'W4WP_MAX_LOGIN_REQUEST_SIZE' ) ) {
+            $this->max_login_request_size = intval( W4WP_MAX_LOGIN_REQUEST_SIZE );
         }
 
-        if ( defined( 'O1_BAD_REQUEST_CDN_HEADERS' ) ) {
-            $this->cdn_headers = explode( ':', O1_BAD_REQUEST_CDN_HEADERS );
+        if ( defined( 'W4WP_CDN_HEADERS' ) ) {
+            $this->cdn_headers = explode( ':', W4WP_CDN_HEADERS );
         }
 
-        if ( defined( 'O1_BAD_REQUEST_ALLOW_REG' ) && O1_BAD_REQUEST_ALLOW_REG ) {
+        if ( defined( 'W4WP_ALLOW_REG' ) && W4WP_ALLOW_REG ) {
             $this->allow_registration = true;
         }
 
-        if ( defined( 'O1_BAD_REQUEST_ALLOW_IE8' ) && O1_BAD_REQUEST_ALLOW_IE8 ) {
+        if ( defined( 'W4WP_ALLOW_IE8' ) && W4WP_ALLOW_IE8 ) {
             $this->allow_ie8_login = true;
         }
 
-        if ( defined( 'O1_BAD_REQUEST_ALLOW_OLD_PROXIES' ) && O1_BAD_REQUEST_ALLOW_OLD_PROXIES ) {
+        if ( defined( 'W4WP_ALLOW_OLD_PROXIES' ) && W4WP_ALLOW_OLD_PROXIES ) {
             $this->allow_old_proxies = true;
         }
 
-        if ( defined( 'O1_BAD_REQUEST_ALLOW_CONNECTION_EMPTY' ) && O1_BAD_REQUEST_ALLOW_CONNECTION_EMPTY ) {
+        if ( defined( 'W4WP_ALLOW_CONNECTION_EMPTY' ) && W4WP_ALLOW_CONNECTION_EMPTY ) {
             $this->allow_connection_empty = true;
         }
 
-        if ( defined( 'O1_BAD_REQUEST_ALLOW_CONNECTION_CLOSE' ) && O1_BAD_REQUEST_ALLOW_CONNECTION_CLOSE ) {
+        if ( defined( 'W4WP_ALLOW_CONNECTION_CLOSE' ) && W4WP_ALLOW_CONNECTION_CLOSE ) {
             $this->allow_connection_close = true;
         }
 
-        if ( defined( 'O1_BAD_REQUEST_ALLOW_TWO_CAPS' ) && O1_BAD_REQUEST_ALLOW_TWO_CAPS ) {
+        if ( defined( 'W4WP_ALLOW_TWO_CAPS' ) && W4WP_ALLOW_TWO_CAPS ) {
             $this->allow_two_capitals = true;
         }
 
-        if ( defined( 'O1_BAD_REQUEST_DISALLOW_TOR_LOGIN' ) && O1_BAD_REQUEST_DISALLOW_TOR_LOGIN ) {
+        if ( defined( 'W4WP_DISALLOW_TOR_LOGIN' ) && W4WP_DISALLOW_TOR_LOGIN ) {
             $this->disallow_tor_login = true;
         }
 
-        if ( defined( 'O1_BAD_REQUEST_POST_LOGGING' ) && O1_BAD_REQUEST_POST_LOGGING ) {
+        if ( defined( 'W4WP_POST_LOGGING' ) && W4WP_POST_LOGGING ) {
             $this->debug = true;
         }
     }
