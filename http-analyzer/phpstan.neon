@@ -5,5 +5,5 @@ parameters:
     paths:
         - %currentWorkingDirectory%/
     autoload_files:
-        - %currentWorkingDirectory%/wp-fail2ban-bad-request-instant.inc.php
+        - %currentWorkingDirectory%/waf4wordpress-http-analyzer.php
         - %currentWorkingDirectory%/../miniban/wp-miniban-htaccess.inc.php

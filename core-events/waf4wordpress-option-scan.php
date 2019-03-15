@@ -1,28 +1,28 @@
 <?php
 /**
- * Plugin Name: WordPress-Fail2ban option table scan (MU)
- * Version: 0.1.6
+ * Plugin Name: WAF for WordPress option table scan (MU)
+ * Version:     0.1.6
  * Description: Find <code>&lt;script&gt;</code> and <code>&lt;iframe&gt;</code> tags in wp_options table and alert.
- * Plugin URI: https://github.com/szepeviktor/wordpress-fail2ban
- * License: The MIT License (MIT)
- * Author: Viktor Szépe
+ * Plugin URI:  https://github.com/szepeviktor/wordpress-fail2ban
+ * License:     The MIT License (MIT)
+ * Author:      Viktor Szépe
  * GitHub Plugin URI: https://github.com/szepeviktor/wordpress-fail2ban
  */
 
 
 /* This is an IDEA for a new feature */
 
-add_action( 'plugins_loaded', 'wpf2b_option_scan_schedule' );
-add_action( 'wpf2b/daily', 'wpf2b_option_scan' );
+add_action( 'plugins_loaded', 'w4wp_option_scan_schedule' );
+add_action( 'w4wp/daily', 'w4wp_option_scan' );
 
-function wpf2b_option_scan_schedule() {
+function w4wp_option_scan_schedule() {
 
-    if ( false === wp_get_schedule( 'wpf2b/daily' ) ) {
-        wp_schedule_event( time(), 'daily', 'wpf2b/daily' );
+    if ( false === wp_get_schedule( 'w4wp/daily' ) ) {
+        wp_schedule_event( time(), 'daily', 'w4wp/daily' );
     }
 }
 
-function wpf2b_option_scan() {
+function w4wp_option_scan() {
 
     global $wpdb;
 

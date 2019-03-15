@@ -1,6 +1,6 @@
-# WordPress Fail2ban MU plugin
+# Core events specific part of WAF for WordPress
 
-This is the Must Use (mu-plugin) version of *WordPress Fail2ban* plugin.
+This is the Must Use (mu-plugin) part of *WAF for WordPress*.
 The code is commented, so you may understand it by looking at the code only.
 
 ### Advantages of MU

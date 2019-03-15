@@ -7,7 +7,8 @@ parameters:
     autoload_files:
         - %currentWorkingDirectory%/phpstan-bootstrap.php
         - %currentWorkingDirectory%/../miniban/wp-miniban-htaccess.inc.php
-        - %currentWorkingDirectory%/wp-fail2ban-mu-instant.php
+        - %currentWorkingDirectory%/waf4wordpress-core-events.php
+        - %currentWorkingDirectory%/waf4wordpress-option-scan.php
     ignoreErrors:
         # Core
         - '#^Constant (ABSPATH|WP_CONTENT_DIR|WPMU_PLUGIN_DIR) not found\.$#'

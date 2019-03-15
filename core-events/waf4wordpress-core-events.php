@@ -146,7 +146,7 @@ final class Core_Events {
         } else {
             // Prevent registering with banned username
             add_filter( 'validate_username', array( $this, 'banned_username' ), 99999, 2 );
-            // wp-login or XMLRPC login (any authentication)
+            // wp-login, XMLRPC login (any authentication)
             add_action( 'wp_login_failed', array( $this, 'login_failed' ) );
             add_filter( 'authenticate', array( $this, 'before_login' ), 0, 2 );
             add_action( 'wp_login', array( $this, 'after_login' ), 99999, 2 );
@@ -511,7 +511,7 @@ final class Core_Events {
     }
 
     /**
-     * Ban blacklisted usernames and authentication through XML-RPC.
+     * Ban blacklisted usernames and authenticated XML-RPC.
      */
     public function before_login( $user, $username ) {
 
@@ -568,7 +568,7 @@ final class Core_Events {
     public function robot_403() {
 
         $ua           = array_key_exists( 'HTTP_USER_AGENT', $_SERVER ) ? $_SERVER['HTTP_USER_AGENT'] : '';
-        $request_path = parse_url( $_SERVER['REQUEST_URI'], PHP_URL_PATH );
+        $request_path = (string) parse_url( $_SERVER['REQUEST_URI'], PHP_URL_PATH );
         $admin_path   = parse_url( admin_url(), PHP_URL_PATH );
         $wp_dirs      = sprintf( 'wp-admin|wp-includes|wp-content|%s', basename( WP_CONTENT_DIR ) );
         $uploads      = wp_upload_dir();

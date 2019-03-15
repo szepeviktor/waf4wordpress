@@ -266,7 +266,7 @@ final class Http_Analyzer {
         $write_methods  = array( 'POST', 'PUT', 'DELETE' );
 
         // Dissect request URI
-        $request_path  = parse_url( $this->relative_request_uri, PHP_URL_PATH );
+        $request_path  = (string) parse_url( $this->relative_request_uri, PHP_URL_PATH );
         $request_query = isset( $_SERVER['QUERY_STRING'] )
             ? $_SERVER['QUERY_STRING']
             : parse_url( $this->relative_request_uri, PHP_URL_QUERY );
@@ -327,7 +327,8 @@ final class Http_Analyzer {
                     ),
                     $this->apache_request_headers()
                 );
-                $this->enhanced_error_log( 'HTTP headers: ' . $this->esc_log( $cdn_combined_headers ) );
+                $header_list = $this->esc_log( implode( ',', $cdn_combined_headers ) );
+                $this->enhanced_error_log( 'HTTP headers: ' . $header_list );
                 // Work-around to prevent edge server banning
                 $this->prefix          = 'Attack through CDN: ';
                 $this->instant_trigger = false;
@@ -676,7 +677,8 @@ final class Http_Analyzer {
 
         // Referer HTTP header
         if ( ! $this->allow_registration ) {
-            if ( false === strpos( parse_url( $referer, PHP_URL_PATH ), '/wp-login.php' ) ) {
+            $referer_path = (string) parse_url( $referer, PHP_URL_PATH );
+            if ( false === strpos( $referer_path, '/wp-login.php' ) ) {
                 return 'bad_request_login_referer_path';
             }
         }

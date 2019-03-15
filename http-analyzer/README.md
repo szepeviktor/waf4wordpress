@@ -1,4 +1,4 @@
-# HTTP request analyzer part of WAF for WordPress.
+# HTTP request analyzer part of WAF for WordPress
 
 Examines HTTP headers in all (including login) requests.
 Bans commonly used user names (hardcoded in a property),
