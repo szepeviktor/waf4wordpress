@@ -327,7 +327,7 @@ final class Http_Analyzer {
                     ),
                     $this->apache_request_headers()
                 );
-                $header_list = $this->esc_log( implode( ',', $cdn_combined_headers ) );
+                $header_list          = $this->esc_log( $cdn_combined_headers );
                 $this->enhanced_error_log( 'HTTP headers: ' . $header_list );
                 // Work-around to prevent edge server banning
                 $this->prefix          = 'Attack through CDN: ';
@@ -918,15 +918,15 @@ final class Http_Analyzer {
     }
 
     /**
-     * Prepare a string to safe logging
+     * Prepare log data for safe logging.
      *
-     * @param string $string String to escape.
+     * @param mixed $log_data Log data to escape.
      *
-     * @return string        Escaped string in parentheses.
+     * @return string         Escaped string in parentheses.
      */
-    private function esc_log( $string ) {
+    private function esc_log( $log_data ) {
 
-        $escaped = json_encode( $string, JSON_UNESCAPED_SLASHES );
+        $escaped = json_encode( $log_data, JSON_UNESCAPED_SLASHES );
         if ( false === $escaped ) {
             return 'JSON n/a';
         }

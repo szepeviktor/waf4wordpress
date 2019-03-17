@@ -408,12 +408,14 @@ final class Core_Events {
     public function rest_filter( $response, $server, $request ) {
 
         if ( $response instanceof \WP_HTTP_Response ) {
-            $status = $response->get_status();
-            $method = $request->get_method();
-            $route  = $request->get_route();
-            $data   = $response->get_data();
-            // Disable any kind of user listing
-            if ( $server::READABLE === $method && '/wp/v2/users' === substr( $route, 0, 12 ) ) {
+            $status          = $response->get_status();
+            $method          = $request->get_method();
+            $route           = $request->get_route();
+            $data            = $response->get_data();
+            $is_user_listing = ( $server::READABLE === $method && '/wp/v2/users' === substr( $route, 0, 12 ) );
+            // Disable any kind of unauthenticated user listing
+            // Authenticated REST requests must have a nonce
+            if ( ! is_user_logged_in() && $is_user_listing ) {
                 $message = sprintf( '<%s:%s', $method, $route );
                 $this->trigger_instant( 'wpf2b_rest_user_listing', $message );
             }
@@ -446,7 +448,11 @@ final class Core_Events {
 
         $this->trigger( 'wpf2b_rest_api_disabled', $_SERVER['REQUEST_URI'], 'notice' );
 
-        return new \WP_Error( 'rest_no_route', __( 'No route was found matching the URL and request method' ), array( 'status' => 404 ) );
+        return new \WP_Error(
+            'rest_no_route',
+            __( 'No route was found matching the URL and request method' ),
+            array( 'status' => 404 )
+        );
     }
 
     public function rest_api_only_oembed( $null, $that, $request ) {
@@ -891,9 +897,16 @@ final class Core_Events {
         return false;
     }
 
-    private function esc_log( $string ) {
+    /**
+     * Encode and sanitize log data.
+     *
+     * @param mixed $data
+     *
+     * @return string
+     */
+    private function esc_log( $data ) {
 
-        $escaped = json_encode( $string, JSON_UNESCAPED_SLASHES );
+        $escaped = json_encode( $data, JSON_UNESCAPED_SLASHES );
         if ( false === $escaped ) {
             return ' ';
         }
@@ -908,6 +921,13 @@ final class Core_Events {
         return sprintf( '(%s)', $escaped );
     }
 
+    /**
+     * Translate Aapach log levels for Simple History plugin.
+     *
+     * @param string $apache_level
+     *
+     * @return string
+     */
     private function translate_apache_level( $apache_level ) {
 
         $levels = array(
