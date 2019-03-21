@@ -128,8 +128,8 @@ final class Core_Events {
                 add_filter( 'rest_authentication_errors', array( $this, 'rest_api_disabled' ), 99999 );
             }
         } else {
-            // @TODO Empty out "author_url:" in every REST response
-            add_filter( 'rest_post_dispatch', array( $this, 'rest_filter' ), 0, 3 );
+            add_filter( 'oembed_response_data', array( $this, 'oembed_filter' ), 0 );
+            add_filter( 'rest_request_before_callbacks', array( $this, 'rest_filter' ), 0, 3 );
         }
 
         // Don't redirect to admin
@@ -405,6 +405,29 @@ final class Core_Events {
         }
     }
 
+    /**
+     * Filter oEmbed requests.
+     *
+     * @param array $data
+     * @return array $data
+     */
+    public function oembed_filter( $data ) {
+
+        if ( isset( $data['author_url'] ) ) {
+            unset( $data['author_url'] );
+        }
+
+        return $data;
+    }
+
+    /**
+     * Filter REST requests.
+     *
+     * @param \WP_HTTP_Response|\WP_Error $response
+     * @param \WP_REST_Server $server
+     * @param \WP_REST_Request $request
+     * @return \WP_HTTP_Response|\WP_Error
+     */
     public function rest_filter( $response, $server, $request ) {
 
         if ( $response instanceof \WP_HTTP_Response ) {
@@ -413,9 +436,9 @@ final class Core_Events {
             $route           = $request->get_route();
             $data            = $response->get_data();
             $is_user_listing = ( $server::READABLE === $method && '/wp/v2/users' === substr( $route, 0, 12 ) );
-            // Disable any kind of unauthenticated user listing
+            // Disable any kind of unauthorized user listing
             // Authenticated REST requests must have a nonce
-            if ( ! is_user_logged_in() && $is_user_listing ) {
+            if ( ! current_user_can( 'list_users' ) && $is_user_listing ) {
                 $message = sprintf( '<%s:%s', $method, $route );
                 $this->trigger_instant( 'wpf2b_rest_user_listing', $message );
             }
@@ -424,7 +447,7 @@ final class Core_Events {
                 case '403':
                 case '404':
                     $message = sprintf( '%s <%s:%s', $data['code'], $method, $route );
-                    $this->trigger( 'wpf2b_rest_error', $message );
+                    $this->trigger( 'wpf2b_rest_client_error', $message );
                     break;
             }
         } else {
