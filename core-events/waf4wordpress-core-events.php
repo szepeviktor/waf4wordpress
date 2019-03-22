@@ -113,7 +113,7 @@ final class Core_Events {
             $this->exit_with_instructions();
         }
 
-        // Disable REST API
+        // REST API
         if ( defined( 'W4WP_DISABLE_REST_API' ) && W4WP_DISABLE_REST_API ) {
             // Remove core actions
             // Source: https://plugins.trac.wordpress.org/browser/disable-json-api/trunk/disable-json-api.php
@@ -129,7 +129,7 @@ final class Core_Events {
             }
         } else {
             add_filter( 'oembed_response_data', array( $this, 'oembed_filter' ), 0 );
-            add_filter( 'rest_request_before_callbacks', array( $this, 'rest_filter' ), 0, 3 );
+            add_filter( 'rest_post_dispatch', array( $this, 'rest_filter' ), 0, 3 );
         }
 
         // Don't redirect to admin
