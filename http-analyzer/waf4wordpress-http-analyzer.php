@@ -121,12 +121,9 @@ final class Http_Analyzer {
         'etc/local.xml', // Magento configuration
         'eval(', // Evaluate a string as PHP code
         '=die(', // "z!ax" PHP vulnerability probe
-        'order+by', // SQL injection
-        'order%20by', // SQL injection
-        '+--+', // SQL comment
-        '%20--%20', // SQL comment
-        'and+1=', // SQL injection
-        'and%201=', // SQL injection
+        'order by', // SQL injection
+        ' -- ', // SQL comment
+        'and 1=', // SQL injection
         'bea_wls_deployment_internal', // Oracle WebLogic Server
     );
     private $botnet_pattern         = '#Firefox/1|bot|spider|crawl|user-agent|random|"|\\\\#i';
@@ -143,7 +140,7 @@ final class Http_Analyzer {
     private $debug                  = false;
 
     /**
-     * Set up options, run check and trigger fail2ban on malicous HTTP request.
+     * Set up options, run check and trigger Fail2ban on malicous HTTP request.
      */
     public function __construct() {
 
@@ -409,15 +406,13 @@ final class Http_Analyzer {
         }
 
         // URL path and query string blacklist
-        if ( true === $this->strifounda( $_SERVER['REQUEST_URI'], $this->blacklist ) ) {
+        if ( true === $this->strifounda( urldecode( $_SERVER['REQUEST_URI'] ), $this->blacklist ) ) {
             return 'bad_request_uri_blacklist';
         }
 
         // Query string arrays with hash indices
         // @see https://core.trac.wordpress.org/ticket/17737
-        if ( false !== strpos( $request_query, '[%23' )
-            || false !== stripos( $request_query, '%5B%23' )
-        ) {
+        if ( false !== strpos( urldecode( $request_query ), '[#' ) ) {
             return 'bad_request_uri_array_hash';
         }
 
@@ -447,7 +442,7 @@ final class Http_Analyzer {
         }
 
         // WordPress author sniffing
-        // Except on post listing by author on wp-admin @TODO REST API exclusion?
+        // Except on post listing by author on wp-admin
         if ( false === strpos( $request_path, '/wp-admin/' )
             && isset( $_REQUEST['author'] )
             && is_numeric( $_REQUEST['author'] )
@@ -711,7 +706,7 @@ final class Http_Analyzer {
             }
         }
 
-        // Trigger fail2ban
+        // Trigger Fail2ban
         if ( $this->instant_trigger ) {
             $this->enhanced_error_log( $this->prefix_instant . $this->result, 'crit' );
         } else {
@@ -893,7 +888,7 @@ final class Http_Analyzer {
      *
      * Arrays are not supported.
      *
-     * @param string $query_string The query string.
+     * @param string $query_string Raw query string.
      *
      * @return array               Array of individual queries.
      */

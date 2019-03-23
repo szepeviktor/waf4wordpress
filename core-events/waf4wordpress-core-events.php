@@ -219,7 +219,7 @@ final class Core_Events {
             $prefix = $this->prefix;
         }
 
-        // Trigger fail2ban
+        // Trigger Fail2ban
         $error_msg = sprintf(
             '%s%s %s',
             $prefix,
@@ -240,7 +240,7 @@ final class Core_Events {
         if ( function_exists( 'SimpleLogger' ) ) {
             $simple_level = $this->translate_apache_level( $level );
             $context      = array(
-                '_security'              => 'WordPress fail2ban',
+                '_security'              => 'WAF4WordPress',
                 '_server_request_method' => $this->esc_log( $_SERVER['REQUEST_METHOD'] ),
             );
             if ( array_key_exists( 'HTTP_USER_AGENT', $_SERVER ) ) {
