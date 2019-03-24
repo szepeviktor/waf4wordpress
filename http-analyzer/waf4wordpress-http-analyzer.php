@@ -6,7 +6,7 @@
  *
  * @wordpress-plugin
  * Plugin Name: WAF for WordPress (required from wp-config or started in auto_prepend_file)
- * Version:     3.0.0
+ * Version:     3.0.1
  * Description: Stop various HTTP attacks and trigger Fail2ban.
  * Plugin URI:  https://github.com/szepeviktor/wordpress-fail2ban
  * License:     The MIT License (MIT)
@@ -44,6 +44,8 @@ final class Http_Analyzer {
     private $prefix          = 'Malicious traffic detected: ';
     private $prefix_instant  = 'Break-in attempt detected: ';
     private $instant_trigger = true;
+    private $login_url       = '/wp-login.php';
+    private $admin_url       = '/wp-admin/';
     // Default rest_url_prefix value
     private $rest_url_prefix        = '/wp-json/';
     private $max_login_request_size = 4000;
@@ -307,7 +309,7 @@ final class Http_Analyzer {
         // Request type
         if ( defined( 'XMLRPC_REQUEST' ) && XMLRPC_REQUEST ) {
             $this->is_xmlrpc = true;
-        } elseif ( false !== strpos( $request_path, '/wp-login.php' ) ) {
+        } elseif ( false !== strpos( $request_path, $this->login_url ) ) {
             $this->is_login = true;
         } elseif ( false !== strpos( $request_path, $this->rest_url_prefix ) ) {
             $this->is_rest = true;
@@ -443,7 +445,7 @@ final class Http_Analyzer {
 
         // WordPress author sniffing
         // Except on post listing by author on wp-admin
-        if ( false === strpos( $request_path, '/wp-admin/' )
+        if ( false === strpos( $request_path, $this->admin_url )
             && isset( $_REQUEST['author'] )
             && is_numeric( $_REQUEST['author'] )
         ) {
@@ -673,7 +675,7 @@ final class Http_Analyzer {
         // Referer HTTP header
         if ( ! $this->allow_registration ) {
             $referer_path = (string) parse_url( $referer, PHP_URL_PATH );
-            if ( false === strpos( $referer_path, '/wp-login.php' ) ) {
+            if ( false === strpos( $referer_path, $this->login_url ) ) {
                 return 'bad_request_login_referer_path';
             }
         }
@@ -940,7 +942,7 @@ final class Http_Analyzer {
      * Whether an array contains a case-insensitive substring.
      *
      * @param string $haystack The haystack.
-     * @param array $needles   The needles.
+     * @param array  $needles  The needles.
      *
      * @return boolean         A needle is found.
      */
