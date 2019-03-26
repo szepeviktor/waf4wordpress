@@ -1,0 +1,13 @@
+<?php
+/**
+ * @file
+ * Primary module hooks for Fail2ban module.
+ */
+
+/**
+ * Trigger Fail2ban to block form spammers.
+ */
+function fail2ban_honeypot_reject($form_id, $uid, $type) {
+  $uri = addslashes($_SERVER['REQUEST_URI']);
+  error_log(sprintf('Malicious traffic detected: drupal_honeypot %s:%s', $type, $uri));
+}

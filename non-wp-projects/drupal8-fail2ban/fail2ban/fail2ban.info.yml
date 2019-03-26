@@ -1,0 +1,7 @@
+name: Fail2ban
+type: module
+description: Trigger Fail2ban.
+package: fail2ban
+core: 8.x
+
+version: '8.x-1.0'

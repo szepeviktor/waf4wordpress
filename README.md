@@ -1,16 +1,21 @@
 # WAF for WordPress
 
-Stop WordPress related attacks and trigger Fail2ban running on your server.  
+Stop WordPress related attacks and trigger Fail2ban.
+
+This WAF does not give proper HTTP responses to vulnerability probes
+but save you from future D/DoS attacks by blocking the attacker instantly.
+
 Shared hosting has no server-wide banning (because of trust issues)
 but you can still install this software without Fail2ban to stop attacks by using one of the Miniban methods.
 
-Your WordPress (really HTTP) security consists of:
+Your WordPress - really genral HTTP - security consists of:
 
 1. Use HTTPS
 1. Have daily backup
 1. Block known hostile networks
 1. Have Fail2ban installed (controls the firewall)
-1. Maintain your website + use strict Fail2ban filters which ban on the first attack instantly
+1. Maintain your website and use strict Fail2ban filters
+   which ban on the first suspicious request instantly
 1. Deny direct access to core WordPress files, themes and plugins
 1. Install WAF for WordPress (this project)
 1. Use Leanmail (filters Fail2ban notification emails)
