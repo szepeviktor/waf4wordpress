@@ -27,7 +27,7 @@ namespace Waf4WordPress;
 if ( ! function_exists( 'add_filter' ) ) {
     // phpcs:set WordPress.PHP.DevelopmentFunctions exclude[] error_log
     error_log(
-        'Break-in attempt detected: wpf2b_mu_direct_access '
+        'Break-in attempt detected: w4wp_direct_access '
         . addslashes( isset( $_SERVER['REQUEST_URI'] ) ? $_SERVER['REQUEST_URI'] : '' )
     );
     ob_get_level() && ob_end_clean();
@@ -373,7 +373,7 @@ final class Core_Events {
 
         // HEAD probing resulting in a 404
         if ( false !== stripos( $_SERVER['REQUEST_METHOD'], 'HEAD' ) ) {
-            $this->trigger_instant( 'wpf2b_404_head', $_SERVER['REQUEST_URI'] );
+            $this->trigger_instant( 'w4wp_404_head', $_SERVER['REQUEST_URI'] );
         }
 
         $is_crawler = $this->is_crawler( $ua );
@@ -381,7 +381,7 @@ final class Core_Events {
         // Don't run 404 template for robots
         if ( $this->is_robot( $ua ) && false === $is_crawler && ! is_user_logged_in() ) {
 
-            $this->trigger( 'wpf2b_robot_404', $_SERVER['REQUEST_URI'], 'info' );
+            $this->trigger( 'w4wp_robot_404', $_SERVER['REQUEST_URI'], 'info' );
 
             ob_get_level() && ob_end_clean();
             if ( ! headers_sent() ) {
@@ -401,7 +401,7 @@ final class Core_Events {
             // Crawler
             $this->trigger( $is_crawler, $_SERVER['REQUEST_URI'], 'info', 'Crawler 404: ' );
         } else {
-            $this->trigger( 'wpf2b_404', $_SERVER['REQUEST_URI'], 'info' );
+            $this->trigger( 'w4wp_404', $_SERVER['REQUEST_URI'], 'info' );
         }
     }
 
@@ -440,19 +440,19 @@ final class Core_Events {
             // Authenticated REST requests must have a nonce
             if ( ! current_user_can( 'list_users' ) && $is_user_listing ) {
                 $message = sprintf( '<%s:%s', $method, $route );
-                $this->trigger_instant( 'wpf2b_rest_user_listing', $message );
+                $this->trigger_instant( 'w4wp_rest_user_listing', $message );
             }
             // Detect HTTP/404 and 403
             switch ( $status ) {
                 case '403':
                 case '404':
                     $message = sprintf( '%s <%s:%s', $data['code'], $method, $route );
-                    $this->trigger( 'wpf2b_rest_client_error', $message );
+                    $this->trigger( 'w4wp_rest_client_error', $message );
                     break;
             }
         } else {
             // @TODO Handle non-WP_HTTP_Response errors
-            $this->trigger( 'wpf2b_rest_error', 'Not a REST response but a ' . get_class( $response ) );
+            $this->trigger( 'w4wp_rest_error', 'Not a REST response but a ' . get_class( $response ) );
         }
 
         return $response;
@@ -463,13 +463,13 @@ final class Core_Events {
         if ( '//' === substr( $_SERVER['REQUEST_URI'], 0, 2 ) ) {
             // Remember this to prevent double-logging in redirect()
             $this->is_redirect = true;
-            $this->trigger( 'wpf2b_url_hack', $_SERVER['REQUEST_URI'] );
+            $this->trigger( 'w4wp_url_hack', $_SERVER['REQUEST_URI'] );
         }
     }
 
     public function rest_api_disabled( $enabled ) {
 
-        $this->trigger( 'wpf2b_rest_api_disabled', $_SERVER['REQUEST_URI'], 'notice' );
+        $this->trigger( 'w4wp_rest_api_disabled', $_SERVER['REQUEST_URI'], 'notice' );
 
         return new \WP_Error(
             'rest_no_route',
@@ -485,7 +485,7 @@ final class Core_Events {
             return $null;
         }
 
-        $this->trigger( 'wpf2b_rest_api_not_oembed', $_SERVER['REQUEST_URI'], 'notice' );
+        $this->trigger( 'w4wp_rest_api_not_oembed', $_SERVER['REQUEST_URI'], 'notice' );
 
         $response_data = array(
             'code'    => 'rest_no_route',
@@ -499,7 +499,7 @@ final class Core_Events {
     public function redirect( $redirect_url, $requested_url ) {
 
         if ( false === $this->is_redirect ) {
-            $this->trigger( 'wpf2b_redirect', $requested_url, 'notice' );
+            $this->trigger( 'w4wp_redirect', $requested_url, 'notice' );
         }
 
         return $redirect_url;
@@ -508,7 +508,7 @@ final class Core_Events {
     public function banned_username( $valid, $username ) {
 
         if ( in_array( strtolower( $username ), $this->names2ban, true ) ) {
-            $this->trigger( 'wpf2b_register_banned_username', $username, 'notice' );
+            $this->trigger( 'w4wp_register_banned_username', $username, 'notice' );
             $valid = false;
         }
 
@@ -518,11 +518,11 @@ final class Core_Events {
     public function authentication_disabled( $user, $username ) {
 
         if ( in_array( strtolower( $username ), $this->names2ban, true ) ) {
-            $this->trigger_instant( 'wpf2b_login_disabled_banned_username', $username );
+            $this->trigger_instant( 'w4wp_login_disabled_banned_username', $username );
         }
 
         $user = new \WP_Error( 'invalidcombo', __( '<strong>NOTICE</strong>: Login is disabled for now.' ) );
-        $this->trigger( 'wpf2b_login_disabled', $username );
+        $this->trigger( 'w4wp_login_disabled', $username );
 
         return $user;
     }
@@ -536,7 +536,7 @@ final class Core_Events {
 
     public function login_failed( $username ) {
 
-        $this->trigger( 'wpf2b_auth_failed', $username );
+        $this->trigger( 'w4wp_auth_failed', $username );
     }
 
     /**
@@ -545,11 +545,11 @@ final class Core_Events {
     public function before_login( $user, $username ) {
 
         if ( in_array( strtolower( $username ), $this->names2ban, true ) ) {
-            $this->trigger_instant( 'wpf2b_banned_username', $username );
+            $this->trigger_instant( 'w4wp_banned_username', $username );
         }
 
         if ( defined( 'XMLRPC_REQUEST' ) && XMLRPC_REQUEST ) {
-            $this->trigger_instant( 'wpf2b_xmlrpc_login', $username );
+            $this->trigger_instant( 'w4wp_xmlrpc_login', $username );
         }
 
         return $user;
@@ -626,7 +626,7 @@ final class Core_Events {
             // Somehow logged in?
             && ! is_user_logged_in()
         ) {
-            $this->trigger_instant( 'wpf2b_robot_403', $request_path );
+            $this->trigger_instant( 'w4wp_robot_403', $request_path );
         }
     }
 
@@ -644,7 +644,7 @@ final class Core_Events {
         if ( ! ( is_scalar( $message ) || $this->is_whitelisted_error( $message ) )
             || (int) $message < 0
         ) {
-            $this->trigger( 'wpf2b_wpdie_ajax', $message );
+            $this->trigger( 'w4wp_wpdie_ajax', $message );
         }
 
         // Call previous handler
@@ -662,7 +662,7 @@ final class Core_Events {
     public function wp_die_xmlrpc_handler( $message, $title, $args ) {
 
         if ( ! empty( $message ) ) {
-            $this->trigger( 'wpf2b_wpdie_xmlrpc', $message );
+            $this->trigger( 'w4wp_wpdie_xmlrpc', $message );
         }
 
         // Call previous handler
@@ -681,7 +681,7 @@ final class Core_Events {
     public function wp_die_handler( $message, $title, $args ) {
 
         if ( ! empty( $message ) ) {
-            $this->trigger( 'wpf2b_wpdie', $message );
+            $this->trigger( 'w4wp_wpdie', $message );
         }
 
         // Call previous handler
@@ -738,24 +738,24 @@ final class Core_Events {
                 && ! array_key_exists( $tag, $wp_filter )
                 && ! in_array( $tag, $whitelisted_actions, true )
             ) {
-                $this->trigger_instant( 'wpf2b_admin_action_unknown', $tag );
+                $this->trigger_instant( 'w4wp_admin_action_unknown', $tag );
             }
         }
     }
 
     public function spam_hiddenfield( $text ) {
 
-        $this->trigger_instant( 'wpf2b_spam_hiddenfield', $text );
+        $this->trigger_instant( 'w4wp_spam_hiddenfield', $text );
     }
 
     public function spam_mx( $domain ) {
 
-        $this->trigger( 'wpf2b_spam_mx', $domain, 'warn' );
+        $this->trigger( 'w4wp_spam_mx', $domain, 'warn' );
     }
 
     public function nfrt_robot_trap( $message ) {
 
-        $this->trigger_instant( 'wpf2b_nfrt_robot_trap', $message );
+        $this->trigger_instant( 'w4wp_nfrt_robot_trap', $message );
     }
 
     /**
@@ -892,28 +892,28 @@ final class Core_Events {
             && $this->is_msnbot( $ua, $_SERVER['REMOTE_ADDR'] )
         ) {
             // Identified Bingbot
-            return 'wpf2b_msnbot_404';
+            return 'w4wp_msnbot_404';
         }
 
         if ( defined( 'W4WP_GOOGLEBOT' ) && W4WP_GOOGLEBOT
             && $this->is_googlebot( $ua, $_SERVER['REMOTE_ADDR'] )
         ) {
             // Identified Googlebot
-            return 'wpf2b_googlebot_404';
+            return 'w4wp_googlebot_404';
         }
 
         if ( defined( 'W4WP_YANDEXBOT' ) && W4WP_YANDEXBOT
             && $this->is_yandexbot( $ua, $_SERVER['REMOTE_ADDR'] )
         ) {
             // Identified Yandexbot
-            return 'wpf2b_googlebot_404';
+            return 'w4wp_googlebot_404';
         }
 
         if ( defined( 'W4WP_GOOGLEPROXY' ) && W4WP_GOOGLEPROXY
             && $this->is_google_proxy( $ua, $_SERVER['REMOTE_ADDR'] )
         ) {
             // Identified GoogleProxy
-            return 'wpf2b_googleproxy_404';
+            return 'w4wp_googleproxy_404';
         }
 
         // Unidentified
