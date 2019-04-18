@@ -6,7 +6,7 @@
  *
  * @wordpress-plugin
  * Plugin Name: WAF for WordPress (required from wp-config or started in auto_prepend_file)
- * Version:     3.0.1
+ * Version:     3.0.2
  * Description: Stop various HTTP attacks and trigger Fail2ban.
  * Plugin URI:  https://github.com/szepeviktor/wordpress-fail2ban
  * License:     The MIT License (MIT)
@@ -70,6 +70,7 @@ final class Http_Analyzer {
         'information',
         'internet',
         'login',
+        'manager',
         'marketing',
         'master',
         'number',
@@ -299,6 +300,7 @@ final class Http_Analyzer {
                     'headers' => $this->apache_request_headers(),
                     'request' => $request_data,
                     'files'   => $_FILES,
+                    'cookies' => $_COOKIE,
                 ),
                 JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE
             );

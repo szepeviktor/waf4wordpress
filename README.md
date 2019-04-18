@@ -1,14 +1,17 @@
 # WAF for WordPress
 
-Stop WordPress related attacks and trigger Fail2ban.
+Stop real-life attacks on your WordPress website and trigger Fail2ban.
 
-This WAF does not give proper HTTP responses to vulnerability probes
-but save you from future D/DoS attacks by blocking the attacker instantly.
+This WAF does not give proper HTTP responses to unusual requets.
+It blocks the attacking IP address instantly, the purpose of this are the following.
+
+1. Prevent website compromise in further request
+1. Prevent D/DoS attacks
 
 Shared hosting has no server-wide banning (because of trust issues)
 but you can still install this software without Fail2ban to stop attacks by using one of the Miniban methods.
 
-Your WordPress - really genral HTTP - security consists of:
+Your WordPress - really general HTTP - security consists of:
 
 1. Use HTTPS
 1. Have daily backup

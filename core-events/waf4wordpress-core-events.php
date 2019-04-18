@@ -6,7 +6,7 @@
  *
  * @wordpress-plugin
  * Plugin Name: WAF for WordPress (MU)
- * Version:     5.0.0
+ * Version:     5.0.1
  * Description: Stop WordPress related attacks and trigger Fail2ban.
  * Plugin URI:  https://github.com/szepeviktor/wordpress-fail2ban
  * License:     The MIT License (MIT)
@@ -76,6 +76,7 @@ final class Core_Events {
         'information',
         'internet',
         'login',
+        'manager',
         'marketing',
         'master',
         'number',
