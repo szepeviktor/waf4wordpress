@@ -52,14 +52,14 @@ function w4wp_option_scan() {
             $option->option_name,
             MAIL_EOL
         );
-        // phpcs:set WordPress.PHP.DevelopmentFunctions exclude error_log
+        // phpcs:set WordPress.PHP.DevelopmentFunctions exclude[] error_log
         error_log( 'Malicious code in wp_options: ' . $option->option_name );
         $option_names[] = $option->option_name;
     }
 
     $mail = wp_mail( $to, $subject, $body, $headers );
     if ( false === $mail ) {
-        // phpcs:set WordPress.PHP.DevelopmentFunctions exclude error_log
+        // phpcs:set WordPress.PHP.DevelopmentFunctions exclude[] error_log
         error_log(
             sprintf(
                 'E-mail sending error: Malicious code in `%s`: %s',
