@@ -1,4 +1,4 @@
-<?php
+<?php declare( strict_types=1 );
 /**
  * HTTP request analyzer part of WAF for WordPress.
  *
@@ -41,20 +41,20 @@ namespace Waf4WordPress;
  */
 final class Http_Analyzer {
 
-    private $prefix          = 'Malicious traffic detected: ';
-    private $prefix_instant  = 'Break-in attempt detected: ';
+    private $prefix = 'Malicious traffic detected: ';
+    private $prefix_instant = 'Break-in attempt detected: ';
     private $instant_trigger = true;
-    private $login_url       = '/wp-login.php';
-    private $admin_url       = '/wp-admin/';
+    private $login_url = '/wp-login.php';
+    private $admin_url = '/wp-admin/';
     // Default rest_url_prefix value
-    private $rest_url_prefix        = '/wp-json/';
+    private $rest_url_prefix = '/wp-json/';
     private $max_login_request_size = 4000;
-    private $is_login               = false;
-    private $is_xmlrpc              = false;
-    private $is_rest                = false;
-    private $is_options_method      = false;
-    private $is_delete_method       = false;
-    private $names2ban              = array(
+    private $is_login = false;
+    private $is_xmlrpc = false;
+    private $is_rest = false;
+    private $is_options_method = false;
+    private $is_delete_method = false;
+    private $names2ban = [
         'access',
         'admin',
         'administrator',
@@ -90,8 +90,8 @@ final class Http_Analyzer {
         'user2',
         'username',
         'webmaster',
-    );
-    private $blacklist              = array(
+    ];
+    private $blacklist = [
         '../', // Path traversal
         '/..', // Path traversal
         'wp-config', // WP configuration
@@ -128,19 +128,19 @@ final class Http_Analyzer {
         ' -- ', // SQL comment
         'and 1=', // SQL injection
         'bea_wls_deployment_internal', // Oracle WebLogic Server
-    );
-    private $botnet_pattern         = '#Firefox/1|bot|spider|crawl|user-agent|random|"|\\\\#i';
-    private $relative_request_uri   = '';
+    ];
+    private $botnet_pattern = '#Firefox/1|bot|spider|crawl|user-agent|random|"|\\\\#i';
+    private $relative_request_uri = '';
     private $cdn_headers;
-    private $allow_registration     = false;
-    private $allow_ie8_login        = false;
-    private $allow_old_proxies      = false;
+    private $allow_registration = false;
+    private $allow_ie8_login = false;
+    private $allow_old_proxies = false;
     private $allow_connection_empty = false;
     private $allow_connection_close = false;
-    private $allow_two_capitals     = false;
-    private $disallow_tor_login     = false;
-    private $result                 = false;
-    private $debug                  = false;
+    private $allow_two_capitals = false;
+    private $disallow_tor_login = false;
+    private $result = false;
+    private $debug = false;
 
     /**
      * Set up options, run check and trigger Fail2ban on malicous HTTP request.
@@ -162,9 +162,9 @@ final class Http_Analyzer {
             || empty( $_SERVER['REQUEST_METHOD'] )
             || empty( $_SERVER['REQUEST_URI'] )
         ) {
-            $this->prefix          = 'Server configuration error: ';
+            $this->prefix = 'Server configuration error: ';
             $this->instant_trigger = false;
-            $this->result          = 'bad_request_superglobal';
+            $this->result = 'bad_request_superglobal';
             $this->trigger();
             exit;
         }
@@ -260,13 +260,13 @@ final class Http_Analyzer {
 
         // Request methods
         $request_method = strtoupper( $_SERVER['REQUEST_METHOD'] );
-        $wp_methods     = array( 'HEAD', 'GET', 'POST' );
-        $login_methods  = array( 'GET', 'POST' );
-        $rest_methods   = array( 'GET', 'HEAD', 'POST', 'PUT', 'DELETE', 'OPTIONS' );
-        $write_methods  = array( 'POST', 'PUT', 'DELETE' );
+        $wp_methods = [ 'HEAD', 'GET', 'POST' ];
+        $login_methods = [ 'GET', 'POST' ];
+        $rest_methods = [ 'GET', 'HEAD', 'POST', 'PUT', 'DELETE', 'OPTIONS' ];
+        $write_methods = [ 'POST', 'PUT', 'DELETE' ];
 
         // Dissect request URI
-        $request_path  = (string) parse_url( $this->relative_request_uri, PHP_URL_PATH );
+        $request_path = (string) parse_url( $this->relative_request_uri, PHP_URL_PATH );
         $request_query = isset( $_SERVER['QUERY_STRING'] )
             ? $_SERVER['QUERY_STRING']
             : parse_url( $this->relative_request_uri, PHP_URL_QUERY );
@@ -295,13 +295,13 @@ final class Http_Analyzer {
                 time(),
                 $_SERVER['REMOTE_ADDR']
             );
-            $dump      = json_encode(
-                array(
+            $dump = json_encode(
+                [
                     'headers' => $this->apache_request_headers(),
                     'request' => $request_data,
-                    'files'   => $_FILES,
+                    'files' => $_FILES,
                     'cookies' => $_COOKIE,
-                ),
+                ],
                 JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE
             );
             // phpcs:ignore WordPress.VIP.FileSystemWritesDisallow
@@ -323,15 +323,15 @@ final class Http_Analyzer {
             if ( $common_headers === $this->cdn_headers ) {
                 // Log HTTP request headers
                 $cdn_combined_headers = array_merge(
-                    array(
+                    [
                         'REQUEST_URI' => $_SERVER['REQUEST_URI'],
-                    ),
+                    ],
                     $this->apache_request_headers()
                 );
-                $header_list          = $this->esc_log( $cdn_combined_headers );
+                $header_list = $this->esc_log( $cdn_combined_headers );
                 $this->enhanced_error_log( 'HTTP headers: ' . $header_list );
                 // Work-around to prevent edge server banning
-                $this->prefix          = 'Attack through CDN: ';
+                $this->prefix = 'Attack through CDN: ';
                 $this->instant_trigger = false;
                 return 'bad_request_cdn_attack';
             }
@@ -360,7 +360,7 @@ final class Http_Analyzer {
         // https://tools.ietf.org/html/rfc2616#section-9.2
         if ( ! $this->is_rest && 'OPTIONS' === $request_method ) {
             $this->is_options_method = true;
-            $this->instant_trigger   = false;
+            $this->instant_trigger = false;
             return 'bad_request_http_options_method';
         }
         if ( 'DELETE' === $request_method ) {
@@ -471,7 +471,7 @@ final class Http_Analyzer {
                 if ( ! isset( $files['name'] ) ) {
                     continue;
                 }
-                $types = array();
+                $types = [];
                 if ( is_array( $files['name'] ) ) {
                     // Convert to a leaf-only array
                     $names = $this->get_leafs( $files['name'] );
@@ -481,9 +481,9 @@ final class Http_Analyzer {
                 } else {
                     // Make it look like an HTML array
                     // 'name' and 'type' are enough
-                    $names = array( $files['name'] );
+                    $names = [ $files['name'] ];
                     if ( isset( $files['type'] ) ) {
-                        $types = array( $files['type'] );
+                        $types = [ $files['type'] ];
                     }
                 }
                 foreach ( $names as $key => $value ) {
@@ -684,9 +684,9 @@ final class Http_Analyzer {
 
         // Tor network exit node detection
         if ( $this->disallow_tor_login ) {
-            $exitlist_tpl      = '%s.80.%s.ip-port.exitlist.torproject.org';
-            $remote_rev        = implode( '.', array_reverse( explode( '.', $_SERVER['REMOTE_ADDR'] ) ) );
-            $server_rev        = implode( '.', array_reverse( explode( '.', $_SERVER['SERVER_ADDR'] ) ) );
+            $exitlist_tpl = '%s.80.%s.ip-port.exitlist.torproject.org';
+            $remote_rev = implode( '.', array_reverse( explode( '.', $_SERVER['REMOTE_ADDR'] ) ) );
+            $server_rev = implode( '.', array_reverse( explode( '.', $_SERVER['SERVER_ADDR'] ) ) );
             $exitlist_response = gethostbyname( sprintf( $exitlist_tpl, $remote_rev, $server_rev ) );
             if ( false !== strpos( $exitlist_response, '127.0.0' ) ) {
                     return 'bad_request_login_tor';
@@ -755,15 +755,15 @@ final class Http_Analyzer {
 
     private function fake_wplogin() {
 
-        $server_name         = isset( $_SERVER['SERVER_NAME'] )
+        $server_name = isset( $_SERVER['SERVER_NAME'] )
             ? $_SERVER['SERVER_NAME']
             : $_SERVER['HTTP_HOST'];
-        $username            = trim( $_POST['log'] );
-        $expire              = time() + 3600;
-        $token               = substr( hash_hmac( 'sha256', (string) rand(), 'token' ), 0, 43 );
-        $hash                = hash_hmac( 'sha256', (string) rand(), 'hash' );
-        $auth_cookie         = $username . '|' . $expire . '|' . $token . '|' . $hash;
-        $authcookie_name     = 'wordpress_' . md5( 'authcookie' );
+        $username = trim( $_POST['log'] );
+        $expire = time() + 3600;
+        $token = substr( hash_hmac( 'sha256', (string) rand(), 'token' ), 0, 43 );
+        $hash = hash_hmac( 'sha256', (string) rand(), 'hash' );
+        $auth_cookie = $username . '|' . $expire . '|' . $token . '|' . $hash;
+        $authcookie_name = 'wordpress_' . md5( 'authcookie' );
         $loggedincookie_name = 'wordpress_logged_in_' . md5( 'cookiehash' );
 
         header( 'Cache-Control: max-age=0, private, no-store, no-cache, must-revalidate' );
@@ -831,9 +831,9 @@ final class Http_Analyzer {
         */
 
         // Add entry point, correct when `auto_prepend_file` is empty
-        $included_files      = get_included_files();
+        $included_files = get_included_files();
         $first_included_file = reset( $included_files );
-        $error_msg           = sprintf(
+        $error_msg = sprintf(
             '%s <%s',
             $message,
             $this->esc_log( sprintf( '%s:%s', $_SERVER['REQUEST_METHOD'], $first_included_file ) )
@@ -877,7 +877,7 @@ final class Http_Analyzer {
             return (array) apache_request_headers();
         }
 
-        $headers = array();
+        $headers = [];
         foreach ( $_SERVER as $name => $value ) {
             if ( 'HTTP_' === substr( $name, 0, 5 ) ) {
                 $headers[ substr( $name, 5 ) ] = $value;
@@ -898,7 +898,7 @@ final class Http_Analyzer {
      */
     private function parse_query( $query_string ) {
 
-        $query              = array();
+        $query = [];
         $names_values_array = explode( '&', $query_string );
 
         foreach ( $names_values_array as $name_value ) {
@@ -933,7 +933,7 @@ final class Http_Analyzer {
         // Limit length
         $escaped = mb_substr( $escaped, 0, 500, 'utf-8' );
         // Change new lines and tabs to "|"
-        $escaped = str_replace( array( "\n", "\r", "\t" ), '|', $escaped );
+        $escaped = str_replace( [ "\n", "\r", "\t" ], '|', $escaped );
         // Replace non-printables with "?"
         $escaped = preg_replace( '/[^\P{C}]+/u', '?', $escaped );
 
@@ -968,21 +968,21 @@ final class Http_Analyzer {
      */
     private function get_leafs( $array ) {
 
-        $leafs = array();
+        $leafs = [];
 
         if ( ! is_array( $array ) ) {
             return $leafs;
         }
 
-        $array_iterator    = new \RecursiveArrayIterator( $array );
+        $array_iterator = new \RecursiveArrayIterator( $array );
         $iterator_iterator = new \RecursiveIteratorIterator( $array_iterator, \RecursiveIteratorIterator::LEAVES_ONLY );
         foreach ( $iterator_iterator as $key => $value ) {
-            $keys  = array();
+            $keys = [];
             $depth = $iterator_iterator->getDepth();
             for ( $i = 0; $i < $depth; $i++ ) {
                 $keys[] = $iterator_iterator->getSubIterator( $i )->key();
             }
-            $keys[]   = $key;
+            $keys[] = $key;
             $leaf_key = implode( ' ', $keys );
 
             $leafs[ $leaf_key ] = $value;
@@ -1038,9 +1038,9 @@ final class Http_Analyzer {
      */
     private function rebuild_query( $request_query ) {
 
-        $rebuilt_query = array();
-        $query_length  = strlen( $request_query );
-        $queries       = $this->parse_query( $request_query );
+        $rebuilt_query = [];
+        $query_length = strlen( $request_query );
+        $queries = $this->parse_query( $request_query );
 
         foreach ( $queries as $key => $value ) {
             $rebuilt_query[] = sprintf(

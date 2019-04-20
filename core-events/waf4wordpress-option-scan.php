@@ -1,4 +1,5 @@
-<?php
+<?php // phpcs:disable NeutronStandard.Globals.DisallowGlobalFunctions.GlobalFunctions
+declare( strict_types=1 );
 /**
  * Plugin Name: WAF for WordPress option table scan (MU)
  * Version:     0.1.6
@@ -8,7 +9,6 @@
  * Author:      Viktor Szépe
  * GitHub Plugin URI: https://github.com/szepeviktor/wordpress-fail2ban
  */
-
 
 /* This is an IDEA for a new feature */
 
@@ -22,35 +22,36 @@ function w4wp_option_scan_schedule() {
     }
 }
 
+// phpcs:ignore NeutronStandard.Functions.LongFunction.LongFunction
 function w4wp_option_scan() {
 
     global $wpdb;
 
-    define( 'MAIL_EOL', "\r\n" );
+    $mail_eol = "\r\n";
 
     $injection_exp = '<script|<iframe';
-    $options       = $wpdb->get_results(
+    $options = $wpdb->get_results(
         $wpdb->prepare(
             "SELECT option_name, option_value FROM {$wpdb->options} WHERE option_value REGEXP %s",
             $injection_exp
         )
     ); // WPCS: cache ok, db call ok.
 
-    $to           = get_option( 'admin_email' );
-    $subject      = '[admin] Malicious code found in WordPress options';
-    $headers      = array( 'Content-Type: text/plain; charset=UTF-8' );
-    $body         = sprintf(
+    $to = get_option( 'admin_email' );
+    $subject = '[admin] Malicious code found in WordPress options';
+    $headers = [ 'Content-Type: text/plain; charset=UTF-8' ];
+    $body = sprintf(
         '%s has malicious code in `%s` database table:%s',
         get_option( 'blogname' ),
         $wpdb->options,
-        MAIL_EOL
+        $mail_eol
     );
-    $option_names = array();
+    $option_names = [];
     foreach ( $options as $option ) {
         $body .= sprintf(
             'Option name: %s%s',
             $option->option_name,
-            MAIL_EOL
+            $mail_eol
         );
         // phpcs:set WordPress.PHP.DevelopmentFunctions exclude[] error_log
         error_log( 'Malicious code in wp_options: ' . $option->option_name );
