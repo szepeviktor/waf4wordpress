@@ -1,4 +1,4 @@
-<?php declare( strict_types=1 );
+<?php declare( strict_types = 1 );
 /**
  * HTTP request analyzer part of WAF for WordPress.
  *
@@ -36,8 +36,6 @@ namespace Waf4WordPress;
  *     define( 'W4WP_ALLOW_CONNECTION_EMPTY', true ); // HTTP2
  *     require_once __DIR__ . '/waf4wordpress-http-analyzer.php';
  *     new \Waf4WordPress\Http_Analyzer();
- *
- * @see     README.md
  */
 final class Http_Analyzer {
 
@@ -46,7 +44,11 @@ final class Http_Analyzer {
     private $instant_trigger = true;
     private $login_url = '/wp-login.php';
     private $admin_url = '/wp-admin/';
-    // Default rest_url_prefix value
+    /**
+     * Default rest_url_prefix.
+     *
+     * @var string
+     */
     private $rest_url_prefix = '/wp-json/';
     private $max_login_request_size = 4000;
     private $is_login = false;
@@ -147,9 +149,9 @@ final class Http_Analyzer {
      */
     public function __construct() {
 
-        // Don't run on CLI
-        // Don't run on install or upgrade
-        // WP_INSTALLING is available even before wp-config.php
+        // Don't run on CLI.
+        // Don't run on install or upgrade.
+        // WP_INSTALLING is available even before wp-config.php.
         if ( 'cli' === php_sapi_name()
             || ( defined( 'WP_INSTALLING' ) && WP_INSTALLING )
         ) {
@@ -169,7 +171,7 @@ final class Http_Analyzer {
             exit;
         }
 
-        // Don't run on local access
+        // Don't run on local access.
         if ( $_SERVER['REMOTE_ADDR'] === $_SERVER['SERVER_ADDR'] ) { // WPCS: input var okay.
             return;
         }
@@ -178,7 +180,7 @@ final class Http_Analyzer {
 
         $this->result = $this->check();
 
-        // "false" means there were no bad requests
+        // "false" means there were no bad requests.
         if ( false !== $this->result ) {
             $this->trigger();
             exit;
@@ -200,7 +202,7 @@ final class Http_Analyzer {
             $home_url_length = strlen( W4WP_PROXY_HOME_URL );
             if ( W4WP_PROXY_HOME_URL === substr( $_SERVER['REQUEST_URI'], 0, $home_url_length ) ) {
                 $this->relative_request_uri = substr( $_SERVER['REQUEST_URI'], $home_url_length );
-                /**
+                /*
                  * Fix request URI
                  *
                  * @see https://core.trac.wordpress.org/ticket/39586
@@ -258,30 +260,30 @@ final class Http_Analyzer {
      */
     private function check() {
 
-        // Request methods
+        // Request methods.
         $request_method = strtoupper( $_SERVER['REQUEST_METHOD'] );
         $wp_methods = [ 'HEAD', 'GET', 'POST' ];
         $login_methods = [ 'GET', 'POST' ];
         $rest_methods = [ 'GET', 'HEAD', 'POST', 'PUT', 'DELETE', 'OPTIONS' ];
         $write_methods = [ 'POST', 'PUT', 'DELETE' ];
 
-        // Dissect request URI
+        // Dissect request URI.
         $request_path = (string) parse_url( $this->relative_request_uri, PHP_URL_PATH );
         $request_query = isset( $_SERVER['QUERY_STRING'] )
             ? $_SERVER['QUERY_STRING']
             : parse_url( $this->relative_request_uri, PHP_URL_QUERY );
 
-        // Server name
+        // Server name.
         $server_name = isset( $_SERVER['SERVER_NAME'] )
             ? $_SERVER['SERVER_NAME']
             : $_SERVER['HTTP_HOST'];
 
-        // Log requests to a file
+        // Log requests to a file.
         if ( true === $this->debug
-            // Sample conditions
+            // Sample conditions.
             && 'POST' === $request_method
             && false !== strpos( $request_path, '/customer/account/createpost' )
-            && isset( $_SERVER['HTTP_CF_RAY'] ) // Cloudflare request
+            && isset( $_SERVER['HTTP_CF_RAY'] ) // Cloudflare request.
         ) {
             if ( empty( $_POST ) ) {
                 // phpcs:ignore WordPress.VIP.RestrictedFunctions
@@ -308,7 +310,7 @@ final class Http_Analyzer {
             file_put_contents( $dump_file, $dump, FILE_APPEND | LOCK_EX );
         }
 
-        // Request type
+        // Request type.
         if ( defined( 'XMLRPC_REQUEST' ) && XMLRPC_REQUEST ) {
             $this->is_xmlrpc = true;
         } elseif ( false !== strpos( $request_path, $this->login_url ) ) {
@@ -317,11 +319,11 @@ final class Http_Analyzer {
             $this->is_rest = true;
         }
 
-        // Block non-static requests from CDN but allow robots.txt
+        // Block non-static requests from CDN but allow robots.txt.
         if ( ! empty( $this->cdn_headers ) && '/robots.txt' !== $request_path ) {
             $common_headers = array_intersect( $this->cdn_headers, array_keys( $_SERVER ) );
             if ( $common_headers === $this->cdn_headers ) {
-                // Log HTTP request headers
+                // Log HTTP request headers.
                 $cdn_combined_headers = array_merge(
                     [
                         'REQUEST_URI' => $_SERVER['REQUEST_URI'],
@@ -330,14 +332,14 @@ final class Http_Analyzer {
                 );
                 $header_list = $this->esc_log( $cdn_combined_headers );
                 $this->enhanced_error_log( 'HTTP headers: ' . $header_list );
-                // Work-around to prevent edge server banning
+                // Work-around to prevent edge server banning.
                 $this->prefix = 'Attack through CDN: ';
                 $this->instant_trigger = false;
                 return 'bad_request_cdn_attack';
             }
         }
 
-        // Too big HTTP request URI
+        // Too big HTTP request URI.
         // Apache: LimitRequestLine directive defaults to 8190
         // By standard: HTTP/414 Request-URI Too Long
         // https://tools.ietf.org/html/rfc2616#section-10.4.15
@@ -346,14 +348,14 @@ final class Http_Analyzer {
             return 'bad_request_uri_length';
         }
 
-        // Too big user agent
+        // Too big user agent.
         if ( isset( $_SERVER['HTTP_USER_AGENT'] )
             && strlen( $this->fix_opera_ua( $_SERVER['HTTP_USER_AGENT'] ) ) > 472
         ) {
             return 'bad_request_user_agent_length';
         }
 
-        // HTTP request method
+        // HTTP request method.
         // Google Translate makes OPTIONS requests
         // Microsoft Office Protocol Discovery does it also
         // Windows Explorer (Microsoft-WebDAV-MiniRedir) also
@@ -378,19 +380,20 @@ final class Http_Analyzer {
             return 'bad_request_rest_http_method';
         }
 
-        // Request URI does not begin with forward slash (maybe with URL scheme)
+        // Request URI does not begin with forward slash (maybe with URL scheme).
         if ( '/' !== substr( $this->relative_request_uri, 0, 1 ) ) {
             return 'bad_request_uri_slash';
         }
 
-        // IE{8,9,10,11} may send UTF-8 encoded query string
+        // IE{8,9,10,11} may send UTF-8 encoded query string.
         if ( ! empty( $request_query )
             && ! empty( $_SERVER['HTTP_USER_AGENT'] )
             && $this->is_ie( $_SERVER['HTTP_USER_AGENT'] )
         ) {
             $this->rebuild_query( $request_query );
         }
-        // Request URI encoding
+
+        // Request URI encoding.
         // https://tools.ietf.org/html/rfc3986#section-2.2
         // reserved    = gen-delims / sub-delims
         // gen-delims  = ":" / "/" / "?" / "#" / "[" / "]" / "@"
@@ -409,28 +412,29 @@ final class Http_Analyzer {
             return 'bad_request_uri_encoding';
         }
 
-        // URL path and query string blacklist
+        // URL path and query string blacklist.
         if ( true === $this->strifounda( urldecode( $_SERVER['REQUEST_URI'] ), $this->blacklist ) ) {
             return 'bad_request_uri_blacklist';
         }
 
-        // Query string arrays with hash indices
+        // Query string arrays with hash indices.
         // @see https://core.trac.wordpress.org/ticket/17737
         if ( false !== strpos( urldecode( $request_query ), '[#' ) ) {
             return 'bad_request_uri_array_hash';
         }
 
-        // HTTP protocol name
+        // HTTP protocol name.
         if ( empty( $_SERVER['SERVER_PROTOCOL'] ) ) {
             return 'bad_request_protocol_empty';
         }
 
-        // Non-existent PHP file
+        // Non-existent PHP file.
         // http://httpd.apache.org/docs/current/custom-error.html#variables
         if ( isset( $_SERVER['REDIRECT_URL'] )
             && false !== stripos( $_SERVER['REDIRECT_URL'], '.php' )
-            /**
-             * For old mod_fastcgi setup
+            // phpcs:ignore Squiz.PHP.CommentedOutCode
+            /*
+             * For old mod_fastcgi setups.
              *
              * && $_SERVER['SCRIPT_NAME'] !== $_SERVER['REDIRECT_URL']
              */
@@ -438,15 +442,15 @@ final class Http_Analyzer {
             return 'bad_request_nonexistent_php';
         }
 
-        // robots.txt probing in a subdirectory and with query string
+        // robots.txt probing in a subdirectory and with query string.
         if ( false !== stripos( $this->relative_request_uri, 'robots.txt' )
             && '/robots.txt' !== $this->relative_request_uri
         ) {
             return 'bad_request_robots_probe';
         }
 
-        // WordPress author sniffing
-        // Except on post listing by author on wp-admin
+        // WordPress author sniffing.
+        // Except on post listing by author on wp-admin.
         if ( false === strpos( $request_path, $this->admin_url )
             && isset( $_REQUEST['author'] )
             && is_numeric( $_REQUEST['author'] )
@@ -454,18 +458,20 @@ final class Http_Analyzer {
             return 'bad_request_wp_author_sniffing';
         }
 
-        // Check write-type requests only
+        // Check write-type requests only.
         if ( false === in_array( $request_method, $write_methods, true ) ) {
-            // Not a write-type method
+            // Not a write-type method.
             return false;
         }
 
-        // --------------------------- %< ---------------------------
-        // @is_write_method
-        // wget POST: User-Agent, Accept, Host, Connection, Content-Type, Content-Length
-        // curl POST: User-Agent, Host, Accept, Content-Length, Content-Type
+        /*
+         * --------------------------- %< ---------------------------
+         * @is_write_method
+         * wget POST: User-Agent, Accept, Host, Connection, Content-Type, Content-Length
+         * curl POST: User-Agent, Host, Accept, Content-Length, Content-Type
+         */
 
-        // PHP file upload
+        // PHP file upload.
         if ( ! empty( $_FILES ) ) {
             foreach ( $_FILES as $files ) {
                 if ( ! isset( $files['name'] ) ) {
@@ -473,14 +479,14 @@ final class Http_Analyzer {
                 }
                 $types = [];
                 if ( is_array( $files['name'] ) ) {
-                    // Convert to a leaf-only array
+                    // Convert to a leaf-only array.
                     $names = $this->get_leafs( $files['name'] );
                     if ( isset( $files['type'] ) ) {
                         $types = $this->get_leafs( $files['type'] );
                     }
                 } else {
-                    // Make it look like an HTML array
-                    // 'name' and 'type' are enough
+                    // Make it look like an HTML array.
+                    // 'name' and 'type' are enough.
                     $names = [ $files['name'] ];
                     if ( isset( $files['type'] ) ) {
                         $types = [ $files['type'] ];
@@ -502,14 +508,14 @@ final class Http_Analyzer {
             }
         }
 
-        // User agent HTTP header
+        // User agent HTTP header.
         if ( empty( $_SERVER['HTTP_USER_AGENT'] ) ) {
             return 'bad_request_post_user_agent_empty';
         }
         $user_agent = $_SERVER['HTTP_USER_AGENT'];
 
-        // Accept HTTP header
-        // IE9, wget and curl sends only "*/*"
+        // Accept HTTP header.
+        // IE9, wget and curl sends only '*/*'
         // Otherwise the minimum should be: 'text/html'
         if ( empty( $_SERVER['HTTP_ACCEPT'] )
             || false === strpos( $_SERVER['HTTP_ACCEPT'], '/' )
@@ -517,17 +523,17 @@ final class Http_Analyzer {
             return 'bad_request_post_accept';
         }
 
-        // Content-Length HTTP header
+        // Content-Length HTTP header.
         if ( ! isset( $_SERVER['CONTENT_LENGTH'] )
             || ! is_numeric( $_SERVER['CONTENT_LENGTH'] )
         ) {
-            // DELETE request may not have a Content-Length header
+            // DELETE request may not have a Content-Length header.
             if ( ! $this->is_delete_method ) {
                 return 'bad_request_post_content_length';
             }
         }
 
-        // Content-Type HTTP header (for login, XML-RPC, REST and AJAX)
+        // Content-Type HTTP header for login, XML-RPC, REST and AJAX.
         if ( isset( $_SERVER['CONTENT_LENGTH'] )
             && '0' !== $_SERVER['CONTENT_LENGTH']
             && ( empty( $_SERVER['CONTENT_TYPE'] )
@@ -548,37 +554,39 @@ final class Http_Analyzer {
             return 'bad_request_post_content_type';
         }
 
-        // Check requests only for wp-login.php
+        // Check requests only for wp-login.php.
         if ( ! $this->is_login ) {
-            // Not login
+            // Not login.
             return false;
         }
 
-        // --------------------------- %< ---------------------------
-        // @is_login
+        /*
+         * --------------------------- %< ---------------------------
+         * @is_login
+         */
 
-        // Accept-Language HTTP header
+        // Accept-Language HTTP header.
         if ( empty( $_SERVER['HTTP_ACCEPT_LANGUAGE'] )
             || strlen( $_SERVER['HTTP_ACCEPT_LANGUAGE'] ) < 2
         ) {
             return 'bad_request_login_accept_language';
         }
 
-        // Referer HTTP header
+        // Referer HTTP header.
         if ( empty( $_SERVER['HTTP_REFERER'] ) ) {
             return 'bad_request_login_referer_empty';
         }
 
         $referer = $_SERVER['HTTP_REFERER'];
 
-        // Referer HTTP header
+        // Referer HTTP header.
         if ( ! $this->allow_registration ) {
             if ( parse_url( $referer, PHP_URL_HOST ) !== $server_name ) {
                 return 'bad_request_login_referer_host';
             }
         }
 
-        // Maximum HTTP request size for logins (request URI + headers + post parameters)
+        // Maximum HTTP request size for logins (request URI + headers + post parameters).
         $request_size = strlen( $_SERVER['REQUEST_URI'] )
             + strlen( http_build_query( $this->apache_request_headers() ) )
             + strlen( http_build_query( $_POST ) );
@@ -586,16 +594,16 @@ final class Http_Analyzer {
             return 'bad_request_login_request_size';
         }
 
-        // Login request with non-empty username
+        // Login request with non-empty username.
         if ( ! empty( $_POST['log'] ) ) {
             $username = trim( $_POST['log'] );
 
-            // Banned usernames
+            // Banned usernames.
             if ( in_array( strtolower( $username ), $this->names2ban, true ) ) {
                 return 'bad_request_login_username_banned';
             }
 
-            // Attackers try usernames with "TwoCapitals"
+            // Attackers try usernames with "TwoCapitals".
             if ( ! $this->allow_two_capitals ) {
                 if ( 1 === preg_match( '/^[A-Z][a-z]+[A-Z][a-z]+$/', $username ) ) {
                     return 'bad_request_login_username_twocapitals';
@@ -603,56 +611,58 @@ final class Http_Analyzer {
             }
         }
 
-        // Skip following checks on post password
+        // Skip following checks on post password.
         if ( ! empty( $request_query ) ) {
             $queries = $this->parse_query( $request_query );
 
             if ( isset( $queries['action'] ) && 'postpass' === $queries['action'] ) {
-                // wp-login/postpass
+                // wp-login/postpass.
                 return false;
             }
         }
 
-        // --------------------------- %< ---------------------------
-        // @is_registered_user
-        // Other than wp-login/postpass
+        /*
+         * --------------------------- %< ---------------------------
+         * @is_registered_user
+         * Other than wp-login/postpass.
+         */
 
-        // HTTP protocol version
+        // HTTP protocol version.
         if ( ! $this->allow_old_proxies ) {
             if ( false === strpos( $_SERVER['SERVER_PROTOCOL'], 'HTTP/1.1' )
-                // Also matches "HTTP/2.0"
+                // Also matches 'HTTP/2.0'.
                 && false === strpos( $_SERVER['SERVER_PROTOCOL'], 'HTTP/2' )
             ) {
                 return 'bad_request_login_http11_2';
             }
         }
 
-        // Accept-Encoding HTTP header
+        // Accept-Encoding HTTP header.
         if ( empty( $_SERVER['HTTP_ACCEPT_ENCODING'] )
             || false === strpos( $_SERVER['HTTP_ACCEPT_ENCODING'], 'gzip' )
         ) {
             return 'bad_request_login_accept_encoding';
         }
 
-        // IE8 login
+        // IE8 login.
         if ( $this->allow_ie8_login ) {
             if ( 'Mozilla/4.0 (compatible; MSIE 8.0;' === substr( $user_agent, 0, 34 ) ) {
-                // Allow IE8
+                // Allow IE8.
                 return false;
             }
         }
 
-        // Botnet user agents
+        // Botnet user agents.
         if ( 1 === preg_match( $this->botnet_pattern, $user_agent ) ) {
             return 'bad_request_login_user_agent_botnet';
         }
 
-        // Modern browser user agents
+        // Modern browser user agents.
         if ( 'Mozilla/5.0' !== substr( $user_agent, 0, 11 ) ) {
             return 'bad_request_login_user_agent_mozilla50';
         }
 
-        // WordPress test cookie
+        // WordPress test cookie.
         if ( ! $this->allow_registration ) {
             if ( empty( $_SERVER['HTTP_COOKIE'] )
                 || false === strpos( $_SERVER['HTTP_COOKIE'], 'wordpress_test_cookie' )
@@ -661,7 +671,7 @@ final class Http_Analyzer {
             }
         }
 
-        // Connection HTTP header (keep alive)
+        // Connection HTTP header (keep alive).
         if ( ! $this->allow_connection_empty ) {
             if ( empty( $_SERVER['HTTP_CONNECTION'] ) ) {
                 return 'bad_request_login_connection_empty';
@@ -674,7 +684,7 @@ final class Http_Analyzer {
             }
         }
 
-        // Referer HTTP header
+        // Referer HTTP header.
         if ( ! $this->allow_registration ) {
             $referer_path = (string) parse_url( $referer, PHP_URL_PATH );
             if ( false === strpos( $referer_path, $this->login_url ) ) {
@@ -682,7 +692,7 @@ final class Http_Analyzer {
             }
         }
 
-        // Tor network exit node detection
+        // Tor network exit node detection.
         if ( $this->disallow_tor_login ) {
             $exitlist_tpl = '%s.80.%s.ip-port.exitlist.torproject.org';
             $remote_rev = implode( '.', array_reverse( explode( '.', $_SERVER['REMOTE_ADDR'] ) ) );
@@ -693,7 +703,7 @@ final class Http_Analyzer {
             }
         }
 
-        // OK
+        // OK.
         return false;
     }
 
@@ -702,7 +712,7 @@ final class Http_Analyzer {
      */
     private function trigger() {
 
-        // Trigger Miniban
+        // Trigger Miniban.
         if ( class_exists( '\Miniban' ) && $this->instant_trigger ) {
             if ( true !== \Miniban::ban() ) {
                 // phpcs:set WordPress.PHP.DevelopmentFunctions exclude[] error_log
@@ -710,7 +720,7 @@ final class Http_Analyzer {
             }
         }
 
-        // Trigger Fail2ban
+        // Trigger Fail2ban.
         if ( $this->instant_trigger ) {
             $this->enhanced_error_log( $this->prefix_instant . $this->result, 'crit' );
         } else {
@@ -733,6 +743,9 @@ final class Http_Analyzer {
         }
     }
 
+    /**
+     * Send HTTP/403 with no-cache headers.
+     */
     private function ban() {
 
         header( 'Status: 403 Forbidden' );
@@ -744,6 +757,9 @@ final class Http_Analyzer {
         header( 'Content-Length: 0' );
     }
 
+    /**
+     * Send HTTP/405 with allowed methods.
+     */
     private function disable_options_method() {
 
         header( 'Status: 405 Method Not Allowed' );
@@ -753,6 +769,9 @@ final class Http_Analyzer {
         header( 'Content-Length: 0' );
     }
 
+    /**
+     * Send fake wp-login.php response.
+     */
     private function fake_wplogin() {
 
         $server_name = isset( $_SERVER['SERVER_NAME'] )
@@ -775,6 +794,9 @@ final class Http_Analyzer {
         header( 'Location: http://' . $server_name . '/brake/wp-admin/' );
     }
 
+    /**
+     * Send fake XML-RPC response.
+     */
     private function fake_xmlrpc() {
 
         $server_name = isset( $_SERVER['SERVER_NAME'] )
@@ -816,8 +838,8 @@ final class Http_Analyzer {
     /**
      * Send a string to error log optionally completed with client data.
      *
-     * @param string $message  The log message.
-     * @param string $level    Log level.
+     * @param string $message The log message.
+     * @param string $level   Log level.
      *
      * @see http://httpd.apache.org/docs/trunk/mod/core.html#loglevel
      */
@@ -825,12 +847,12 @@ final class Http_Analyzer {
 
         // phpcs:ignore Squiz.PHP.CommentedOutCode
         /*
-        // log_errors directive does not actually disable logging.
-        $log_enabled = ( '1' === ini_get( 'log_errors' ) );
-        if ( ! $log_enabled || empty( $log_destination ) ) {
+            log_errors directive does not actually disable logging.
+            $log_enabled = ( '1' === ini_get( 'log_errors' ) );
+            if ( ! $log_enabled || empty( $log_destination ) ) {
         */
 
-        // Add entry point, correct when `auto_prepend_file` is empty
+        // Add entry point, correct when `auto_prepend_file` is empty.
         $included_files = get_included_files();
         $first_included_file = reset( $included_files );
         $error_msg = sprintf(
@@ -839,11 +861,7 @@ final class Http_Analyzer {
             $this->esc_log( sprintf( '%s:%s', $_SERVER['REQUEST_METHOD'], $first_included_file ) )
         );
 
-        /**
-         * Add log level and client data to log message if SAPI does not add it.
-         *
-         * Client data: IP address, port, referer
-         */
+        // Add log level and client data to log message if SAPI does not add it.
         $log_destination = function_exists( 'ini_get' ) ? ini_get( 'error_log' ) : '';
         if ( ! empty( $log_destination ) ) {
             $referer = '';
@@ -851,6 +869,7 @@ final class Http_Analyzer {
                 $referer = sprintf( ', referer: %s', $this->esc_log( $_SERVER['HTTP_REFERER'] ) );
             }
 
+            // Client data: IP address, port, referer.
             $error_msg = sprintf(
                 '[%s] [client %s:%s] %s%s',
                 $level,
@@ -930,11 +949,11 @@ final class Http_Analyzer {
             return 'JSON n/a';
         }
 
-        // Limit length
+        // Limit length.
         $escaped = mb_substr( $escaped, 0, 500, 'utf-8' );
-        // Change new lines and tabs to "|"
+        // Change new lines and tabs to "|".
         $escaped = str_replace( [ "\n", "\r", "\t" ], '|', $escaped );
-        // Replace non-printables with "?"
+        // Replace non-printables with "?".
         $escaped = preg_replace( '/[^\P{C}]+/u', '?', $escaped );
 
         return sprintf( '(%s)', $escaped );
@@ -1050,7 +1069,7 @@ final class Http_Analyzer {
             );
         }
 
-        // Fix up REQUEST_URI
+        // Fix up REQUEST_URI.
         $_SERVER['REQUEST_URI'] = substr( $_SERVER['REQUEST_URI'], 0, -1 * $query_length )
             . implode( '&', $rebuilt_query );
     }
