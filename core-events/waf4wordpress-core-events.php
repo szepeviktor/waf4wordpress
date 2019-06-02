@@ -6,7 +6,7 @@
  *
  * @wordpress-plugin
  * Plugin Name: WAF for WordPress (MU)
- * Version:     5.0.1
+ * Version:     5.0.2
  * Description: Stop WordPress related attacks and trigger Fail2ban.
  * Plugin URI:  https://github.com/szepeviktor/wordpress-fail2ban
  * License:     The MIT License (MIT)
@@ -150,7 +150,7 @@ final class Core_Events {
             // wp-login, XMLRPC login (any authentication)
             add_action( 'wp_login_failed', [ $this, 'login_failed' ] );
             add_filter( 'authenticate', [ $this, 'before_login' ], 0, 2 );
-            add_action( 'wp_login', [ $this, 'after_login' ], 99999, 2 );
+            add_action( 'wp_login', [ $this, 'after_login' ], 0, 2 );
         }
 
         // Don't use shortlinks which are redirected to canonical URL-s
@@ -380,9 +380,9 @@ final class Core_Events {
         $is_crawler = $this->is_crawler( $ua );
 
         // Don't run 404 template for robots
-        if ( $this->is_robot( $ua ) && false === $is_crawler && ! is_user_logged_in() ) {
+        if ( $this->is_robot( $ua ) && false === $is_crawler ) {
 
-            $this->trigger( 'w4wp_robot_404', $_SERVER['REQUEST_URI'], 'info' );
+            $this->trigger( 'w4wp_404_robot', $_SERVER['REQUEST_URI'], 'info' );
 
             ob_get_level() && ob_end_clean();
             if ( ! headers_sent() ) {
@@ -399,7 +399,6 @@ final class Core_Events {
 
         // Humans and web crawling bots
         if ( is_string( $is_crawler ) ) {
-            // Crawler
             $this->trigger( $is_crawler, $_SERVER['REQUEST_URI'], 'info', 'Crawler 404: ' );
         } else {
             $this->trigger( 'w4wp_404', $_SERVER['REQUEST_URI'], 'info' );
@@ -767,7 +766,7 @@ final class Core_Events {
      *
      * Robots are everyone except modern browsers.
      *
-     * @see http://www.useragentstring.com/pages/Browserlist/
+     * @see http://www.useragentstring.com/pages/useragentstring.php?typ=Browser
      */
     private function is_robot( $ua ) {
 
