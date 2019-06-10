@@ -1,0 +1,24 @@
+#$ vendor/bin/phpstan analyse
+
+includes:
+    - phar://phpstan.phar/conf/bleedingEdge.neon
+    - vendor/szepeviktor/phpstan-wordpress/extension.neon
+parameters:
+    level: max
+    paths:
+        - %currentWorkingDirectory%/http-analyzer/waf4wordpress-http-analyzer.php
+        - %currentWorkingDirectory%/core-events/waf4wordpress-core-events.php
+        - %currentWorkingDirectory%/core-events/waf4wordpress-option-scan.php
+        - %currentWorkingDirectory%/braintree/Braintree.php
+    autoload_files:
+        - %currentWorkingDirectory%/tests/bootstrap.php
+        - %currentWorkingDirectory%/miniban/wp-miniban-htaccess.inc.php
+        - %currentWorkingDirectory%/http-analyzer/waf4wordpress-http-analyzer.php
+        - %currentWorkingDirectory%/core-events/waf4wordpress-core-events.php
+        - %currentWorkingDirectory%/core-events/waf4wordpress-option-scan.php
+        - %currentWorkingDirectory%/braintree/Braintree.php
+    ignoreErrors:
+        # Plugins
+        - '#^Call to static method report_critical_event\(\) on an unknown class SucuriScanEvent\.$#'
+        - '#^Call to static method get_instance\(\) on an unknown class SimpleHistory\.$#'
+        - '#^Function SimpleLogger not found\.$#'

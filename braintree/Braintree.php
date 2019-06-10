@@ -1,4 +1,4 @@
-<?php
+<?php // phpcs:ignore WordPress.Files.FileName.NotHyphenatedLowercase
 
 namespace Waf4WordPress;
 
@@ -11,13 +11,13 @@ class Braintree_Fix {
      *
      * @var array
      */
-    private $ranges = array(
+    private $ranges = [
         '63.146.102.0/26',
         '184.105.251.192/26',
         '204.109.13.0/24',
         '205.219.64.0/26',
         '209.117.187.192/26',
-    );
+    ];
 
     /**
      * Fix Braintree Webhook request.
