@@ -1,6 +1,8 @@
 <?xml version="1.0"?>
 <ruleset name="WAF for WordPress Coding Style">
-	<description>Stop WordPress related attacks and trigger Fail2ban.</description>
+	<description>Stop real-life attacks on your WordPress website and trigger Fail2ban.</description>
+
+	<!-- Start: vendor/bin/phpcs -->
 
 	<file>./http-analyzer/waf4wordpress-http-analyzer.php</file>
 	<file>./core-events/waf4wordpress-core-events.php</file>
@@ -46,7 +48,8 @@
 	<rule ref="WordPress-VIP"/>
 	-->
 
-	<!--
+	<rule ref="Squiz.Commenting.DocCommentAlignment"/>
+
 	<rule ref="NeutronStandard">
 		<exclude name="NeutronStandard.Functions.LongFunction.LongFunction"/>
 		<exclude name="Generic.Formatting.MultipleStatementAlignment"/>
@@ -54,5 +57,4 @@
 		<exclude name="NeutronStandard.Functions.TypeHint.NoArgumentType"/>
 		<exclude name="NeutronStandard.Functions.TypeHint.NoReturnType"/>
 	</rule>
-	-->
 </ruleset>

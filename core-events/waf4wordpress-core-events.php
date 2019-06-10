@@ -1,4 +1,4 @@
-<?php declare( strict_types=1 );
+<?php declare( strict_types = 1 );
 /**
  * Core events specific part of WAF for WordPress.
  *
@@ -6,7 +6,7 @@
  *
  * @wordpress-plugin
  * Plugin Name: WAF for WordPress (MU)
- * Version:     5.0.2
+ * Version:     5.0.3
  * Description: Stop WordPress related attacks and trigger Fail2ban.
  * Plugin URI:  https://github.com/szepeviktor/wordpress-fail2ban
  * License:     The MIT License (MIT)
@@ -20,6 +20,7 @@
  * Constants: W4WP_GOOGLEBOT
  * Constants: W4WP_YANDEXBOT
  * Constants: W4WP_GOOGLEPROXY
+ * Constants: W4WP_SEZNAMBOT
  */
 
 namespace Waf4WordPress;
@@ -767,6 +768,8 @@ final class Core_Events {
      * Robots are everyone except modern browsers.
      *
      * @see http://www.useragentstring.com/pages/useragentstring.php?typ=Browser
+     * @param string $ua
+     * @return bool
      */
     private function is_robot( $ua ) {
 
@@ -781,6 +784,9 @@ final class Core_Events {
      * Verify Bingbot.
      *
      * @see https://www.bing.com/webmaster/help/how-to-verify-bingbot-3905dc26
+     * @param string $ua
+     * @param string $ip
+     * @return bool
      */
     private function is_msnbot( $ua, $ip ) {
 
@@ -804,6 +810,9 @@ final class Core_Events {
      *
      * @see https://support.google.com/webmasters/answer/80553
      * @see https://support.google.com/webmasters/answer/1061943
+     * @param string $ua
+     * @param string $ip
+     * @return bool
      */
     private function is_googlebot( $ua, $ip ) {
 
@@ -828,6 +837,9 @@ final class Core_Events {
      * Verify YandexBot.
      *
      * @see https://yandex.com/support/webmaster/robot-workings/check-yandex-robots.html
+     * @param string $ua
+     * @param string $ip
+     * @return bool
      */
     private function is_yandexbot( $ua, $ip ) {
 
@@ -852,9 +864,12 @@ final class Core_Events {
     }
 
     /**
-     * Verify Google image proxy
+     * Verify Google image proxy.
      *
      * @see https://gmail.googleblog.com/2013/12/images-now-showing.html
+     * @param string $ua
+     * @param string $ip
+     * @return bool
      */
     private function is_google_proxy( $ua, $ip ) {
 
@@ -874,7 +889,32 @@ final class Core_Events {
     }
 
     /**
-     * Verify Facebook crawler (links sent by users)
+     * Verify SeznamBot.
+     *
+     * @see https://napoveda.seznam.cz/en/full-text-search/seznambot-crawler/
+     * @param string $ua
+     * @param string $ip
+     * @return bool
+     */
+    private function is_seznambot( $ua, $ip ) {
+
+        if ( false === strpos( $ua, 'SeznamBot' ) ) {
+            return false;
+        }
+
+        // No dot at end of host name!
+        $host = gethostbyaddr( $ip );
+        if ( false === $host || 1 !== preg_match( '/^seznam\.cz$/', $host ) ) {
+            return false;
+        }
+        $rev_ip = gethostbyname( $host );
+        $verified = ( $rev_ip === $ip );
+
+        return $verified;
+    }
+
+    /**
+     * TODO Verify Facebook crawler (links sent by users)
      *     "facebookexternalhit/1.1"
      *     grepcidr -x -f <(whois -h whois.radb.net -- '-i origin AS32934'|sed -ne 's/^route6\?:\s\+\(\S\+\)$/\1/p')
      *
@@ -885,41 +925,47 @@ final class Core_Events {
      * Whether the user agent is a web crawler.
      *
      * @param string $ua
-     *
      * @return string|bool
      */
     private function is_crawler( $ua ) {
 
-        // Humans and web crawling bots
+        // Humans and web crawling bots.
         if ( defined( 'W4WP_MSNBOT' ) && W4WP_MSNBOT
             && $this->is_msnbot( $ua, $_SERVER['REMOTE_ADDR'] )
         ) {
-            // Identified Bingbot
+            // Identified Bingbot.
             return 'w4wp_msnbot_404';
         }
 
         if ( defined( 'W4WP_GOOGLEBOT' ) && W4WP_GOOGLEBOT
             && $this->is_googlebot( $ua, $_SERVER['REMOTE_ADDR'] )
         ) {
-            // Identified Googlebot
+            // Identified Googlebot.
             return 'w4wp_googlebot_404';
         }
 
         if ( defined( 'W4WP_YANDEXBOT' ) && W4WP_YANDEXBOT
             && $this->is_yandexbot( $ua, $_SERVER['REMOTE_ADDR'] )
         ) {
-            // Identified Yandexbot
+            // Identified Yandexbot.
             return 'w4wp_googlebot_404';
         }
 
         if ( defined( 'W4WP_GOOGLEPROXY' ) && W4WP_GOOGLEPROXY
             && $this->is_google_proxy( $ua, $_SERVER['REMOTE_ADDR'] )
         ) {
-            // Identified GoogleProxy
+            // Identified GoogleProxy.
             return 'w4wp_googleproxy_404';
         }
 
-        // Unidentified
+        if ( defined( 'W4WP_SEZNAMBOT' ) && W4WP_SEZNAMBOT
+            && $this->is_seznambot( $ua, $_SERVER['REMOTE_ADDR'] )
+        ) {
+            // Identified SeznamBot.
+            return 'w4wp_seznambot_404';
+        }
+
+        // Unidentified.
         return false;
     }
 
