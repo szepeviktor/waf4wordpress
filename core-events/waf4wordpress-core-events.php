@@ -31,7 +31,9 @@ if ( ! function_exists( 'add_filter' ) ) {
         'Break-in attempt detected: w4wp_direct_access '
         . addslashes( isset( $_SERVER['REQUEST_URI'] ) ? $_SERVER['REQUEST_URI'] : '' )
     );
-    ob_get_level() && ob_end_clean();
+    if ( 0 !== ob_get_level() ) {
+        ob_end_clean();
+    }
     if ( ! headers_sent() ) {
         header( 'Status: 403 Forbidden' );
         header( 'HTTP/1.1 403 Forbidden', true, 403 );
@@ -111,7 +113,7 @@ final class Core_Events {
         }
 
         // Prevent usage as a normal plugin in wp-content/plugins
-        if ( did_action( 'muplugins_loaded' ) ) {
+        if ( 0 !== did_action( 'muplugins_loaded' ) ) {
             $this->exit_with_instructions();
         }
 
@@ -201,11 +203,13 @@ final class Core_Events {
         wp_logout();
 
         // Respond
-        ob_get_level() && ob_end_clean();
+        if ( 0 !== ob_get_level() ) {
+            ob_end_clean();
+        }
         if ( defined( 'XMLRPC_REQUEST' ) && XMLRPC_REQUEST ) {
             $this->fake_xmlrpc();
         } elseif ( ! headers_sent() ) {
-            if ( 'wp-login.php' === $GLOBALS['pagenow'] && ! empty( $_POST['log'] ) ) {
+            if ( 'wp-login.php' === $GLOBALS['pagenow'] && isset( $_POST['log'] ) ) {
                 $this->fake_wplogin();
             } else {
                 $this->ban();
@@ -217,7 +221,7 @@ final class Core_Events {
 
     private function trigger( $slug, $message, $level = 'error', $prefix = '' ) {
 
-        if ( empty( $prefix ) ) {
+        if ( '' === $prefix ) {
             $prefix = $this->prefix;
         }
 
@@ -326,7 +330,7 @@ final class Core_Events {
         /*
         // log_errors PHP directive does not actually disable logging
         $log_enabled = ( '1' === ini_get( 'log_errors' ) );
-        if ( ! $log_enabled || empty( $log_destination ) ) {
+        if ( ! $log_enabled || '' !== $log_destination ) {
         */
 
         // Add entry point, correct when auto_prepend_file is empty
@@ -344,7 +348,7 @@ final class Core_Events {
          * level, IP address, port, referer
          */
         $log_destination = function_exists( 'ini_get' ) ? ini_get( 'error_log' ) : '';
-        if ( ! empty( $log_destination ) ) {
+        if ( '' !== $log_destination ) {
             if ( array_key_exists( 'HTTP_REFERER', $_SERVER ) ) {
                 $referer = sprintf( ', referer: %s', $this->esc_log( $_SERVER['HTTP_REFERER'] ) );
             } else {
@@ -385,7 +389,9 @@ final class Core_Events {
 
             $this->trigger( 'w4wp_404_robot', $_SERVER['REQUEST_URI'], 'info' );
 
-            ob_get_level() && ob_end_clean();
+            if ( 0 !== ob_get_level() ) {
+                ob_end_clean();
+            }
             if ( ! headers_sent() ) {
                 header( 'Status: 404 Not Found' );
                 status_header( 404 );
@@ -445,8 +451,8 @@ final class Core_Events {
             }
             // Detect HTTP/404 and 403
             switch ( $status ) {
-                case '403':
-                case '404':
+                case 403:
+                case 404:
                     $message = sprintf( '%s <%s:%s', $data['code'], $method, $route );
                     $this->trigger( 'w4wp_rest_client_error', $message );
                     break;
@@ -583,9 +589,14 @@ final class Core_Events {
         $this->trigger( 'logged_out', $user, 'info', 'WordPress auth: ' );
     }
 
+    /**
+     * Catch lost password action.
+     *
+     * @param string $username
+     */
     public function lostpass( $username ) {
 
-        if ( empty( $username ) ) {
+        if ( '' === trim( $username ) ) {
             $this->trigger( 'lost_pass_empty', $username, 'warn' );
         }
 
@@ -631,6 +642,12 @@ final class Core_Events {
         }
     }
 
+    /**
+     * Set our callback in wp_die_ajax.
+     *
+     * @param callable $function
+     * @return callable
+     */
     public function wp_die_ajax( $function ) {
 
         // Remember the previous handler
@@ -639,11 +656,18 @@ final class Core_Events {
         return [ $this, 'wp_die_ajax_handler' ];
     }
 
+    /**
+     * Catch wp_die_ajax errors.
+     *
+     * @param string|\WP_Error $message
+     * @param string|int $title
+     * @param string|array|int $args
+     */
     public function wp_die_ajax_handler( $message, $title, $args ) {
 
         // wp-admin/includes/ajax-actions.php returns -1 on security breach
         if ( ! ( is_scalar( $message ) || $this->is_whitelisted_error( $message ) )
-            || (int) $message < 0
+            || ( is_int( $message ) && $message < 0 )
         ) {
             $this->trigger( 'w4wp_wpdie_ajax', $message );
         }
@@ -653,6 +677,12 @@ final class Core_Events {
         call_user_func( $this->wp_die_ajax_handler, $message, $title, $args );
     }
 
+    /**
+     * Set our callback in wp_die_xmlrpc.
+     *
+     * @param callable $function
+     * @return callable
+     */
     public function wp_die_xmlrpc( $function ) {
 
         // Remember the previous handler
@@ -661,6 +691,13 @@ final class Core_Events {
         return [ $this, 'wp_die_xmlrpc_handler' ];
     }
 
+    /**
+     * Catch wp_die_xmlrpc errors.
+     *
+     * @param string|\WP_Error $message
+     * @param string|int $title
+     * @param string|array|int $args
+     */
     public function wp_die_xmlrpc_handler( $message, $title, $args ) {
 
         if ( ! empty( $message ) ) {
@@ -672,8 +709,13 @@ final class Core_Events {
         call_user_func( $this->wp_die_xmlrpc_handler, $message, $title, $args );
     }
 
-    // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
-    public function wp_die( $function ) {
+    /**
+     * Set our callback in wp_die.
+     *
+     * @param callable $function
+     * @return callable
+     */
+    public function wp_die( $function ) { // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
 
         // Remember the previous handler
         $this->wp_die_handler = $function;
@@ -681,6 +723,13 @@ final class Core_Events {
         return [ $this, 'wp_die_handler' ];
     }
 
+    /**
+     * Catch wp_die errors.
+     *
+     * @param string|\WP_Error $message
+     * @param string|int $title
+     * @param string|array|int $args
+     */
     public function wp_die_handler( $message, $title, $args ) {
 
         if ( ! empty( $message ) ) {
@@ -715,7 +764,7 @@ final class Core_Events {
     public function hook_all_action() {
 
         // Don't slow down everything
-        if ( ! empty( $_REQUEST['action'] ) ) {
+        if ( isset( $_REQUEST['action'] ) ) {
             add_action( 'all', [ $this, 'unknown_action' ], 0 );
         }
     }

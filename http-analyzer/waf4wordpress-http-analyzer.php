@@ -133,7 +133,7 @@ final class Http_Analyzer {
     ];
     private $botnet_pattern = '#Firefox/1|bot|spider|crawl|user-agent|random|"|\\\\#i';
     private $relative_request_uri = '';
-    private $cdn_headers;
+    private $cdn_headers = [];
     private $allow_registration = false;
     private $allow_ie8_login = false;
     private $allow_old_proxies = false;
@@ -320,7 +320,7 @@ final class Http_Analyzer {
         }
 
         // Block non-static requests from CDN but allow robots.txt.
-        if ( ! empty( $this->cdn_headers ) && '/robots.txt' !== $request_path ) {
+        if ( [] !== $this->cdn_headers && '/robots.txt' !== $request_path ) {
             $common_headers = array_intersect( $this->cdn_headers, array_keys( $_SERVER ) );
             if ( $common_headers === $this->cdn_headers ) {
                 // Log HTTP request headers.
@@ -386,7 +386,7 @@ final class Http_Analyzer {
         }
 
         // IE{8,9,10,11} may send UTF-8 encoded query string.
-        if ( ! empty( $request_query )
+        if ( '' !== $request_query
             && ! empty( $_SERVER['HTTP_USER_AGENT'] )
             && $this->is_ie( $_SERVER['HTTP_USER_AGENT'] )
         ) {
@@ -472,6 +472,7 @@ final class Http_Analyzer {
          */
 
         // PHP file upload.
+        // @see https://www.php.net/manual/en/features.file-upload.post-method.php#118858
         if ( ! empty( $_FILES ) ) {
             foreach ( $_FILES as $files ) {
                 if ( ! isset( $files['name'] ) ) {
@@ -612,7 +613,7 @@ final class Http_Analyzer {
         }
 
         // Skip following checks on post password.
-        if ( ! empty( $request_query ) ) {
+        if ( '' !== $request_query ) {
             $queries = $this->parse_query( $request_query );
 
             if ( isset( $queries['action'] ) && 'postpass' === $queries['action'] ) {
@@ -727,7 +728,9 @@ final class Http_Analyzer {
             $this->enhanced_error_log( $this->prefix . $this->result );
         }
 
-        ob_get_level() && ob_end_clean();
+        if ( 0 !== ob_get_level() ) {
+            ob_end_clean();
+        }
         if ( $this->is_options_method ) {
             $this->disable_options_method();
 
@@ -735,7 +738,7 @@ final class Http_Analyzer {
             $this->fake_xmlrpc();
 
         } elseif ( ! headers_sent() ) {
-            if ( $this->is_login && ! empty( $_POST['log'] ) ) {
+            if ( $this->is_login && isset( $_POST['log'] ) ) {
                 $this->fake_wplogin();
             } else {
                 $this->ban();
@@ -849,7 +852,7 @@ final class Http_Analyzer {
         /*
             log_errors directive does not actually disable logging.
             $log_enabled = ( '1' === ini_get( 'log_errors' ) );
-            if ( ! $log_enabled || empty( $log_destination ) ) {
+            if ( ! $log_enabled || '' === $log_destination ) {
         */
 
         // Add entry point, correct when `auto_prepend_file` is empty.
@@ -863,7 +866,7 @@ final class Http_Analyzer {
 
         // Add log level and client data to log message if SAPI does not add it.
         $log_destination = function_exists( 'ini_get' ) ? ini_get( 'error_log' ) : '';
-        if ( ! empty( $log_destination ) ) {
+        if ( '' !== $log_destination ) {
             $referer = '';
             if ( isset( $_SERVER['HTTP_REFERER'] ) ) {
                 $referer = sprintf( ', referer: %s', $this->esc_log( $_SERVER['HTTP_REFERER'] ) );
@@ -924,7 +927,7 @@ final class Http_Analyzer {
             $name_value_array = explode( '=', $name_value );
 
             // Check field name
-            if ( empty( $name_value_array[0] ) ) {
+            if ( '' === $name_value_array[0] ) {
                 continue;
             }
 
@@ -988,10 +991,6 @@ final class Http_Analyzer {
     private function get_leafs( $array ) {
 
         $leafs = [];
-
-        if ( ! is_array( $array ) ) {
-            return $leafs;
-        }
 
         $array_iterator = new \RecursiveArrayIterator( $array );
         $iterator_iterator = new \RecursiveIteratorIterator( $array_iterator, \RecursiveIteratorIterator::LEAVES_ONLY );

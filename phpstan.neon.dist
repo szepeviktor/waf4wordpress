@@ -2,6 +2,7 @@
 
 includes:
     - phar://phpstan.phar/conf/bleedingEdge.neon
+    - vendor/phpstan/phpstan-strict-rules/rules.neon
     - vendor/szepeviktor/phpstan-wordpress/extension.neon
 parameters:
     level: max
@@ -22,3 +23,10 @@ parameters:
         - '#^Call to static method report_critical_event\(\) on an unknown class SucuriScanEvent\.$#'
         - '#^Call to static method get_instance\(\) on an unknown class SimpleHistory\.$#'
         - '#^Function SimpleLogger not found\.$#'
+        # Ease strict rules
+        - '# typehint specified\.$#'
+        # wp_die( -1 );
+        - '#^Call to function is_int\(\) with string\|WP_Error will always evaluate to false\.$#'
+        - '#^Result of && is always false\.$#'
+        # empty() can be useful
+        - '#^Construct empty\(\) is not allowed\. Use more strict comparison\.$#'
