@@ -279,7 +279,7 @@ final class Http_Analyzer {
             : $_SERVER['HTTP_HOST'];
 
         // Log requests to a file.
-        if ( true === $this->debug
+        if ( $this->debug
             // Sample conditions.
             && 'POST' === $request_method
             && false !== strpos( $request_path, '/customer/account/createpost' )

@@ -5,7 +5,7 @@ Stop real-life attacks on your WordPress website and trigger Fail2ban.
 This WAF does not give proper HTTP responses to unusual requets.
 It blocks the attacking IP address instantly, the purpose of this are the following.
 
-1. Prevent website compromise in further request
+1. Prevent website compromise in further requests
 1. Prevent D/DoS attacks
 
 Shared hosting has no server-wide banning (because of trust issues)
