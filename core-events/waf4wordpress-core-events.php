@@ -2,11 +2,11 @@
 /**
  * Core events specific part of WAF for WordPress.
  *
- * @package Waf2wordpress
+ * @package Waf4wordpress
  *
  * @wordpress-plugin
  * Plugin Name: WAF for WordPress (MU)
- * Version:     5.0.3
+ * Version:     5.0.4
  * Description: Stop WordPress related attacks and trigger Fail2ban.
  * Plugin URI:  https://github.com/szepeviktor/wordpress-fail2ban
  * License:     The MIT License (MIT)
@@ -100,6 +100,8 @@ final class Core_Events {
         'username',
         'webmaster',
     ];
+    private $min_username_length = 3;
+    private $min_password_length = 12;
 
     public function __construct() {
 
@@ -153,6 +155,7 @@ final class Core_Events {
             // wp-login, XMLRPC login (any authentication)
             add_action( 'wp_login_failed', [ $this, 'login_failed' ] );
             add_filter( 'authenticate', [ $this, 'before_login' ], 0, 2 );
+            add_filter( 'wp_authenticate_user', [ $this, 'authentication_strength' ], 99999, 2 );
             add_action( 'wp_login', [ $this, 'after_login' ], 0, 2 );
         }
 
@@ -512,9 +515,18 @@ final class Core_Events {
         return $redirect_url;
     }
 
+    /**
+     * Do not allow banned or short usernames.
+     *
+     * @param bool $valid
+     * @param string $username
+     * @return bool
+     */
     public function banned_username( $valid, $username ) {
 
-        if ( in_array( strtolower( $username ), $this->names2ban, true ) ) {
+        if ( in_array( strtolower( $username ), $this->names2ban, true )
+            || mb_strlen( $username ) < $this->min_username_length
+        ) {
             $this->trigger( 'w4wp_register_banned_username', $username, 'notice' );
             $valid = false;
         }
@@ -548,8 +560,17 @@ final class Core_Events {
 
     /**
      * Ban blacklisted usernames and authenticated XML-RPC.
+     *
+     * @param null|\WP_User|\WP_Error $user
+     * @param string $username
+     * @return null|\WP_User|\WP_Error
      */
     public function before_login( $user, $username ) {
+
+        // Only act on login.
+        if ( $user instanceof \WP_User ) {
+            return $user;
+        }
 
         if ( in_array( strtolower( $username ), $this->names2ban, true ) ) {
             $this->trigger_instant( 'w4wp_banned_username', $username );
@@ -557,6 +578,30 @@ final class Core_Events {
 
         if ( defined( 'XMLRPC_REQUEST' ) && XMLRPC_REQUEST ) {
             $this->trigger_instant( 'w4wp_xmlrpc_login', $username );
+        }
+
+        return $user;
+    }
+
+    /**
+     * Make login with short details fail.
+     *
+     * @param \WP_User|\WP_Error $user
+     * @param string $password
+     * @return \WP_User|\WP_Error
+     */
+    public function authentication_strength( $user, $password ) {
+
+        // Do not touch previous errors.
+        if ( ! $user instanceof \WP_User ) {
+            return $user;
+        }
+
+        if ( mb_strlen( $user->user_login ) < $this->min_username_length ) {
+            $user = new \WP_Error( 'invalid_username', __( '<strong>ERROR</strong>: Sorry, that username is not allowed.' ) );
+        }
+        if ( mb_strlen( $password ) < $this->min_password_length ) {
+            $user = new \WP_Error( 'incorrect_password', __( '<strong>ERROR</strong>: The password you entered is too short.' ) );
         }
 
         return $user;
@@ -997,7 +1042,7 @@ final class Core_Events {
             && $this->is_yandexbot( $ua, $_SERVER['REMOTE_ADDR'] )
         ) {
             // Identified Yandexbot.
-            return 'w4wp_googlebot_404';
+            return 'w4wp_yandexbot_404';
         }
 
         if ( defined( 'W4WP_GOOGLEPROXY' ) && W4WP_GOOGLEPROXY
@@ -1043,7 +1088,7 @@ final class Core_Events {
     }
 
     /**
-     * Translate Aapach log levels for Simple History plugin.
+     * Translate Apache log levels for Simple History plugin.
      *
      * @param string $apache_level
      *
