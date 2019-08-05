@@ -101,6 +101,9 @@ final class Core_Events {
         'webmaster',
     ];
     private $min_username_length = 3;
+    /**
+     * @see https://github.com/WordPress/WordPress/blob/5.2.2/wp-includes/pluggable.php#L2364
+     */
     private $min_password_length = 12;
 
     public function __construct() {
@@ -871,6 +874,8 @@ final class Core_Events {
             && ( 'Mozilla/4.0 (compatible; MSIE 8.0;' !== substr( $ua, 0, 34 ) )
             && ( 'Mozilla/4.0 (compatible; MSIE 7.0;' !== substr( $ua, 0, 34 ) )
             && ( 'Opera/9.80' !== substr( $ua, 0, 10 ) )
+            // phpcs:ignore Squiz.PHP.CommentedOutCode.Found
+            // && 1 !== preg_match( '#^\S+ Linux/\S+ Android/\S+ Release/\S+ Browser/AppleWebKit\S+ Chrome/\S+ Mobile Safari/\S+ System/Android \S+$#', $ua )
         );
     }
 

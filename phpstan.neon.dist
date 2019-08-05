@@ -25,7 +25,7 @@ parameters:
         - '#^Function SimpleLogger not found\.$#'
         # Ease strict rules
         - '# typehint specified\.$#'
-        # wp_die( -1 );
+        # wp_die( -1 ) in core
         - '#^Call to function is_int\(\) with string\|WP_Error will always evaluate to false\.$#'
         - '#^Result of && is always false\.$#'
         # empty() can be useful
