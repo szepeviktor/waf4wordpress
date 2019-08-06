@@ -104,7 +104,12 @@ final class Core_Events {
     /**
      * @see https://github.com/WordPress/WordPress/blob/5.2.2/wp-includes/pluggable.php#L2364
      */
-    private $min_password_length = 12;
+    private $secure_min_password_length = 12;
+
+    /**
+     * @see https://keepass.info/help/kb/pw_quality_est.html
+     */
+    private $min_password_length = 8;
 
     public function __construct() {
 
@@ -600,10 +605,13 @@ final class Core_Events {
             return $user;
         }
 
+        $min_password_length = user_can( $user, 'list_users' ) ? $this->secure_min_password_length : $this->min_password_length;
+
         if ( mb_strlen( $user->user_login ) < $this->min_username_length ) {
             $user = new \WP_Error( 'invalid_username', __( '<strong>ERROR</strong>: Sorry, that username is not allowed.' ) );
         }
-        if ( mb_strlen( $password ) < $this->min_password_length ) {
+
+        if ( mb_strlen( $password ) < $min_password_length ) {
             $user = new \WP_Error( 'incorrect_password', __( '<strong>ERROR</strong>: The password you entered is too short.' ) );
         }
 
