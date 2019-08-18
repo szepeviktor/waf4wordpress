@@ -124,12 +124,13 @@ final class Http_Analyzer {
         'id_dsa', // SSH key file
         'muieblackcat', // Vulnerability scanner
         'etc/local.xml', // Magento configuration
+        'bea_wls_deployment_internal', // Oracle WebLogic Server
+        'plus/download.php', // DeDeCMS
         'eval(', // Evaluate a string as PHP code
         '=die(', // "z!ax" PHP vulnerability probe
         'order by', // SQL injection
         ' -- ', // SQL comment
         'and 1=', // SQL injection
-        'bea_wls_deployment_internal', // Oracle WebLogic Server
     ];
     private $botnet_pattern = '#Firefox/1|bot|spider|crawl|user-agent|random|"|\\\\#i';
     private $relative_request_uri = '';
