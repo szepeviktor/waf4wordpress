@@ -133,7 +133,7 @@ Insert this code at the end of `__construct()`.
         }
 ```
 
-To learn attack internals insert the code in the MU plugin's README just before `ob_get_level()` in `trigger()`.
+To learn attack internals define `W4WP_POST_LOGGING` and edit conditions in `if ( $this->debug ...`.
 
 ### XMLRPC request and response
 

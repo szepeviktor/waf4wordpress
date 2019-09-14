@@ -1021,6 +1021,13 @@ final class Core_Events {
     }
 
     /**
+     * TODO Verify Baiduspider
+     *     *.baidu.com or *.baidu.jp
+     *
+     * @see https://help.baidu.com/question?prod_id=99&class=0&id=3001
+     */
+
+    /**
      * TODO Verify Facebook crawler (links sent by users)
      *     "facebookexternalhit/1.1"
      *     grepcidr -x -f <(whois -h whois.radb.net -- '-i origin AS32934'|sed -ne 's/^route6\?:\s\+\(\S\+\)$/\1/p')
