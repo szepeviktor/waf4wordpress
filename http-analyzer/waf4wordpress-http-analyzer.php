@@ -135,7 +135,7 @@ final class Http_Analyzer {
     private $botnet_pattern = '#Firefox/1|bot|spider|crawl|user-agent|random|"|\\\\#i';
     private $relative_request_uri = '';
     private $cdn_headers = [];
-    private $allow_registration = false;
+    private $allow_custom_registration = false;
     private $allow_ie8_login = false;
     private $allow_old_proxies = false;
     private $allow_connection_empty = false;
@@ -222,7 +222,7 @@ final class Http_Analyzer {
         }
 
         if ( defined( 'W4WP_ALLOW_REG' ) && W4WP_ALLOW_REG ) {
-            $this->allow_registration = true;
+            $this->allow_custom_registration = true;
         }
 
         if ( defined( 'W4WP_ALLOW_IE8' ) && W4WP_ALLOW_IE8 ) {
@@ -582,7 +582,7 @@ final class Http_Analyzer {
         $referer = $_SERVER['HTTP_REFERER'];
 
         // Referer HTTP header.
-        if ( ! $this->allow_registration ) {
+        if ( ! $this->allow_custom_registration ) {
             if ( parse_url( $referer, PHP_URL_HOST ) !== $server_name ) {
                 return 'bad_request_login_referer_host';
             }
@@ -665,7 +665,7 @@ final class Http_Analyzer {
         }
 
         // WordPress test cookie.
-        if ( ! $this->allow_registration ) {
+        if ( ! $this->allow_custom_registration ) {
             if ( empty( $_SERVER['HTTP_COOKIE'] )
                 || false === strpos( $_SERVER['HTTP_COOKIE'], 'wordpress_test_cookie' )
             ) {
@@ -687,7 +687,7 @@ final class Http_Analyzer {
         }
 
         // Referer HTTP header.
-        if ( ! $this->allow_registration ) {
+        if ( ! $this->allow_custom_registration ) {
             $referer_path = (string) parse_url( $referer, PHP_URL_PATH );
             if ( false === strpos( $referer_path, $this->login_url ) ) {
                 return 'bad_request_login_referer_path';

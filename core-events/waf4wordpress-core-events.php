@@ -63,6 +63,9 @@ final class Core_Events {
     private $wp_die_xmlrpc_handler;
     private $wp_die_handler;
     private $is_redirect = false;
+    /**
+     * Ban instead of displaying error message with `illegal_user_logins` filter.
+     */
     private $names2ban = [
         'access',
         'admin',
