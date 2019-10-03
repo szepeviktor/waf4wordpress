@@ -58,6 +58,7 @@ class Braintree_Fix {
                 return true;
             }
         }
+
         return false;
     }
 
