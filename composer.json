@@ -1,5 +1,5 @@
 {
-    "name": "szepeviktor/wordpress-fail2ban",
+    "name": "szepeviktor/waf4wordpress",
     "description": "WAF for WordPress",
     "type": "wordpress-muplugin",
     "license": "MIT",

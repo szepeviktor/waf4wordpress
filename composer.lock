@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "1b5cb8c6fec03eb657503d1ef2af7b41",
+    "content-hash": "8d77631f567c94080ea7aae6b7e76a19",
     "packages": [],
     "packages-dev": [
         {
@@ -157,16 +157,16 @@
         },
         {
             "name": "phpstan/phpstan-shim",
-            "version": "0.11.8",
+            "version": "0.11.16",
             "source": {
                 "type": "git",
                 "url": "https://github.com/phpstan/phpstan-shim.git",
-                "reference": "f71f7bc73849191e1d044e69f99046b58253054e"
+                "reference": "cf44220c5c015b5e974c22c93341bdcdc9ee3a1e"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/phpstan/phpstan-shim/zipball/f71f7bc73849191e1d044e69f99046b58253054e",
-                "reference": "f71f7bc73849191e1d044e69f99046b58253054e",
+                "url": "https://api.github.com/repos/phpstan/phpstan-shim/zipball/cf44220c5c015b5e974c22c93341bdcdc9ee3a1e",
+                "reference": "cf44220c5c015b5e974c22c93341bdcdc9ee3a1e",
                 "shasum": ""
             },
             "require": {
@@ -197,7 +197,7 @@
                 "MIT"
             ],
             "description": "PHPStan Phar distribution",
-            "time": "2019-05-28T20:19:02+00:00"
+            "time": "2019-09-17T11:49:39+00:00"
         },
         {
             "name": "phpstan/phpstan-strict-rules",
@@ -252,16 +252,16 @@
         },
         {
             "name": "squizlabs/php_codesniffer",
-            "version": "3.4.2",
+            "version": "3.5.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/squizlabs/PHP_CodeSniffer.git",
-                "reference": "b8a7362af1cc1aadb5bd36c3defc4dda2cf5f0a8"
+                "reference": "0afebf16a2e7f1e434920fa976253576151effe9"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/squizlabs/PHP_CodeSniffer/zipball/b8a7362af1cc1aadb5bd36c3defc4dda2cf5f0a8",
-                "reference": "b8a7362af1cc1aadb5bd36c3defc4dda2cf5f0a8",
+                "url": "https://api.github.com/repos/squizlabs/PHP_CodeSniffer/zipball/0afebf16a2e7f1e434920fa976253576151effe9",
+                "reference": "0afebf16a2e7f1e434920fa976253576151effe9",
                 "shasum": ""
             },
             "require": {
@@ -299,20 +299,20 @@
                 "phpcs",
                 "standards"
             ],
-            "time": "2019-04-10T23:49:02+00:00"
+            "time": "2019-09-26T23:12:26+00:00"
         },
         {
             "name": "szepeviktor/phpstan-wordpress",
-            "version": "0.1.2",
+            "version": "0.1.3",
             "source": {
                 "type": "git",
                 "url": "https://github.com/szepeviktor/phpstan-wordpress.git",
-                "reference": "4160f3a82bfd65a635bda0cd4e955172e0a26f80"
+                "reference": "9dbf2f8268b07d58c9fe9c643016f75996b6761f"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/szepeviktor/phpstan-wordpress/zipball/4160f3a82bfd65a635bda0cd4e955172e0a26f80",
-                "reference": "4160f3a82bfd65a635bda0cd4e955172e0a26f80",
+                "url": "https://api.github.com/repos/szepeviktor/phpstan-wordpress/zipball/9dbf2f8268b07d58c9fe9c643016f75996b6761f",
+                "reference": "9dbf2f8268b07d58c9fe9c643016f75996b6761f",
                 "shasum": ""
             },
             "require": {
@@ -338,7 +338,7 @@
                 "MIT"
             ],
             "description": "WordPress extensions for PHPStan",
-            "time": "2019-05-05T22:04:43+00:00"
+            "time": "2019-06-25T23:00:54+00:00"
         },
         {
             "name": "wp-coding-standards/wpcs",
