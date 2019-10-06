@@ -6,6 +6,7 @@ includes:
     - vendor/szepeviktor/phpstan-wordpress/extension.neon
 parameters:
     level: max
+    inferPrivatePropertyTypeFromConstructor: true
     paths:
         - %currentWorkingDirectory%/http-analyzer/waf4wordpress-http-analyzer.php
         - %currentWorkingDirectory%/core-events/waf4wordpress-core-events.php

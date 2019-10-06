@@ -154,6 +154,7 @@ final class Core_Events {
 
         // Login related
         add_action( 'login_init', [ $this, 'login' ] );
+        add_action( 'admin_bar_menu', [ $this, 'admin_bar' ], 99999 );
         add_action( 'wp_logout', [ $this, 'logout' ] );
         add_action( 'retrieve_password', [ $this, 'lostpass' ] );
         if ( defined( 'W4WP_DISABLE_LOGIN' ) && W4WP_DISABLE_LOGIN ) {
@@ -627,6 +628,28 @@ final class Core_Events {
     public function login() {
 
         status_header( 404 );
+    }
+
+    /**
+     * Add rel="nofollow" to login/register links.
+     *
+     * @param \WP_Admin_Bar $admin_bar
+     */
+    public function admin_bar( $admin_bar ) {
+
+        $admin_bar_nodes = $admin_bar->get_nodes();
+        if ( ! is_array( $admin_bar_nodes ) ) {
+            return;
+        }
+
+        foreach ( $admin_bar_nodes as $id => $node ) {
+            if ( false === strpos( $node->href, '/wp-login.php' ) ) {
+                continue;
+            }
+            $admin_bar->remove_menu( $id );
+            $node->meta['rel'] = 'nofollow';
+            $admin_bar->add_menu( $node );
+        }
     }
 
     public function after_login( $username, $user ) {
