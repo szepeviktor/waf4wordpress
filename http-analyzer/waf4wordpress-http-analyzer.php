@@ -11,19 +11,18 @@
  * Plugin URI:  https://github.com/szepeviktor/wordpress-fail2ban
  * License:     The MIT License (MIT)
  * Author:      Viktor Szépe
- * GitHub Plugin URI: https://github.com/szepeviktor/wordpress-fail2ban
- * Constants: W4WP_INSTANT
- * Constants: W4WP_PROXY_HOME_URL
- * Constants: W4WP_MAX_LOGIN_REQUEST_SIZE
- * Constants: W4WP_CDN_HEADERS
- * Constants: W4WP_ALLOW_REG
- * Constants: W4WP_ALLOW_IE8
- * Constants: W4WP_ALLOW_OLD_PROXIES
- * Constants: W4WP_ALLOW_CONNECTION_EMPTY
- * Constants: W4WP_ALLOW_CONNECTION_CLOSE
- * Constants: W4WP_ALLOW_TWO_CAPS
- * Constants: W4WP_DISALLOW_TOR_LOGIN
- * Constants: W4WP_POST_LOGGING
+ * Constants:   W4WP_INSTANT
+ * Constants:   W4WP_PROXY_HOME_URL
+ * Constants:   W4WP_MAX_LOGIN_REQUEST_SIZE
+ * Constants:   W4WP_CDN_HEADERS
+ * Constants:   W4WP_ALLOW_REG
+ * Constants:   W4WP_ALLOW_IE8
+ * Constants:   W4WP_ALLOW_OLD_PROXIES
+ * Constants:   W4WP_ALLOW_CONNECTION_EMPTY
+ * Constants:   W4WP_ALLOW_CONNECTION_CLOSE
+ * Constants:   W4WP_ALLOW_TWO_CAPS
+ * Constants:   W4WP_DISALLOW_TOR_LOGIN
+ * Constants:   W4WP_POST_LOGGING
  */
 
 namespace Waf4WordPress;
@@ -343,7 +342,7 @@ final class Http_Analyzer {
         // Too big HTTP request URI.
         // Apache: LimitRequestLine directive defaults to 8190
         // By standard: HTTP/414 Request-URI Too Long
-        // https://tools.ietf.org/html/rfc2616#section-10.4.15
+        // @see https://tools.ietf.org/html/rfc2616#section-10.4.15
         // 2500 bytes ~ deletion of 50 spam comments (GET form)
         if ( strlen( $_SERVER['REQUEST_URI'] ) > 2500 ) {
             return 'bad_request_uri_length';
@@ -360,7 +359,7 @@ final class Http_Analyzer {
         // Google Translate makes OPTIONS requests
         // Microsoft Office Protocol Discovery does it also
         // Windows Explorer (Microsoft-WebDAV-MiniRedir) also
-        // https://tools.ietf.org/html/rfc2616#section-9.2
+        // @see https://tools.ietf.org/html/rfc2616#section-9.2
         if ( ! $this->is_rest && 'OPTIONS' === $request_method ) {
             $this->is_options_method = true;
             $this->instant_trigger = false;
@@ -395,7 +394,7 @@ final class Http_Analyzer {
         }
 
         // Request URI encoding.
-        // https://tools.ietf.org/html/rfc3986#section-2.2
+        // @see https://tools.ietf.org/html/rfc3986#section-2.2
         // reserved    = gen-delims / sub-delims
         // gen-delims  = ":" / "/" / "?" / "#" / "[" / "]" / "@"
         // sub-delims  = "!" / "$" / "&" / "'" / "(" / ")"
@@ -430,7 +429,7 @@ final class Http_Analyzer {
         }
 
         // Non-existent PHP file.
-        // http://httpd.apache.org/docs/current/custom-error.html#variables
+        // @see http://httpd.apache.org/docs/current/custom-error.html#variables
         if ( isset( $_SERVER['REDIRECT_URL'] )
             && false !== stripos( $_SERVER['REDIRECT_URL'], '.php' )
             // phpcs:ignore Squiz.PHP.CommentedOutCode
@@ -1044,7 +1043,7 @@ final class Http_Analyzer {
 
         // phpcs:ignore Squiz.PHP.CommentedOutCode
         // "A unique identifier for the widget."
-        // http://operasoftware.github.io/scope-interface/WidgetManager.html
+        // @see http://operasoftware.github.io/scope-interface/WidgetManager.html
         $ua_reduced = (string) preg_replace( '#(WUID=[0-9a-f]{32}; WTB=[0-9]+; )\1+#', '', $ua );
 
         return $ua_reduced;

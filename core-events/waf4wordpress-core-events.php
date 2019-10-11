@@ -11,16 +11,15 @@
  * Plugin URI:  https://github.com/szepeviktor/wordpress-fail2ban
  * License:     The MIT License (MIT)
  * Author:      Viktor Szépe
- * GitHub Plugin URI: https://github.com/szepeviktor/wordpress-fail2ban
- * Constants: W4WP_DISABLE_LOGIN
- * Constants: W4WP_ALLOW_REDIRECT
- * Constants: W4WP_DISABLE_REST_API
- * Constants: W4WP_ONLY_OEMBED
- * Constants: W4WP_MSNBOT
- * Constants: W4WP_GOOGLEBOT
- * Constants: W4WP_YANDEXBOT
- * Constants: W4WP_GOOGLEPROXY
- * Constants: W4WP_SEZNAMBOT
+ * Constants:   W4WP_DISABLE_LOGIN
+ * Constants:   W4WP_ALLOW_REDIRECT
+ * Constants:   W4WP_DISABLE_REST_API
+ * Constants:   W4WP_ONLY_OEMBED
+ * Constants:   W4WP_MSNBOT
+ * Constants:   W4WP_GOOGLEBOT
+ * Constants:   W4WP_YANDEXBOT
+ * Constants:   W4WP_GOOGLEPROXY
+ * Constants:   W4WP_SEZNAMBOT
  */
 
 namespace Waf4WordPress;
