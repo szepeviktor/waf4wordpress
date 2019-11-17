@@ -25,7 +25,7 @@ class Handler extends ExceptionHandler
      */
     protected $security = [
         \Illuminate\Session\TokenMismatchException::class,
-        \Illuminate\Auth\Access\AuthorizationException::class,
+        \Illuminate\Auth\AuthenticationException::class,
         \Illuminate\Database\Eloquent\ModelNotFoundException::class,
         \Symfony\Component\HttpKernel\Exception\HttpException::class,
         \Symfony\Component\HttpKernel\Exception\NotFoundHttpException::class,

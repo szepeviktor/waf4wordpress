@@ -442,7 +442,7 @@ final class Http_Analyzer {
             return 'bad_request_nonexistent_php';
         }
 
-        // robots.txt probing in a subdirectory and with query string.
+        // robots.txt probing in a subdirectory or with query string.
         if ( false !== stripos( $this->relative_request_uri, 'robots.txt' )
             && '/robots.txt' !== $this->relative_request_uri
         ) {
@@ -817,15 +817,13 @@ final class Http_Analyzer {
   <params>
     <param>
       <value>
-      <array><data>
-  <value><struct>
-  <member><name>isAdmin</name><value><boolean>1</boolean></value></member>
-  <member><name>url</name><value><string>http://%s/</string></value></member>
-  <member><name>blogid</name><value><string>1</string></value></member>
-  <member><name>blogName</name><value><string>brake</string></value></member>
-  <member><name>xmlrpc</name><value><string>http://%s/brake/xmlrpc.php</string></value></member>
-</struct></value>
-</data></array>
+        <array><data><value><struct>
+          <member><name>isAdmin</name><value><boolean>1</boolean></value></member>
+          <member><name>url</name><value><string>http://%s/</string></value></member>
+          <member><name>blogid</name><value><string>1</string></value></member>
+          <member><name>blogName</name><value><string>brake</string></value></member>
+          <member><name>xmlrpc</name><value><string>http://%s/brake/xmlrpc.php</string></value></member>
+        </struct></value></data></array>
       </value>
     </param>
   </params>

@@ -319,15 +319,13 @@ final class Core_Events {
   <params>
     <param>
       <value>
-      <array><data>
-  <value><struct>
-  <member><name>isAdmin</name><value><boolean>1</boolean></value></member>
-  <member><name>url</name><value><string>%s</string></value></member>
-  <member><name>blogid</name><value><string>1</string></value></member>
-  <member><name>blogName</name><value><string>brake</string></value></member>
-  <member><name>xmlrpc</name><value><string>%s</string></value></member>
-</struct></value>
-</data></array>
+        <array><data><value><struct>
+          <member><name>isAdmin</name><value><boolean>1</boolean></value></member>
+          <member><name>url</name><value><string>%s</string></value></member>
+          <member><name>blogid</name><value><string>1</string></value></member>
+          <member><name>blogName</name><value><string>brake</string></value></member>
+          <member><name>xmlrpc</name><value><string>%s</string></value></member>
+        </struct></value></data></array>
       </value>
     </param>
   </params>
@@ -1053,7 +1051,7 @@ final class Core_Events {
      */
 
     /**
-     * TODO Verify Facebook crawler (links sent by users)
+     * TODO Verify Facebook crawler (checking links sent by users)
      *     "facebookexternalhit/1.1"
      *     grepcidr -x -f <(whois -h whois.radb.net -- '-i origin AS32934'|sed -ne 's/^route6\?:\s\+\(\S\+\)$/\1/p')
      *
