@@ -1,5 +1,3 @@
-#$ vendor/bin/phpstan analyse
-
 includes:
     - phar://phpstan.phar/conf/bleedingEdge.neon
     - vendor/phpstan/phpstan-strict-rules/rules.neon
@@ -10,14 +8,12 @@ parameters:
     paths:
         - %currentWorkingDirectory%/http-analyzer/waf4wordpress-http-analyzer.php
         - %currentWorkingDirectory%/core-events/waf4wordpress-core-events.php
-        - %currentWorkingDirectory%/core-events/waf4wordpress-option-scan.php
         - %currentWorkingDirectory%/braintree/Braintree.php
     autoload_files:
         - %currentWorkingDirectory%/tests/bootstrap.php
         - %currentWorkingDirectory%/miniban/wp-miniban-htaccess.inc.php
         - %currentWorkingDirectory%/http-analyzer/waf4wordpress-http-analyzer.php
         - %currentWorkingDirectory%/core-events/waf4wordpress-core-events.php
-        - %currentWorkingDirectory%/core-events/waf4wordpress-option-scan.php
         - %currentWorkingDirectory%/braintree/Braintree.php
     ignoreErrors:
         # Plugins

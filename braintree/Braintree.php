@@ -9,7 +9,7 @@ class Braintree_Fix {
      *
      * @see https://developers.braintreepayments.com/reference/general/braintree-ip-addresses
      *
-     * @var array
+     * @var array<int, string>
      */
     private $ranges = [
         '63.146.102.0/26',
@@ -47,8 +47,8 @@ class Braintree_Fix {
     /**
      * Match a standalone IP to CIDRs.
      *
-     * @param string  $ip
-     * @param array   $ranges
+     * @param string $ip
+     * @param array<int, string> $ranges
      * @return bool
      */
     private function ip_in_ranges( $ip, $ranges ) {

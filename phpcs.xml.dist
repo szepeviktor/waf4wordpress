@@ -2,11 +2,8 @@
 <ruleset name="WAF for WordPress Coding Style">
 	<description>Stop real-life attacks on your WordPress website and trigger Fail2ban.</description>
 
-	<!-- Start: vendor/bin/phpcs -->
-
 	<file>./http-analyzer/waf4wordpress-http-analyzer.php</file>
 	<file>./core-events/waf4wordpress-core-events.php</file>
-	<file>./core-events/waf4wordpress-option-scan.php</file>
 	<file>./braintree/Braintree.php</file>
 
 	<exclude-pattern>./vendor/*</exclude-pattern>

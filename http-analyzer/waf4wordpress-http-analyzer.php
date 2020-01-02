@@ -343,7 +343,7 @@ final class Http_Analyzer {
         // Apache: LimitRequestLine directive defaults to 8190
         // By standard: HTTP/414 Request-URI Too Long
         // @see https://tools.ietf.org/html/rfc2616#section-10.4.15
-        // 2500 bytes ~ deletion of 50 spam comments (GET form)
+        // 2500 bytes ~ deletion of 50 spam comments (form with GET action)
         if ( strlen( $_SERVER['REQUEST_URI'] ) > 2500 ) {
             return 'bad_request_uri_length';
         }
@@ -380,7 +380,7 @@ final class Http_Analyzer {
             return 'bad_request_rest_http_method';
         }
 
-        // Request URI does not begin with forward slash (maybe with URL scheme).
+        // Request URI does not begin with forward slash (but for example with URL scheme).
         if ( '/' !== substr( $this->relative_request_uri, 0, 1 ) ) {
             return 'bad_request_uri_slash';
         }
@@ -538,13 +538,16 @@ final class Http_Analyzer {
         if ( isset( $_SERVER['CONTENT_LENGTH'] )
             && '0' !== $_SERVER['CONTENT_LENGTH']
             && ( empty( $_SERVER['CONTENT_TYPE'] )
-                || ( $this->is_login
+                || (
+                    $this->is_login
                     && 0 !== stripos( $_SERVER['CONTENT_TYPE'], 'application/x-www-form-urlencoded' )
                 )
-                || ( $this->is_xmlrpc
+                || (
+                    $this->is_xmlrpc
                     && 0 !== stripos( $_SERVER['CONTENT_TYPE'], 'text/xml' )
                 )
-                || ( 0 !== stripos( $_SERVER['CONTENT_TYPE'], 'application/x-www-form-urlencoded' )
+                || (
+                    0 !== stripos( $_SERVER['CONTENT_TYPE'], 'application/x-www-form-urlencoded' )
                     && 0 !== stripos( $_SERVER['CONTENT_TYPE'], 'multipart/form-data' )
                     && 0 !== stripos( $_SERVER['CONTENT_TYPE'], 'text/xml' )
                     && 0 !== stripos( $_SERVER['CONTENT_TYPE'], 'application/json' )
@@ -888,7 +891,7 @@ final class Http_Analyzer {
     /**
      * Fetch all HTTP request headers.
      *
-     * @return array HTTP request headers
+     * @return array<string, mixed> HTTP request headers
      */
     private function apache_request_headers() {
 
@@ -914,7 +917,7 @@ final class Http_Analyzer {
      *
      * @param string $query_string Raw query string.
      *
-     * @return array               Array of individual queries.
+     * @return array<string, string> Array of individual queries.
      */
     private function parse_query( $query_string ) {
 
@@ -941,7 +944,7 @@ final class Http_Analyzer {
      *
      * @param mixed $log_data Log data to escape.
      *
-     * @return string         Escaped string in parentheses.
+     * @return string Escaped string in parentheses.
      */
     private function esc_log( $log_data ) {
 
@@ -964,9 +967,9 @@ final class Http_Analyzer {
      * Whether an array contains a case-insensitive substring.
      *
      * @param string $haystack The haystack.
-     * @param array  $needles  The needles.
+     * @param array<string> $needles The needles.
      *
-     * @return boolean         A needle is found.
+     * @return boolean A needle is found.
      */
     private function strifounda( $haystack, $needles ) {
 
@@ -982,9 +985,9 @@ final class Http_Analyzer {
     /**
      * Convert a PHP multi-dimensional array to a leaf-only array with full-depth array keys.
      *
-     * @param array $array The multi-dimensional array.
+     * @param array<array> $array The multi-dimensional array.
      *
-     * @return array       An array containing the leafs only.
+     * @return array<mixed> An array containing the leafs only.
      */
     private function get_leafs( $array ) {
 

@@ -427,8 +427,8 @@ final class Core_Events {
     /**
      * Filter oEmbed requests.
      *
-     * @param array $data
-     * @return array $data
+     * @param array<string, mixed> $data
+     * @return array<string, mixed> $data
      */
     public function oembed_filter( $data ) {
 
@@ -499,7 +499,7 @@ final class Core_Events {
 
     public function rest_api_only_oembed( $null, $that, $request ) {
 
-        // Spec: https://oembed.com/#section2.2
+        // @see https://oembed.com/#section2.2
         if ( '/oembed/1.0/embed' === $request->get_route() ) {
             return $null;
         }
@@ -738,9 +738,9 @@ final class Core_Events {
     /**
      * Catch wp_die_ajax errors.
      *
-     * @param string|\WP_Error $message
+     * @param string|int|\WP_Error $message
      * @param string|int $title
-     * @param string|array|int $args
+     * @param string|int|array<mixed> $args
      */
     public function wp_die_ajax_handler( $message, $title, $args ) {
 
@@ -775,7 +775,7 @@ final class Core_Events {
      *
      * @param string|\WP_Error $message
      * @param string|int $title
-     * @param string|array|int $args
+     * @param string|int|array<mixed> $args
      */
     public function wp_die_xmlrpc_handler( $message, $title, $args ) {
 
@@ -807,7 +807,7 @@ final class Core_Events {
      *
      * @param string|\WP_Error $message
      * @param string|int $title
-     * @param string|array|int $args
+     * @param string|int|array<mixed> $args
      */
     public function wp_die_handler( $message, $title, $args ) {
 
