@@ -1,6 +1,7 @@
 # WAF for WordPress
 
-Stop real-life attacks on your WordPress website and trigger Fail2ban.
+Stop real-life attacks on your WordPress website and
+trigger [Fail2ban](https://github.com/fail2ban/fail2ban).
 
 This WAF does not give proper HTTP responses to unusual requets.
 It blocks the attacking IP address instantly, the purpose of this are the following.
@@ -17,11 +18,13 @@ Your WordPress - really general HTTP - security consists of:
 1. Have daily backup
 1. Block known hostile networks
 1. Have Fail2ban installed (controls the firewall)
-1. Maintain your website and use strict Fail2ban filters
+1. Maintain your website and use
+   [strict Fail2ban filters](https://github.com/szepeviktor/debian-server-tools/tree/master/security/fail2ban-conf)
    which ban on the first suspicious request instantly
 1. Deny direct access to core WordPress files, themes and plugins
 1. Install WAF for WordPress (this project)
-1. Use Leanmail (filters Fail2ban notification emails)
+1. Use [Leanmail](https://github.com/szepeviktor/debian-server-tools/tree/master/security/fail2ban-leanmail)
+   for filtering Fail2ban notification emails
 
 See the [Block WordPress attack vectors](https://github.com/szepeviktor/debian-server-tools/blob/master/webserver/WordPress-security.md)
 note in my other repository for an overview of the topic.
