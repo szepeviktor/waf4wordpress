@@ -130,6 +130,7 @@ final class Http_Analyzer {
         'order by', // SQL injection
         ' -- ', // SQL comment
         'and 1=', // SQL injection
+        'wallet.dat', // Bitcoin private key
     ];
     private $botnet_pattern = '#Firefox/1|bot|spider|crawl|user-agent|random|"|\\\\#i';
     private $relative_request_uri = '';
