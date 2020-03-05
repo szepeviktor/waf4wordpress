@@ -6,7 +6,7 @@
  *
  * @wordpress-plugin
  * Plugin Name: WAF for WordPress (MU)
- * Version:     5.0.4
+ * Version:     5.0.5
  * Description: Stop WordPress related attacks and trigger Fail2ban.
  * Plugin URI:  https://github.com/szepeviktor/wordpress-fail2ban
  * License:     The MIT License (MIT)
@@ -20,6 +20,7 @@
  * Constants:   W4WP_YANDEXBOT
  * Constants:   W4WP_GOOGLEPROXY
  * Constants:   W4WP_SEZNAMBOT
+ * Constants:   W4WP_CONTENTKING
  */
 
 namespace Waf4WordPress;
@@ -1044,6 +1045,37 @@ final class Core_Events {
     }
 
     /**
+     * Verify ContentKing crawler.
+     *
+     * sed -n -e 's#.*"highlighter-rouge".*>\([0-9./]\+\)<.*#\1#p'
+     *
+     * @see https://www.contentkingapp.com/support/crawl-ip-addresses/
+     * @param string $ua
+     * @param string $ip
+     * @return bool
+     */
+    private function is_contentking( $ua, $ip ) {
+
+        $ranges = [
+            '89.149.192.96/27',
+            '23.105.12.64/27',
+            '23.19.63.0/28',
+        ];
+
+        if ( false === strpos( $ua, 'whatis.contentkingapp.com' ) ) {
+            return false;
+        }
+
+        foreach ( $ranges as $range ) {
+            if ( $this->ip_in_range( $ip, $range ) ) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
      * TODO Verify Baiduspider
      *     *.baidu.com or *.baidu.jp
      *
@@ -1102,8 +1134,39 @@ final class Core_Events {
             return 'w4wp_seznambot_404';
         }
 
+        if ( defined( 'W4WP_CONTENTKING' ) && W4WP_CONTENTKING
+            && $this->is_contentking( $ua, $_SERVER['REMOTE_ADDR'] )
+        ) {
+            // Identified ContentKing crawler.
+            return 'w4wp_contentking_404';
+        }
+
         // Unidentified.
         return false;
+    }
+
+    /**
+     * Whether the IPv4 address is in the given range.
+     *
+     * @param string $ip
+     * @param string $range
+     * @return bool
+     */
+    private function ip_in_range( $ip, $range ) {
+
+        if ( false === strpos( $range, '/' ) ) {
+            $range .= '/32';
+        }
+
+        $ip_decimal = ip2long( $ip );
+
+        // Range is in CIDR format
+        list( $range_ip, $netmask ) = explode( '/', $range, 2 );
+        $range_decimal = ip2long( $range_ip );
+        $wildcard_decimal = pow( 2, ( 32 - (int) $netmask ) ) - 1;
+        $netmask_decimal = ~ $wildcard_decimal;
+
+        return ( ( $ip_decimal & $netmask_decimal ) === ( $range_decimal & $netmask_decimal ) );
     }
 
     /**
