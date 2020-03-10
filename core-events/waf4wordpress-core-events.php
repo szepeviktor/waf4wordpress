@@ -6,7 +6,7 @@
  *
  * @wordpress-plugin
  * Plugin Name: WAF for WordPress (MU)
- * Version:     5.0.5
+ * Version:     5.0.6
  * Description: Stop WordPress related attacks and trigger Fail2ban.
  * Plugin URI:  https://github.com/szepeviktor/wordpress-fail2ban
  * License:     The MIT License (MIT)
@@ -154,7 +154,9 @@ final class Core_Events {
 
         // Login related
         add_action( 'login_init', [ $this, 'login' ] );
-        add_action( 'admin_bar_menu', [ $this, 'admin_bar' ], 99999 );
+        if ( ! is_admin() ) {
+            add_action( 'admin_bar_menu', [ $this, 'admin_bar' ], 99999 );
+        }
         add_action( 'wp_logout', [ $this, 'logout' ] );
         add_action( 'retrieve_password', [ $this, 'lostpass' ] );
         if ( defined( 'W4WP_DISABLE_LOGIN' ) && W4WP_DISABLE_LOGIN ) {
@@ -641,7 +643,7 @@ final class Core_Events {
         }
 
         foreach ( $admin_bar_nodes as $id => $node ) {
-            if ( false === strpos( $node->href, '/wp-login.php' ) ) {
+            if ( ! is_string( $node->href ) || false === strpos( $node->href, '/wp-login.php' ) ) {
                 continue;
             }
             $admin_bar->remove_menu( $id );
