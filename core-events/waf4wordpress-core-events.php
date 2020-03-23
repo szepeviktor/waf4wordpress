@@ -156,6 +156,8 @@ final class Core_Events {
         add_action( 'login_init', [ $this, 'login' ] );
         if ( ! is_admin() ) {
             add_action( 'admin_bar_menu', [ $this, 'admin_bar' ], 99999 );
+            // For login links in nav menus:
+            // Appearance / Menus / (menu) / (item) / XFN = nofollow
         }
         add_action( 'wp_logout', [ $this, 'logout' ] );
         add_action( 'retrieve_password', [ $this, 'lostpass' ] );

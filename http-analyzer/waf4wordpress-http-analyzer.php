@@ -20,6 +20,7 @@
  * Constants:   W4WP_ALLOW_OLD_PROXIES
  * Constants:   W4WP_ALLOW_CONNECTION_EMPTY
  * Constants:   W4WP_ALLOW_CONNECTION_CLOSE
+ * Constants:   W4WP_ALLOW_IE_NO_REFERER
  * Constants:   W4WP_ALLOW_TWO_CAPS
  * Constants:   W4WP_DISALLOW_TOR_LOGIN
  * Constants:   W4WP_POST_LOGGING
@@ -140,6 +141,7 @@ final class Http_Analyzer {
     private $allow_old_proxies = false;
     private $allow_connection_empty = false;
     private $allow_connection_close = false;
+    private $allow_ie_no_referer = false;
     private $allow_two_capitals = false;
     private $disallow_tor_login = false;
     private $result = false;
@@ -239,6 +241,10 @@ final class Http_Analyzer {
 
         if ( defined( 'W4WP_ALLOW_CONNECTION_CLOSE' ) && W4WP_ALLOW_CONNECTION_CLOSE ) {
             $this->allow_connection_close = true;
+        }
+
+        if ( defined( 'W4WP_ALLOW_IE_NO_REFERER' ) && W4WP_ALLOW_IE_NO_REFERER ) {
+            $this->allow_ie_no_referer = true;
         }
 
         if ( defined( 'W4WP_ALLOW_TWO_CAPS' ) && W4WP_ALLOW_TWO_CAPS ) {
@@ -579,7 +585,11 @@ final class Http_Analyzer {
 
         // Referer HTTP header.
         if ( empty( $_SERVER['HTTP_REFERER'] ) ) {
-            return 'bad_request_login_referer_empty';
+            if ( ! $this->allow_ie_no_referer || ! $this->is_ie( $user_agent ) ) {
+                return 'bad_request_login_referer_empty';
+            }
+            // IE does not send referer on reload.
+            $_SERVER['HTTP_REFERER'] = sprintf( 'https://%s%s', $server_name, $request_path );
         }
 
         $referer = $_SERVER['HTTP_REFERER'];
