@@ -8,7 +8,7 @@
  * Plugin Name: WAF for WordPress (MU)
  * Version:     5.0.6
  * Description: Stop WordPress related attacks and trigger Fail2ban.
- * Plugin URI:  https://github.com/szepeviktor/wordpress-fail2ban
+ * Plugin URI:  https://github.com/szepeviktor/waf4wordpress
  * License:     The MIT License (MIT)
  * Author:      Viktor Szépe
  * Constants:   W4WP_DISABLE_LOGIN
@@ -925,7 +925,7 @@ final class Core_Events {
      */
     private function is_msnbot( $ua, $ip ) {
 
-        if ( false === strpos( $ua, 'bingbot' ) ) {
+        if ( false === strpos( $ua, 'bingbot' ) && false === strpos( $ua, 'BingPreview' ) ) {
             return false;
         }
 
@@ -935,9 +935,8 @@ final class Core_Events {
             return false;
         }
         $rev_ip = gethostbyname( $host );
-        $verified = ( $rev_ip === $ip );
 
-        return $verified;
+        return $rev_ip === $ip;
     }
 
     /**
@@ -963,9 +962,8 @@ final class Core_Events {
             return false;
         }
         $rev_ip = gethostbyname( $host );
-        $verified = ( $rev_ip === $ip );
 
-        return $verified;
+        return $rev_ip === $ip;
     }
 
     /**
@@ -993,9 +991,8 @@ final class Core_Events {
             return false;
         }
         $rev_ip = gethostbyname( $host );
-        $verified = ( $rev_ip === $ip );
 
-        return $verified;
+        return $rev_ip === $ip;
     }
 
     /**
@@ -1018,9 +1015,8 @@ final class Core_Events {
             return false;
         }
         $rev_ip = gethostbyname( $host );
-        $verified = ( $rev_ip === $ip );
 
-        return $verified;
+        return $rev_ip === $ip;
     }
 
     /**
@@ -1043,9 +1039,8 @@ final class Core_Events {
             return false;
         }
         $rev_ip = gethostbyname( $host );
-        $verified = ( $rev_ip === $ip );
 
-        return $verified;
+        return $rev_ip === $ip;
     }
 
     /**

@@ -2,7 +2,7 @@
 /*
 Snippet Name: Trigger Fail2ban on HTTP/404 responses in any CMS.
 Version: 0.1.2
-Snippet URI: https://github.com/szepeviktor/wordpress-fail2ban
+Snippet URI: https://github.com/szepeviktor/waf4wordpress
 License: The MIT License (MIT)
 Author: Viktor Szépe
 */

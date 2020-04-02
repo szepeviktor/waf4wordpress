@@ -202,4 +202,4 @@ You can customize the Fail2ban trigger string in the `$prefix` property.
 
 Tests are included as a shell script: `bad-request-test.sh`
 
-[GitHub repository](https://github.com/szepeviktor/wordpress-fail2ban)
+[GitHub repository](https://github.com/szepeviktor/waf4wordpress)

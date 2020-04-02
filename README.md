@@ -107,4 +107,4 @@ if ( isset( $_SERVER['REQUEST_URI'] ) ) {
 
 ### Support and feature requests
 
-[Open a new issue](https://github.com/szepeviktor/wordpress-fail2ban/issues/new)
+[Open a new issue](https://github.com/szepeviktor/waf4wordpress/issues/new)

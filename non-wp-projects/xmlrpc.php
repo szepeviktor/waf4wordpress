@@ -2,7 +2,7 @@
 /*
 Snippet Name: Trigger Fail2ban in non-WordPress projects and subdirectory installs.
 Version: 0.5.0
-Snippet URI: https://github.com/szepeviktor/wordpress-fail2ban
+Snippet URI: https://github.com/szepeviktor/waf4wordpress
 License: The MIT License (MIT)
 Author: Viktor Szépe
 */
