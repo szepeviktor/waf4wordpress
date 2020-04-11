@@ -9,44 +9,36 @@
 	<!--
 	https://github.com/WordPress-Coding-Standards/WordPress-Coding-Standards/wiki/Customizable-sniff-properties
 	-->
-	<config name="minimum_supported_wp_version" value="4.5" />
+	<config name="minimum_supported_wp_version" value="4.5"/>
 
-	<arg value="s" />
+	<arg value="s"/>
 
 	<rule ref="NeutronRuleset">
-		<exclude name="NeutronStandard.Functions.LongFunction.LongFunction" />
-		<exclude name="Generic.Formatting.MultipleStatementAlignment" />
-		<exclude name="WordPress.Arrays.MultipleStatementAlignment.DoubleArrowNotAligned" />
-		<exclude name="NeutronStandard.Functions.TypeHint.NoArgumentType" />
-		<exclude name="NeutronStandard.Functions.TypeHint.NoReturnType" />
-		<exclude name="ImportDetection.Imports.RequireImports.Symbol" />
+		<exclude name="NeutronStandard.Functions.LongFunction.LongFunction"/>
+		<exclude name="NeutronStandard.Functions.TypeHint.NoArgumentType"/>
+		<exclude name="NeutronStandard.Functions.TypeHint.NoReturnType"/>
+		<exclude name="ImportDetection.Imports.RequireImports.Symbol"/>
 
 		<!-- I indent with spaces -->
-		<exclude name="Generic.WhiteSpace.DisallowSpaceIndent" />
+		<exclude name="Generic.WhiteSpace.DisallowSpaceIndent"/>
 
-		<exclude name="Generic.Commenting.DocComment" />
-		<exclude name="Generic.Arrays.DisallowShortArraySyntax" />
-		<exclude name="Squiz.Commenting" />
-		<exclude name="WordPress.Security.NonceVerification" />
-		<exclude name="WordPress.Security.ValidatedSanitizedInput" />
-
-		<exclude name="WordPress.WP.AlternativeFunctions" />
-		<exclude name="Generic.Formatting.MultipleStatementAlignment" />
-		<exclude name="WordPress.Arrays.MultipleStatementAlignment.DoubleArrowNotAligned" />
+		<exclude name="Generic.Commenting.DocComment"/>
+		<exclude name="Squiz.Commenting"/>
+		<exclude name="WordPress.WP.AlternativeFunctions"/>
+		<exclude name="WordPress.Security.NonceVerification"/>
+		<exclude name="WordPress.Security.ValidatedSanitizedInput"/>
 	</rule>
 
 	<rule ref="WordPress.Files.FileName">
 		<properties>
-			<property name="strict_class_file_names" value="false" />
+			<property name="strict_class_file_names" value="false"/>
 		</properties>
 	</rule>
 	<rule ref="WordPress.PHP.DiscouragedPHPFunctions">
 		<properties>
-			<property name="exclude" value="obfuscation" />
+			<property name="exclude" value="obfuscation"/>
 		</properties>
 	</rule>
 
-	<rule ref="Generic.Arrays.DisallowLongArraySyntax" />
-
-	<rule ref="Squiz.Commenting.DocCommentAlignment" />
+	<rule ref="Squiz.Commenting.DocCommentAlignment"/>
 </ruleset>
