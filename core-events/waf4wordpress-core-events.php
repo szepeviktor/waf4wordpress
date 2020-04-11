@@ -292,9 +292,6 @@ final class Core_Events {
 
     private function fake_wplogin() {
 
-        $server_name = isset( $_SERVER['SERVER_NAME'] )
-            ? $_SERVER['SERVER_NAME']
-            : $_SERVER['HTTP_HOST'];
         $username = trim( $_POST['log'] );
         $expire = time() + 3600;
         $token = substr( hash_hmac( 'sha256', (string) rand(), 'token' ), 0, 43 );
@@ -491,6 +488,7 @@ final class Core_Events {
         }
     }
 
+    // phpcs:ignore VariableAnalysis.CodeAnalysis.VariableAnalysis
     public function rest_api_disabled( $enabled ) {
 
         $this->trigger( 'w4wp_rest_api_disabled', $_SERVER['REQUEST_URI'], 'notice' );
@@ -694,7 +692,6 @@ final class Core_Events {
 
         $ua = array_key_exists( 'HTTP_USER_AGENT', $_SERVER ) ? $_SERVER['HTTP_USER_AGENT'] : '';
         $request_path = (string) parse_url( $_SERVER['REQUEST_URI'], PHP_URL_PATH );
-        $admin_path = parse_url( admin_url(), PHP_URL_PATH );
         $wp_dirs = sprintf( 'wp-admin|wp-includes|wp-content|%s', basename( WP_CONTENT_DIR ) );
         $uploads = wp_upload_dir();
         $uploads_base = basename( $uploads['baseurl'] );
