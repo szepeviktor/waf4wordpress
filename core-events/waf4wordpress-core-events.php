@@ -1087,6 +1087,14 @@ final class Core_Events {
      */
 
     /**
+     * TODO Verify Linguee Bot (search engine for translations)
+     *     "Linguee Bot"
+     *     wget -qO- "https://www.linguee.com/bot"|sed -n -e '/^<pre/,/^<\/pre/s#^[0-9.]\+$#&#p'
+     *
+     * @see https://www.linguee.com/bot
+     */
+
+    /**
      * Whether the user agent is a web crawler.
      *
      * @param string $ua
