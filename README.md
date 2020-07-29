@@ -12,6 +12,8 @@ It blocks the attacking IP address instantly, the purpose of this are the follow
 Shared hosting has no server-wide banning (because of trust issues)
 but you can still install this software without Fail2ban to stop attacks by using one of the Miniban methods.
 
+### Theory
+
 Your WordPress - really general HTTP - security consists of:
 
 1. Use HTTPS
@@ -29,7 +31,7 @@ Your WordPress - really general HTTP - security consists of:
 See the [Block WordPress attack vectors](https://github.com/szepeviktor/debian-server-tools/blob/master/webserver/WordPress-security.md)
 note in my other repository for an overview of the topic.
 
-### `Http_Analyzer` class
+### Installation of `Http_Analyzer` class
 
 Examines headers in the HTTP requests and triggers Fail2ban accordingly.
 
@@ -45,7 +47,7 @@ new \Waf4WordPress\Http_Analyzer();
 A better solution is to load it from the `auto_prepend_file` PHP directive.
 This time you have to copy the above code in the class file.
 
-### `Core_Events` class
+### Installation of `Core_Events` class
 
 It is an MU plugin that triggers Fail2ban on various WordPress specific attack types.
 Login is only logged, use `Http_Analyzer` class for handling that.
@@ -53,19 +55,19 @@ Login is only logged, use `Http_Analyzer` class for handling that.
 To install copy `core-events/waf4wordpress-core-events.php` into your `wp-content/mu-plugins/` directory.
 You may have to create the `mu-plugins` directory. It activates automatically.
 
-### The `non-wp-projects` folder
+### About the `non-wp-projects` directory
 
 Triggers Fail2ban on WordPress login probes in any project.
 
 To install copy the fake `non-wp-projects/wp-login.php`and `non-wp-projects/xmlrpc.php`
 to your **non-WordPress** project's document root.
 
-### WAF for WordPress is not in WordPress.org's plugin directory
+### Not available in WordPress.org's plugin directory
 
 After is it published on WordPress.org you can install the plugin and skip file copying.  
 That way it'll be installed automatically.
 
-### Support PayPal IPN, Brantree and custom entry points in poorly written plugins
+### How to support PayPal IPN, Brantree and custom entry points in poorly written plugins
 
 Copy this into your in `wp-config.php`.
 
