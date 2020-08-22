@@ -17,7 +17,7 @@ but you can still install this software without Fail2ban to stop attacks by usin
 Your WordPress - really general HTTP - security consists of:
 
 1. Use HTTPS
-1. Have daily backup
+1. Have daily backups
 1. Block [known hostile networks](https://github.com/szepeviktor/debian-server-tools/tree/master/security/myattackers-ipsets)
 1. Have Fail2ban installed (controls the firewall)
 1. Maintain your website and use
