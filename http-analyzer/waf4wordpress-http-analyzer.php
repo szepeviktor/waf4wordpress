@@ -357,7 +357,7 @@ final class Http_Analyzer {
 
         // Too big user agent.
         if ( isset( $_SERVER['HTTP_USER_AGENT'] )
-            && strlen( $this->fix_opera_ua( $_SERVER['HTTP_USER_AGENT'] ) ) > 472
+            && strlen( $this->fix_opera_ua( $_SERVER['HTTP_USER_AGENT'] ) ) > 473
         ) {
             return 'bad_request_user_agent_length';
         }
