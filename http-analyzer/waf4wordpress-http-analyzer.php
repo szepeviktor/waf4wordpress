@@ -915,6 +915,9 @@ final class Http_Analyzer {
         foreach ( $_SERVER as $name => $value ) {
             if ( 'HTTP_' === substr( $name, 0, 5 ) ) {
                 $headers[ substr( $name, 5 ) ] = $value;
+            } elseif ( 'CONTENT_' === substr( $name, 0, 8 ) ) {
+                // RFC 3875
+                $headers[ $name ] = $value;
             }
         }
 
