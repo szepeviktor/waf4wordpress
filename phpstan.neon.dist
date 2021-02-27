@@ -9,7 +9,7 @@ parameters:
         - %currentWorkingDirectory%/http-analyzer/waf4wordpress-http-analyzer.php
         - %currentWorkingDirectory%/core-events/waf4wordpress-core-events.php
         - %currentWorkingDirectory%/braintree/Braintree.php
-    autoload_files:
+    scanFiles:
         - %currentWorkingDirectory%/tests/bootstrap.php
         - %currentWorkingDirectory%/miniban/wp-miniban-htaccess.inc.php
         - %currentWorkingDirectory%/http-analyzer/waf4wordpress-http-analyzer.php

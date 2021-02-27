@@ -21,6 +21,7 @@
  * Constants:   W4WP_GOOGLEPROXY
  * Constants:   W4WP_SEZNAMBOT
  * Constants:   W4WP_CONTENTKING
+ * Constants:   W4WP_FACEBOOKCRAWLER
  */
 
 namespace Waf4WordPress;
@@ -65,6 +66,8 @@ final class Core_Events {
     private $is_redirect = false;
     /**
      * Ban instead of displaying error message with `illegal_user_logins` filter.
+     *
+     * @link https://github.com/divine/reserved-usernames/blob/master/src/ReservedUsernames.php#L7
      */
     private $names2ban = [
         'access',
@@ -1072,18 +1075,25 @@ final class Core_Events {
     }
 
     /**
+     * Verify Facebook crawler checking links sent by users.
+     *
+     * Install facebook-crawler-ip-update.sh
+     *
+     * @see https://developers.facebook.com/docs/sharing/webmasters/crawler/
+     * @param string $ua
+     * @return bool
+     */
+    private function is_facebookcrawler( $ua ) {
+
+        // facebook-crawler-ip-update.sh blocks fake Facebook crawlers.
+        return 0 === strpos( $ua, 'facebookexternalhit/' );
+    }
+
+    /**
      * TODO Verify Baiduspider
      *     *.baidu.com or *.baidu.jp
      *
      * @see https://help.baidu.com/question?prod_id=99&class=0&id=3001
-     */
-
-    /**
-     * TODO Verify Facebook crawler (checking links sent by users)
-     *     "facebookexternalhit/1.1"
-     *     grepcidr -x -f <(whois -h whois.radb.net -- '-i origin AS32934'|sed -ne 's/^route6\?:\s\+\(\S\+\)$/\1/p')
-     *
-     * @see https://developers.facebook.com/docs/sharing/webmasters/crawler/
      */
 
     /**
@@ -1143,6 +1153,13 @@ final class Core_Events {
         ) {
             // Identified ContentKing crawler.
             return 'w4wp_contentking_404';
+        }
+
+        if ( defined( 'W4WP_FACEBOOKCRAWLER' ) && W4WP_FACEBOOKCRAWLER
+            && $this->is_facebookcrawler( $ua )
+        ) {
+            // Identified Facebook crawler.
+            return 'w4wp_facebookcrawler_404';
         }
 
         // Unidentified.
