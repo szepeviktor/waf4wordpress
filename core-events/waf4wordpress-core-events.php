@@ -6,7 +6,7 @@
  *
  * @wordpress-plugin
  * Plugin Name: WAF for WordPress (MU)
- * Version:     5.0.6
+ * Version:     5.0.7
  * Description: Stop WordPress related attacks and trigger Fail2ban.
  * Plugin URI:  https://github.com/szepeviktor/waf4wordpress
  * License:     The MIT License (MIT)
@@ -865,6 +865,7 @@ final class Core_Events {
             $whitelisted_actions = [
                 'wp_ajax_nopriv_wp-remove-post-lock',
                 'wp_ajax_nopriv_SimpleHistoryNewRowsNotifier',
+                'wp_ajax_crop_image_pre_save',
             ];
 
             // Actions only, not filters, not registered ones, except whitelisted ones
