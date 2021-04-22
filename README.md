@@ -67,7 +67,7 @@ to your **non-WordPress** project's document root.
 After is it published on WordPress.org you can install the plugin and skip file copying.  
 That way it'll be installed automatically.
 
-### How to support PayPal IPN, Brantree and custom entry points in poorly written plugins
+### How to support PayPal IPN, Braintree and custom entry points in poorly written plugins
 
 Copy this into your in `wp-config.php`.
 
