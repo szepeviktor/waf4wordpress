@@ -6,7 +6,7 @@
  *
  * @wordpress-plugin
  * Plugin Name: WAF for WordPress (required from wp-config or started in auto_prepend_file)
- * Version:     3.0.2
+ * Version:     3.1.0
  * Description: Stop various HTTP attacks and trigger Fail2ban.
  * Plugin URI:  https://github.com/szepeviktor/waf4wordpress
  * License:     The MIT License (MIT)
@@ -94,6 +94,7 @@ final class Http_Analyzer {
         'webmaster',
     ];
     private $blacklist = [
+        "\x00", // Null character
         '../', // Path traversal
         '/..', // Path traversal
         'wp-config', // WP configuration
