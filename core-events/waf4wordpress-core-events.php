@@ -6,7 +6,7 @@
  *
  * @wordpress-plugin
  * Plugin Name: WAF for WordPress (MU)
- * Version:     5.0.7
+ * Version:     5.0.8
  * Description: Stop WordPress related attacks and trigger Fail2ban.
  * Plugin URI:  https://github.com/szepeviktor/waf4wordpress
  * License:     The MIT License (MIT)
@@ -1047,7 +1047,7 @@ final class Core_Events {
     /**
      * Verify ContentKing crawler.
      *
-     * sed -n -e 's#.*"highlighter-rouge".*>\([0-9./]\+\)<.*#\1#p'
+     * sed -n -e 's#.*highlighter-rouge".*>\([0-9./]\+\)<.*#\1#p'
      *
      * @see https://www.contentkingapp.com/support/crawl-ip-addresses/
      * @param string $ua
@@ -1059,7 +1059,7 @@ final class Core_Events {
         $ranges = [
             '89.149.192.96/27',
             '23.105.12.64/27',
-            '23.19.63.0/28',
+            '173.234.16.0/28',
         ];
 
         if ( false === strpos( $ua, 'whatis.contentkingapp.com' ) ) {
