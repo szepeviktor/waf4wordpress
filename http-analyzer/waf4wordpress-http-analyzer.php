@@ -133,6 +133,7 @@ final class Http_Analyzer {
         ' -- ', // SQL comment
         'and 1=', // SQL injection
         'wallet.dat', // Bitcoin private key
+        '{jndi:ldap:', // CVE-2021-44228 Log4j
     ];
     private $botnet_pattern = '#Firefox/1|bot|spider|crawl|user-agent|random|"|\\\\#i';
     private $relative_request_uri = '';
