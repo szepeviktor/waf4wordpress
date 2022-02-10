@@ -21,7 +21,9 @@ parameters:
         - '#^Call to static method get_instance\(\) on an unknown class SimpleHistory\.$#'
         - '#^Function SimpleLogger not found\.$#'
         # Ease strict rules
-        - '# typehint specified\.$#'
+        - '#^Property Waf4WordPress\\.+ has no type specified\.$#'
+        - '#^Method Waf4WordPress\\.+ has parameter .+ with no type specified\.$#'
+        - '#^Method Waf4WordPress\\.+ has no return type specified\.$#'
         # wp_die( -1 ) in core
         - '#^Call to function is_int\(\) with string\|WP_Error will always evaluate to false\.$#'
         - '#^Result of && is always false\.$#'

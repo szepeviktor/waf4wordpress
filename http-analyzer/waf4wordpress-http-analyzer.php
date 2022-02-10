@@ -1001,7 +1001,7 @@ final class Http_Analyzer {
     /**
      * Convert a PHP multi-dimensional array to a leaf-only array with full-depth array keys.
      *
-     * @param array<array> $array The multi-dimensional array.
+     * @param array<array<mixed>> $array The multi-dimensional array.
      *
      * @return array<mixed> An array containing the leafs only.
      */

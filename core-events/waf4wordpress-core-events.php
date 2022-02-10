@@ -162,7 +162,7 @@ final class Core_Events {
             // For login links in nav menus:
             // Appearance / Menus / (menu) / (item) / XFN = nofollow
         }
-        add_action( 'wp_logout', [ $this, 'logout' ] );
+        add_action( 'wp_logout', [ $this, 'logout' ], 0, 1 );
         add_action( 'retrieve_password', [ $this, 'lostpass' ] );
         if ( defined( 'W4WP_DISABLE_LOGIN' ) && W4WP_DISABLE_LOGIN ) {
             // Disable login
@@ -221,7 +221,7 @@ final class Core_Events {
         $this->trigger( $slug, $message, $level, $this->prefix_instant );
 
         // Remove session
-        remove_action( 'wp_logout', [ $this, 'logout' ] );
+        remove_action( 'wp_logout', [ $this, 'logout' ], 0 );
         wp_logout();
 
         // Respond
@@ -458,6 +458,7 @@ final class Core_Events {
             $status = $response->get_status();
             $method = $request->get_method();
             $route = $request->get_route();
+            /** @var array{code:string, message:string} $data */
             $data = $response->get_data();
             $is_user_listing = ( $server::READABLE === $method && '/wp/v2/users' === substr( $route, 0, 12 ) );
             // Disable any kind of unauthorized user listing
@@ -662,16 +663,12 @@ final class Core_Events {
         }
     }
 
-    public function logout() {
+    public function logout( $user_id ) {
 
-        if ( is_user_logged_in() ) {
-            $current_user = wp_get_current_user();
-            $user = $current_user->user_login;
-        } else {
-            $user = '';
-        }
+        /** @var \WP_User $user */
+        $user = get_user_by( 'id', $user_id );
 
-        $this->trigger( 'logged_out', $user, 'info', 'WordPress auth: ' );
+        $this->trigger( 'logged_out', $user->user_login, 'info', 'WordPress auth: ' );
     }
 
     /**
