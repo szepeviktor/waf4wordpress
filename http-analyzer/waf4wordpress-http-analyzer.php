@@ -6,7 +6,7 @@
  *
  * @wordpress-plugin
  * Plugin Name: WAF for WordPress (required from wp-config or started in auto_prepend_file)
- * Version:     3.1.0
+ * Version:     3.1.1
  * Description: Stop various HTTP attacks and trigger Fail2ban.
  * Plugin URI:  https://github.com/szepeviktor/waf4wordpress
  * License:     The MIT License (MIT)
@@ -135,7 +135,7 @@ final class Http_Analyzer {
         'wallet.dat', // Bitcoin private key
         '{jndi:ldap:', // CVE-2021-44228 Log4j
     ];
-    private $botnet_pattern = '#Firefox/1|bot|spider|crawl|user-agent|random|"|\\\\#i';
+    private $botnet_pattern = '#Firefox/1[^0-9]|bot|spider|crawl|user-agent|random|"|\\\\#i';
     private $relative_request_uri = '';
     private $cdn_headers = [];
     private $allow_custom_registration = false;
