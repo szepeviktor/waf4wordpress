@@ -38,7 +38,7 @@ if ( ! function_exists( 'add_filter' ) ) {
     if ( ! headers_sent() ) {
         header( 'Status: 403 Forbidden' );
         header( 'HTTP/1.1 403 Forbidden', true, 403 );
-        header( 'Connection: Close' );
+        header( 'Connection: close' );
     }
     exit;
 }
@@ -286,7 +286,7 @@ final class Core_Events {
 
         header( 'Status: 403 Forbidden' );
         header( 'HTTP/1.1 403 Forbidden', true, 403 );
-        header( 'Connection: Close' );
+        header( 'Connection: close' );
         header( 'Cache-Control: max-age=0, private, no-store, no-cache, must-revalidate' );
         header( 'X-Robots-Tag: noindex, nofollow' );
         header( 'Content-Type: text/html' );
@@ -313,7 +313,7 @@ final class Core_Events {
 
     private function fake_xmlrpc() {
 
-        header( 'Connection: Close' );
+        header( 'Connection: close' );
         header( 'Cache-Control: max-age=0, private, no-store, no-cache, must-revalidate' );
         header( 'X-Robots-Tag: noindex, nofollow' );
         header( 'Content-Type: text/xml; charset=UTF-8' );
@@ -413,7 +413,7 @@ final class Core_Events {
                 header( 'Status: 404 Not Found' );
                 status_header( 404 );
                 header( 'X-Robots-Tag: noindex, nofollow' );
-                header( 'Connection: Close' );
+                header( 'Connection: close' );
                 header( 'Content-Length: 0' );
                 nocache_headers();
             }
