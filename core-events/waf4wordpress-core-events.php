@@ -175,6 +175,7 @@ final class Core_Events {
             add_action( 'wp_login_failed', [ $this, 'login_failed' ] );
             add_filter( 'authenticate', [ $this, 'before_login' ], 0, 2 );
             add_filter( 'wp_authenticate_user', [ $this, 'authentication_strength' ], 99999, 2 );
+            add_action( 'register_new_user', [ $this, 'after_register' ], 99999, 1 );
             add_action( 'wp_login', [ $this, 'after_login' ], 0, 2 );
         }
 
@@ -656,6 +657,21 @@ final class Core_Events {
         }
     }
 
+    /**
+     * @param int $user_id
+     */
+    public function after_register( $user_id ) {
+
+        /** @var \WP_User $user */
+        $user = get_user_by( 'id', $user_id );
+
+        $this->trigger( 'registered', $user->user_login, 'info', 'WordPress auth: ' );
+    }
+
+    /**
+     * @param string $username
+     * @param \WP_User $user
+     */
     public function after_login( $username, $user ) {
 
         if ( is_a( $user, 'WP_User' ) ) {
