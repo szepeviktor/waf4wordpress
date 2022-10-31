@@ -684,6 +684,7 @@ final class Core_Events {
         /** @var \WP_User $user */
         $user = get_user_by( 'id', $user_id );
 
+        // @TODO $user->user_login on profile deletion
         $this->trigger( 'logged_out', $user->user_login, 'info', 'WordPress auth: ' );
     }
 
@@ -1071,6 +1072,7 @@ final class Core_Events {
 
         $ranges = [
             '89.149.192.96/27',
+            '81.17.55.192/27',
             '23.105.12.64/27',
             '173.234.16.0/28',
         ];

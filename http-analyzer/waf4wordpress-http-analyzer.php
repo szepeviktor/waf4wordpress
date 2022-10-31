@@ -308,8 +308,9 @@ final class Http_Analyzer {
             );
             $dump = json_encode(
                 [
+                    'uri' => $this->relative_request_uri,
                     'headers' => $this->apache_request_headers(),
-                    'request' => $request_data,
+                    'body' => $request_data,
                     'files' => $_FILES,
                     'cookies' => $_COOKIE,
                 ],
@@ -1062,6 +1063,20 @@ final class Http_Analyzer {
         // "A unique identifier for the widget."
         // @see http://operasoftware.github.io/scope-interface/WidgetManager.html
         $ua_reduced = (string) preg_replace( '#(WUID=[0-9a-f]{32}; WTB=[0-9]+; )\1+#', '', $ua );
+
+        return $ua_reduced;
+    }
+
+    /**
+     * Remove Facebook's display metrics from user agent.
+     *
+     * @param string $ua The user agent string.
+     *
+     * @return string    The reduced user agent string.
+     */
+    private function fix_facebook_dm( $ua ) {
+
+        $ua_reduced = (string) preg_replace( '#(FBDM/DisplayMetrics)\{([A-Za-z]+=[0-9.]+(, )?)+\}#', '\1', $ua );
 
         return $ua_reduced;
     }
