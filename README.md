@@ -110,3 +110,22 @@ if ( isset( $_SERVER['REQUEST_URI'] ) ) {
 ### Support and feature requests
 
 [Open a new issue](https://github.com/szepeviktor/waf4wordpress/issues/new)
+
+#### Where script kiddies look for WordPress
+
+- `/backup/`
+- `/blog/`
+- `/cms/`
+- `/demo/`
+- `/dev/`
+- `/home/`
+- `/main/`
+- `/new/`
+- `/old/`
+- `/portal/`
+- `/site/`
+- `/test/`
+- `/tmp/`
+- `/web/`
+- `/wordpress/`
+- `/wp/`

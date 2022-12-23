@@ -135,7 +135,7 @@ final class Http_Analyzer {
         'wallet.dat', // Bitcoin private key
         '{jndi:ldap:', // CVE-2021-44228 Log4j
     ];
-    private $botnet_pattern = '#Firefox/1[^0-9]|bot|spider|crawl|user-agent|random|"|\\\\#i';
+    private $botnet_pattern = '#Firefox/1[^0-9]|Mozlila/5|bot|spider|crawl|user-agent|random|"|\\\\#i';
     private $relative_request_uri = '';
     private $cdn_headers = [];
     private $allow_custom_registration = false;
