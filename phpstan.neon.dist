@@ -1,29 +1,11 @@
 includes:
-    - phar://phpstan.phar/conf/bleedingEdge.neon
     - vendor/phpstan/phpstan-strict-rules/rules.neon
     - vendor/szepeviktor/phpstan-wordpress/extension.neon
 parameters:
-    level: max
-    inferPrivatePropertyTypeFromConstructor: true
     paths:
-        - %currentWorkingDirectory%/http-analyzer/waf4wordpress-http-analyzer.php
-        - %currentWorkingDirectory%/core-events/waf4wordpress-core-events.php
-        - %currentWorkingDirectory%/braintree/Braintree.php
-    scanFiles:
-        - %currentWorkingDirectory%/tests/bootstrap.php
-        - %currentWorkingDirectory%/miniban/wp-miniban-htaccess.inc.php
-        - %currentWorkingDirectory%/http-analyzer/waf4wordpress-http-analyzer.php
-        - %currentWorkingDirectory%/core-events/waf4wordpress-core-events.php
-        - %currentWorkingDirectory%/braintree/Braintree.php
+        - src/
+    level: max
     ignoreErrors:
-        # Plugins
-        - '#^Call to static method report_critical_event\(\) on an unknown class SucuriScanEvent\.$#'
-        - '#^Call to static method get_instance\(\) on an unknown class SimpleHistory\.$#'
-        - '#^Function SimpleLogger not found\.$#'
-        # Ease strict rules
-        - '#^Property Waf4WordPress\\.+ has no type specified\.$#'
-        - '#^Method Waf4WordPress\\.+ has parameter .+ with no type specified\.$#'
-        - '#^Method Waf4WordPress\\.+ has no return type specified\.$#'
         # wp_die( -1 ) in core
         - '#^Call to function is_int\(\) with string\|WP_Error will always evaluate to false\.$#'
         - '#^Result of && is always false\.$#'

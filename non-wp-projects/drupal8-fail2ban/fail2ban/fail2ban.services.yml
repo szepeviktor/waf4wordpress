@@ -1,5 +1,0 @@
-services:
-  logger.fail2ban:
-    class: 'Drupal\fail2ban\Logger\Firewall'
-    tags:
-      - { name: logger }

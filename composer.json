@@ -1,21 +1,26 @@
 {
     "name": "szepeviktor/waf4wordpress",
     "description": "WAF for WordPress",
-    "type": "wordpress-muplugin",
+    "type": "library",
     "license": "MIT",
     "require": {
-        "php": ">=7.0"
+        "php": "~7.4.0"
     },
     "require-dev": {
         "squizlabs/php_codesniffer": "^3.0",
         "dealerdirect/phpcodesniffer-composer-installer": "^0.7.1",
-        "automattic/phpcs-neutron-ruleset": "^3.0",
+        "szepeviktor/phpcs-psr-12-neutron-hybrid-ruleset": "^0.6.1",
         "szepeviktor/phpstan-wordpress": "^1.0",
         "phpstan/phpstan-strict-rules": "^1.1"
     },
+    "autoload": {
+        "psr-4": {
+            "SzepeViktor\\WordPress\\Waf\\": "src/"
+        }
+    },
     "scripts": {
-        "test:analyze": "vendor/bin/phpstan analyze",
-        "test:cs": "vendor/bin/phpcs -p",
+        "test:analyze": "phpstan",
+        "test:cs": "phpcs",
         "test": [
             "@test:analyze",
             "@test:cs"

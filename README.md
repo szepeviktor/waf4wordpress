@@ -1,7 +1,7 @@
 # WAF for WordPress
 
 Stop real-life attacks on your WordPress website and
-trigger [Fail2ban](https://github.com/fail2ban/fail2ban).
+trigger [Fail2Ban](https://github.com/fail2ban/fail2ban).
 
 This WAF does not give proper HTTP responses to unusual requets.
 It blocks the attacking IP address instantly, the purpose of this are the following.
@@ -10,7 +10,7 @@ It blocks the attacking IP address instantly, the purpose of this are the follow
 1. Prevent D/DoS attacks
 
 Shared hosting has no server-wide banning (because of trust issues)
-but you can still install this software without Fail2ban to stop attacks by using one of the Miniban methods.
+but you can still install this software without Fail2Ban to stop attacks by using one of the Miniban methods.
 
 ### Theory
 
@@ -19,21 +19,59 @@ Your WordPress - really general HTTP - security consists of:
 1. Use HTTPS
 1. Have daily backups
 1. Block [known hostile networks](https://github.com/szepeviktor/debian-server-tools/tree/master/security/myattackers-ipsets)
-1. Have Fail2ban installed (controls the firewall)
+1. Have Fail2Ban installed (controls the firewall)
 1. Maintain your website and use
-   [strict Fail2ban filters](https://github.com/szepeviktor/debian-server-tools/tree/master/security/fail2ban-conf)
+   [strict Fail2Ban filters](https://github.com/szepeviktor/debian-server-tools/tree/master/security/fail2ban-conf)
    which ban on the first suspicious request instantly
 1. Deny direct access to core WordPress files, themes and plugins
 1. Install WAF for WordPress (this project)
 1. Use [Leanmail](https://github.com/szepeviktor/debian-server-tools/tree/master/security/fail2ban-leanmail)
-   for filtering Fail2ban notification emails
+   for filtering Fail2Ban notification emails
 
 See the [Block WordPress attack vectors](https://github.com/szepeviktor/debian-server-tools/blob/master/webserver/WordPress-security.md)
 note in my other repository for an overview of the topic.
 
-### Installation of `Http_Analyzer` class
+### Composer installation
 
-Examines headers in the HTTP requests and triggers Fail2ban accordingly.
+Technically this is not a WordPress plugin nor an MU plugin.
+WAF for WordPress is distributed and autoloaded as a Composer package.
+
+1. Issue `composer require szepeviktor/waf4wordpress` command
+1. Load `vendor/autoload.php` from your `wp-config`
+1. Instantiate `SzepeViktor\WordPress\Waf\HttpAnalyzer` class early in `wp-config`
+1. Create an MU plugin in `wp-content/mu-plugins/waf4wordpress.php`
+
+```php
+<?php
+/*
+Plugin Name: WAF for WordPress
+*/
+if (! function_exists('add_filter')) {
+    exit;
+}
+new SzepeViktor\WordPress\Waf\CoreEvents();
+```
+
+### Manual installation
+
+see composer-managed...
+Technically this is not a WordPress plugin nor an MU plugin.
+
+links to class files, create a directory, download
+
+add `require_once __DIR__ . '/waf/HttpAnalyzer.php';`
+and `require_once __DIR__ . '/waf/CoreEvents.php';`
+
+### Configuration
+
+WAF for WordPress is configured in source code at class instantiation.
+For `HttpAnalyzer` in `wp-config`, for `CoreEvents` in the MU plugin.
+
+add examples, list configuration methods and their parameters
+
+---
+
+Examines headers in the HTTP requests and triggers Fail2Ban accordingly.
 
 To install it copy `http-analyzer/waf4wordpress-http-analyzer.php`
 beside your `wp-config.php` and copy these lines in top of `wp-config.php`:
@@ -49,7 +87,7 @@ This time you have to copy the above code in the class file.
 
 ### Installation of `Core_Events` class
 
-It is an MU plugin that triggers Fail2ban on various WordPress specific attack types.
+It is an MU plugin that triggers Fail2Ban on various WordPress specific attack types.
 Login is only logged, use `Http_Analyzer` class for handling that.
 
 To install copy `core-events/waf4wordpress-core-events.php` into your `wp-content/mu-plugins/` directory.
@@ -57,7 +95,7 @@ You may have to create the `mu-plugins` directory. It activates automatically.
 
 ### About the `non-wp-projects` directory
 
-Triggers Fail2ban on WordPress login probes in any project.
+Triggers Fail2Ban on WordPress login probes in any project.
 
 To install copy the fake `non-wp-projects/wp-login.php`and `non-wp-projects/xmlrpc.php`
 to your **non-WordPress** project's document root.
