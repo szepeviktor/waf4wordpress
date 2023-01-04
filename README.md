@@ -28,7 +28,7 @@ Your WordPress - really general HTTP - security consists of:
 1. Use [Leanmail](https://github.com/szepeviktor/debian-server-tools/tree/master/security/fail2ban-leanmail)
    for filtering Fail2Ban notification emails
 
-See the [Block WordPress attack vectors](https://github.com/szepeviktor/debian-server-tools/blob/master/webserver/WordPress-security.md)
+See the [Block WordPress attack vectors](https://github.com/szepeviktor/wordpress-website-lifecycle/blob/master/WordPress-security.md)
 note in my other repository for an overview of the topic.
 
 ### Composer installation
@@ -39,6 +39,10 @@ WAF for WordPress is distributed and autoloaded as a Composer package.
 1. Issue `composer require szepeviktor/waf4wordpress` command
 1. Load `vendor/autoload.php` from your `wp-config`
 1. Instantiate `SzepeViktor\WordPress\Waf\HttpAnalyzer` class early in `wp-config`
+   ```php
+   require dirname(__DIR__) . '/vendor/autoload.php';
+   new SzepeViktor\WordPress\Waf\HttpAnalyzer();
+   ```
 1. Create an MU plugin in `wp-content/mu-plugins/waf4wordpress.php`
 
 ```php
