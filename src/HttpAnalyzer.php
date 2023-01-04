@@ -303,11 +303,12 @@ final class HttpAnalyzer
             );
             $dump = json_encode(
                 [
+                    'method' => $request_method,
                     'uri' => $this->relative_request_uri,
                     'headers' => $this->apache_request_headers(),
                     'body' => $request_data,
-                    'files' => $_FILES,
                     'cookies' => $_COOKIE,
+                    'files' => $_FILES,
                 ],
                 JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE
             );
