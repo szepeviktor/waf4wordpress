@@ -39,75 +39,59 @@ WAF for WordPress is distributed and autoloaded as a Composer package.
 1. Issue `composer require szepeviktor/waf4wordpress` command
 1. Load `vendor/autoload.php` from your `wp-config`
 1. Instantiate `SzepeViktor\WordPress\Waf\HttpAnalyzer` class early in `wp-config`
-   ```php
-   require dirname(__DIR__) . '/vendor/autoload.php';
-   new SzepeViktor\WordPress\Waf\HttpAnalyzer();
-   ```
+    ```php
+    require dirname(__DIR__) . '/vendor/autoload.php';
+    new SzepeViktor\WordPress\Waf\HttpAnalyzer();
+    ```
 1. Create an MU plugin in `wp-content/mu-plugins/waf4wordpress.php`
-
-```php
-<?php
-/*
-Plugin Name: WAF for WordPress
-*/
-if (! function_exists('add_filter')) {
-    exit;
-}
-new SzepeViktor\WordPress\Waf\CoreEvents();
-```
+    ```php
+    <?php
+    /*
+     * Plugin Name: WAF for WordPress (MU)
+     */
+    if (! function_exists('add_filter')) {
+        exit;
+    }
+    new SzepeViktor\WordPress\Waf\CoreEvents();
+    ```
 
 ### Manual installation
 
-see composer-managed...
+:bulb: Please see [Composer-managed WordPress](https://github.com/szepeviktor/composer-managed-wordpress)
+for managing WordPress with Composer.
+
 Technically this is not a WordPress plugin nor an MU plugin.
 
-links to class files, create a directory, download
-
-add `require_once __DIR__ . '/waf/HttpAnalyzer.php';`
-and `require_once __DIR__ . '/waf/CoreEvents.php';`
+1. First download
+    [WAF for WordPress](https://github.com/szepeviktor/waf4wordpress/archive/refs/heads/master.zip)
+    then extract files to a directory, e.g. `waf/`
+1. Instantiate `SzepeViktor\WordPress\Waf\HttpAnalyzer` class early in `wp-config`
+    ```php
+    require_once __DIR__ . '/waf/src/HttpAnalyzer.php';
+    require_once __DIR__ . '/waf/src/CoreEvents.php';
+    new SzepeViktor\WordPress\Waf\HttpAnalyzer();
+    ```
+1. Create an MU plugin in `wp-content/mu-plugins/waf4wordpress.php`
+    ```php
+    <?php
+    /*
+     * Plugin Name: WAF for WordPress (MU)
+     */
+    if (! function_exists('add_filter')) {
+        exit;
+    }
+    new SzepeViktor\WordPress\Waf\CoreEvents();
+    ```
 
 ### Configuration
 
-WAF for WordPress is configured in source code at class instantiation.
-For `HttpAnalyzer` in `wp-config`, for `CoreEvents` in the MU plugin.
+WAF for WordPress is configured in source code
+before class instantiation. in `wp-config`.
 
-add examples, list configuration methods and their parameters
+Create custom filters for Fail2Ban catching these PHP messages.
 
----
-
-Examines headers in the HTTP requests and triggers Fail2Ban accordingly.
-
-To install it copy `http-analyzer/waf4wordpress-http-analyzer.php`
-beside your `wp-config.php` and copy these lines in top of `wp-config.php`:
-
-```php
-/** Security */
-require_once __DIR__ . '/waf4wordpress-http-analyzer.php';
-new \Waf4WordPress\Http_Analyzer();
-```
-
-A better solution is to load it from the `auto_prepend_file` PHP directive.
-This time you have to copy the above code in the class file.
-
-### Installation of `Core_Events` class
-
-It is an MU plugin that triggers Fail2Ban on various WordPress specific attack types.
-Login is only logged, use `Http_Analyzer` class for handling that.
-
-To install copy `core-events/waf4wordpress-core-events.php` into your `wp-content/mu-plugins/` directory.
-You may have to create the `mu-plugins` directory. It activates automatically.
-
-### About the `non-wp-projects` directory
-
-Triggers Fail2Ban on WordPress login probes in any project.
-
-To install copy the fake `non-wp-projects/wp-login.php`and `non-wp-projects/xmlrpc.php`
-to your **non-WordPress** project's document root.
-
-### Not available in WordPress.org's plugin directory
-
-After is it published on WordPress.org you can install the plugin and skip file copying.  
-That way it'll be installed automatically.
+- Likely malicious requests: `Malicious traffic detected:` may be banned after 6 attempts per 10 minutes
+- Surely break-in attempts: `Break-in attempt detected:` may be banned instantly
 
 ### How to support PayPal IPN, Braintree and custom entry points in poorly written plugins
 
@@ -171,3 +155,5 @@ if ( isset( $_SERVER['REQUEST_URI'] ) ) {
 - `/web/`
 - `/wordpress/`
 - `/wp/`
+
+Best not to create these directories to avoid lenghty log excepts.

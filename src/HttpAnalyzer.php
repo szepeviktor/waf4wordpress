@@ -442,13 +442,13 @@ final class HttpAnalyzer
         // @see http://httpd.apache.org/docs/current/custom-error.html#variables
         if (
             isset($_SERVER['REDIRECT_URL'])
-            && stripos($_SERVER['REDIRECT_URL'], '.php')
+            && stripos($_SERVER['REDIRECT_URL'], '.php') !== false
             // phpcs:ignore Squiz.PHP.CommentedOutCode
             /*
              * For old mod_fastcgi setups.
              *
              * && $_SERVER['SCRIPT_NAME'] !== $_SERVER['REDIRECT_URL']
-             */ !== false
+             */
         ) {
             return 'bad_request_nonexistent_php';
         }

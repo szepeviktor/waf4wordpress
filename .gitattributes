@@ -1,0 +1,3 @@
+/examples/ linguist-documentation export-ignore
+/phpcs.xml.dist export-ignore
+/phpstan.neon.dist export-ignore
