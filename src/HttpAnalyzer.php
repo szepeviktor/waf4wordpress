@@ -461,7 +461,7 @@ final class HttpAnalyzer
             return 'bad_request_robots_probe';
         }
 
-        // WordPress author sniffing.
+        // WordPress user enumeration.
         // Except on post listing by author on wp-admin.
         if (
             strpos($request_path, $this->admin_url) === false
