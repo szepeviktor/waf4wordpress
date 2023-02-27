@@ -3,11 +3,13 @@
 Stop real-life attacks on your WordPress website and
 trigger [Fail2Ban](https://github.com/fail2ban/fail2ban).
 
+💡 Before using this WAF you have to clean your websites, get rid of even tiny errors. This WAF will remind you that a small error needs to be fixed by banning everyone.
+
 This WAF does not give proper HTTP responses to unusual requets.
 It blocks the attacking IP address instantly, the purpose of this are the following.
 
 1. Prevent website compromise in further requests
-1. Prevent D/DoS attacks
+1. Prevent DoS attacks
 
 Shared hosting has no server-wide banning (because of trust issues)
 but you can still install this software without Fail2Ban to stop attacks by using one of the Miniban methods.
