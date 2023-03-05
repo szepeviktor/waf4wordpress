@@ -3,7 +3,8 @@
 Stop real-life attacks on your WordPress website and
 trigger [Fail2Ban](https://github.com/fail2ban/fail2ban).
 
-💡 Before using this WAF you have to clean your websites, get rid of even tiny errors. This WAF will remind you that a small error needs to be fixed by banning everyone.
+💡 Before using this WAF you have to clean your websits, get rid of even tiny errors
+This WAF will remind you that a small error needs to be fixed by banning every visitor.
 
 This WAF does not give proper HTTP responses to unusual requets.
 It blocks the attacking IP address instantly, the purpose of this are the following.
@@ -14,7 +15,13 @@ It blocks the attacking IP address instantly, the purpose of this are the follow
 Shared hosting has no server-wide banning (because of trust issues)
 but you can still install this software without Fail2Ban to stop attacks by using one of the Miniban methods.
 
-### Theory
+## Support my work
+
+Please consider sponsoring me monthly if you use my packages in an agency.
+
+[![Sponsor](https://github.com/szepeviktor/.github/raw/master/.github/assets/github-like-sponsor-button.svg)](https://github.com/sponsors/szepeviktor)
+
+## Theory
 
 Your WordPress - really general HTTP - security consists of:
 
@@ -33,7 +40,7 @@ Your WordPress - really general HTTP - security consists of:
 See the [Block WordPress attack vectors](https://github.com/szepeviktor/wordpress-website-lifecycle/blob/master/WordPress-security.md)
 note in my other repository for an overview of the topic.
 
-### Composer installation
+## Composer installation
 
 Technically this is not a WordPress plugin nor an MU plugin.
 WAF for WordPress is distributed and autoloaded as a Composer package.
@@ -57,7 +64,7 @@ WAF for WordPress is distributed and autoloaded as a Composer package.
     new SzepeViktor\WordPress\Waf\CoreEvents();
     ```
 
-### Manual installation
+## Manual installation
 
 :bulb: Please see [Composer-managed WordPress](https://github.com/szepeviktor/composer-managed-wordpress)
 for managing WordPress with Composer.
@@ -85,7 +92,7 @@ Technically this is not a WordPress plugin nor an MU plugin.
     new SzepeViktor\WordPress\Waf\CoreEvents();
     ```
 
-### Configuration
+## Configuration
 
 WAF for WordPress is configured in source code
 before class instantiation. in `wp-config`.
@@ -95,7 +102,7 @@ Create custom filters for Fail2Ban catching these PHP messages.
 - Likely malicious requests: `Malicious traffic detected:` may be banned after 6 attempts per 10 minutes
 - Surely break-in attempts: `Break-in attempt detected:` may be banned instantly
 
-### How to support PayPal IPN, Braintree and custom entry points in poorly written plugins
+## How to support PayPal IPN, Braintree and custom entry points in poorly written plugins
 
 Copy this into your in `wp-config.php`.
 
@@ -135,11 +142,11 @@ if ( isset( $_SERVER['REQUEST_URI'] ) ) {
 }
 ```
 
-### Support and feature requests
+## Bug reports and feature requests
 
 [Open a new issue](https://github.com/szepeviktor/waf4wordpress/issues/new)
 
-#### Where script kiddies look for WordPress
+### Where script kiddies look for WordPress
 
 - `/backup/`
 - `/blog/`
