@@ -3,8 +3,8 @@
 Stop real-life attacks on your WordPress website and
 trigger [Fail2Ban](https://github.com/fail2ban/fail2ban).
 
-💡 Before using this WAF you have to clean your websits, get rid of even tiny errors
-This WAF will remind you that a small error needs to be fixed by banning every visitor.
+:bulb: Before using this WAF you have to clean your website, get rid of even tiny errors.
+See you access and error logs daily and run this WAF without Fail2ban for a week.
 
 This WAF does not give proper HTTP responses to unusual requets.
 It blocks the attacking IP address instantly, the purpose of this are the following.
@@ -23,7 +23,7 @@ Please consider sponsoring me monthly if you use my packages in an agency.
 
 ## Theory
 
-Your WordPress - really general HTTP - security consists of:
+Your WordPress - really general HTTP - security consists of the followings.
 
 1. Use HTTPS
 1. Have daily backups
@@ -102,7 +102,7 @@ Create custom filters for Fail2Ban catching these PHP messages.
 - Likely malicious requests: `Malicious traffic detected:` may be banned after 6 attempts per 10 minutes
 - Surely break-in attempts: `Break-in attempt detected:` may be banned instantly
 
-## How to support PayPal IPN, Braintree and custom entry points in poorly written plugins
+### How to support PayPal IPN, Braintree and custom entry points in poorly written plugins
 
 Copy this into your in `wp-config.php`.
 
@@ -146,7 +146,7 @@ if ( isset( $_SERVER['REQUEST_URI'] ) ) {
 
 [Open a new issue](https://github.com/szepeviktor/waf4wordpress/issues/new)
 
-### Where script kiddies look for WordPress
+## Where script kiddies look for WordPress
 
 - `/backup/`
 - `/blog/`
