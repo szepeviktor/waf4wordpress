@@ -656,9 +656,9 @@ final class HttpAnalyzer
         // HTTP protocol version.
         if (! $this->allow_old_proxies) {
             if (
-                strpos($_SERVER['SERVER_PROTOCOL'], 'HTTP/1.1')
+                strpos($_SERVER['SERVER_PROTOCOL'], 'HTTP/1.1') === false
                 // Also matches 'HTTP/2.0'.
-                === false                && strpos($_SERVER['SERVER_PROTOCOL'], 'HTTP/2') === false
+                && strpos($_SERVER['SERVER_PROTOCOL'], 'HTTP/2') === false
             ) {
                 return 'bad_request_login_http11_2';
             }
@@ -1090,11 +1090,11 @@ final class HttpAnalyzer
     }
 
     /**
-     * Rebuild possibly not URL-encoded query string.
+     * Rebuild possibly not URL-encoded query string in $_SERVER.
      *
      * @param string $request_query The query string.
      */
-    private function rebuild_query( $request_query )
+    private function rebuild_query($request_query)
     {
 
         $rebuilt_query = [];

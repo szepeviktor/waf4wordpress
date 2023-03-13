@@ -723,22 +723,20 @@ final class CoreEvents
         // It does SHORTINIT, no mu-plugins get loaded
         if (
             !$this->is_robot($ua)
-
             // Not a whitelisted crawler
-            || $this->is_crawler($ua)
-
+            || $this->is_crawler($ua) !== false
             // Request to a WordPress directory
-            !== false            || preg_match('/\/(' . $wp_dirs . ')\//i', $request_path)
-
+            || preg_match('/\/(' . $wp_dirs . ')\//i', $request_path) !== 1
             // Exclude missing media files
             //      and stale cache items
-            //  but not `*.pHp*`
-            !== 1            || ( ( strstr($request_path, $uploads_base) !== false
+            //      but not `*.pHp*`
+            || (
+                (
+                    strstr($request_path, $uploads_base) !== false
                     || strstr($request_path, $cache) !== false
                 )
                 && stristr($request_path, '.php') === false
             )
-
             // Somehow logged in?
             || is_user_logged_in()
         ) {
