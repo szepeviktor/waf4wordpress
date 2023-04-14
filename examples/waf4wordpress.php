@@ -2,9 +2,10 @@
 
 /*
  * Plugin Name: WAF for WordPress (MU)
+ * Plugin URI: https://github.com/szepeviktor/waf4wordpress
  */
 
-if (! function_exists('add_filter')) {
+if (!function_exists('add_filter')) {
     exit;
 }
 
