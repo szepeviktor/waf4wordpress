@@ -4,9 +4,9 @@ Stop real-life attacks on your WordPress website and
 trigger [Fail2Ban](https://github.com/fail2ban/fail2ban).
 
 :bulb: Before using this WAF you have to clean your website, get rid of even tiny errors.
-See you access and error logs daily and run this WAF without Fail2ban for a week.
+See your access and error logs daily and run this WAF without Fail2ban for a week.
 
-This WAF does not give proper HTTP responses to unusual requets.
+This WAF does not give proper HTTP responses to unusual requests.
 It blocks the attacking IP address instantly, the purpose of this are the following.
 
 1. Prevent website compromise in further requests
@@ -165,4 +165,4 @@ if ( isset( $_SERVER['REQUEST_URI'] ) ) {
 - `/wordpress/`
 - `/wp/`
 
-Best not to create these directories to avoid lenghty log excepts.
+Best not to create these directories to avoid lengthy log excerpts.
