@@ -18,6 +18,7 @@ declare(strict_types=1);
  * Constants:   W4WP_ALLOW_OLD_PROXIES
  * Constants:   W4WP_ALLOW_CONNECTION_EMPTY
  * Constants:   W4WP_ALLOW_CONNECTION_CLOSE
+ * Constants:   W4WP_ALLOW_ACCEPT_LANGUAGE_EMPTY
  * Constants:   W4WP_ALLOW_IE_NO_REFERER
  * Constants:   W4WP_ALLOW_TWO_CAPS
  * Constants:   W4WP_DISALLOW_TOR_LOGIN
@@ -142,6 +143,7 @@ final class HttpAnalyzer
     private $allow_old_proxies = false;
     private $allow_connection_empty = false;
     private $allow_connection_close = false;
+    private $allow_accept_language_empty = false;
     private $allow_ie_no_referer = false;
     private $allow_two_capitals = false;
     private $disallow_tor_login = false;
@@ -239,6 +241,10 @@ final class HttpAnalyzer
 
         if (defined('W4WP_ALLOW_CONNECTION_CLOSE') && W4WP_ALLOW_CONNECTION_CLOSE) {
             $this->allow_connection_close = true;
+        }
+
+        if (defined('W4WP_ALLOW_ACCEPT_LANGUAGE_EMPTY') && W4WP_ALLOW_ACCEPT_LANGUAGE_EMPTY) {
+            $this->allow_accept_language_empty = true;
         }
 
         if (defined('W4WP_ALLOW_IE_NO_REFERER') && W4WP_ALLOW_IE_NO_REFERER) {
@@ -588,11 +594,13 @@ final class HttpAnalyzer
          */
 
         // Accept-Language HTTP header.
-        if (
-            empty($_SERVER['HTTP_ACCEPT_LANGUAGE'])
-            || strlen($_SERVER['HTTP_ACCEPT_LANGUAGE']) < 2
-        ) {
-            return 'bad_request_login_accept_language';
+        if (! $this->allow_accept_language_empty) {
+            if (
+                empty($_SERVER['HTTP_ACCEPT_LANGUAGE'])
+                || strlen($_SERVER['HTTP_ACCEPT_LANGUAGE']) < 2
+            ) {
+                return 'bad_request_login_accept_language';
+            }
         }
 
         // Referer HTTP header.
