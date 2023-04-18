@@ -40,11 +40,17 @@ namespace SzepeViktor\WordPress\Waf;
 final class CoreEvents
 {
     private $prefix = 'Malicious traffic detected: ';
+
     private $prefix_instant = 'Break-in attempt detected: ';
+
     private $wp_die_ajax_handler;
+
     private $wp_die_xmlrpc_handler;
+
     private $wp_die_handler;
+
     private $is_redirect = false;
+
     /**
      * Ban instead of displaying error message with `illegal_user_logins` filter.
      *
@@ -87,7 +93,9 @@ final class CoreEvents
         'username',
         'webmaster',
     ];
+
     private $min_username_length = 3;
+
     /** @see https://github.com/WordPress/WordPress/blob/5.2.2/wp-includes/pluggable.php#L2364 */
     private $secure_min_password_length = 12;
 
@@ -119,78 +127,77 @@ final class CoreEvents
             remove_action('wp_head', 'rest_output_link_wp_head', 10);
             remove_action('template_redirect', 'rest_output_link_header', 11);
             if (defined('W4WP_ONLY_OEMBED') && W4WP_ONLY_OEMBED) {
-                add_filter('rest_pre_dispatch', [ $this, 'rest_api_only_oembed' ], 0, 3);
+                add_filter('rest_pre_dispatch', [$this, 'rest_api_only_oembed'], 0, 3);
             } else {
                 // Remove oembed core action
                 remove_action('wp_head', 'wp_oembed_add_discovery_links');
-                add_filter('rest_authentication_errors', [ $this, 'rest_api_disabled' ], 99999);
+                add_filter('rest_authentication_errors', [$this, 'rest_api_disabled'], 99999);
             }
         } else {
-            add_filter('oembed_response_data', [ $this, 'oembed_filter' ], 0);
-            add_filter('rest_post_dispatch', [ $this, 'rest_filter' ], 0, 3);
+            add_filter('oembed_response_data', [$this, 'oembed_filter'], 0);
+            add_filter('rest_post_dispatch', [$this, 'rest_filter'], 0, 3);
         }
 
         // Don't redirect to admin
         remove_action('template_redirect', 'wp_redirect_admin_locations', 1000);
 
         // Login related
-        add_action('login_init', [ $this, 'login' ]);
+        add_action('login_init', [$this, 'login']);
         if (! is_admin()) {
-            add_action('admin_bar_menu', [ $this, 'admin_bar' ], 99999);
+            add_action('admin_bar_menu', [$this, 'admin_bar'], 99999);
             // For login links in nav menus:
             // Appearance / Menus / (menu) / (item) / XFN = nofollow
         }
-        add_action('wp_logout', [ $this, 'logout' ], 0, 1);
-        add_action('retrieve_password', [ $this, 'lostpass' ]);
+        add_action('wp_logout', [$this, 'logout'], 0, 1);
+        add_action('retrieve_password', [$this, 'lostpass']);
         if (defined('W4WP_DISABLE_LOGIN') && W4WP_DISABLE_LOGIN) {
             // Disable login
-            add_action('login_head', [ $this, 'disable_user_login_js' ]);
-            add_filter('authenticate', [ $this, 'authentication_disabled' ], 0, 2);
+            add_action('login_head', [$this, 'disable_user_login_js']);
+            add_filter('authenticate', [$this, 'authentication_disabled'], 0, 2);
         } else {
             // Prevent registering with banned username
-            add_filter('validate_username', [ $this, 'banned_username' ], 99999, 2);
+            add_filter('validate_username', [$this, 'banned_username'], 99999, 2);
             // wp-login, XMLRPC login (any authentication)
-            add_action('wp_login_failed', [ $this, 'login_failed' ]);
-            add_filter('authenticate', [ $this, 'before_login' ], 0, 2);
-            add_filter('wp_authenticate_user', [ $this, 'authentication_strength' ], 99999, 2);
-            add_action('register_new_user', [ $this, 'after_register' ], 99999, 1);
-            add_action('wp_login', [ $this, 'after_login' ], 0, 2);
+            add_action('wp_login_failed', [$this, 'login_failed']);
+            add_filter('authenticate', [$this, 'before_login'], 0, 2);
+            add_filter('wp_authenticate_user', [$this, 'authentication_strength'], 99999, 2);
+            add_action('register_new_user', [$this, 'after_register'], 99999, 1);
+            add_action('wp_login', [$this, 'after_login'], 0, 2);
         }
 
         // Don't use shortlinks which are redirected to canonical URL-s
         add_filter('pre_get_shortlink', '__return_empty_string');
 
         // Non-existent URLs
-        add_action('init', [ $this, 'url_hack' ]);
-        if (! ( defined('W4WP_ALLOW_REDIRECT') && W4WP_ALLOW_REDIRECT )) {
-            add_filter('redirect_canonical', [ $this, 'redirect' ], 1, 2);
+        add_action('init', [$this, 'url_hack']);
+        if (!(defined('W4WP_ALLOW_REDIRECT') && W4WP_ALLOW_REDIRECT)) {
+            add_filter('redirect_canonical', [$this, 'redirect'], 1, 2);
         }
 
         // Robot and human 404
-        add_action('plugins_loaded', [ $this, 'robot_403' ], 0);
+        add_action('plugins_loaded', [$this, 'robot_403'], 0);
         // BuddyPress fiddles with is_404 at priority 10
-        add_action('template_redirect', [ $this, 'wp_404' ], 11);
+        add_action('template_redirect', [$this, 'wp_404'], 11);
 
         // Non-empty wp_die messages
-        add_filter('wp_die_ajax_handler', [ $this, 'wp_die_ajax' ], 1);
-        add_filter('wp_die_xmlrpc_handler', [ $this, 'wp_die_xmlrpc' ], 1);
-        add_filter('wp_die_handler', [ $this, 'wp_die' ], 1);
+        add_filter('wp_die_ajax_handler', [$this, 'wp_die_ajax'], 1);
+        add_filter('wp_die_xmlrpc_handler', [$this, 'wp_die_xmlrpc'], 1);
+        add_filter('wp_die_handler', [$this, 'wp_die'], 1);
 
         // Unknown admin-ajax and admin-post action
         // admin_init is done just before AJAX actions
-        add_action('admin_init', [ $this, 'hook_all_action' ]);
+        add_action('admin_init', [$this, 'hook_all_action']);
 
         // Ban spammers (Contact Form 7 Robot Trap)
-        add_action('robottrap_hiddenfield', [ $this, 'spam_hiddenfield' ]);
-        add_action('robottrap_mx', [ $this, 'spam_mx' ]);
+        add_action('robottrap_hiddenfield', [$this, 'spam_hiddenfield']);
+        add_action('robottrap_mx', [$this, 'spam_mx']);
 
         // Ban bad robots (Nofollow Robot Trap)
-        add_action('nofollow_robot_trap', [ $this, 'nfrt_robot_trap' ]);
+        add_action('nofollow_robot_trap', [$this, 'nfrt_robot_trap']);
     }
 
-    private function trigger_instant( $slug, $message, $level = 'crit' )
+    private function trigger_instant($slug, $message, $level = 'crit')
     {
-
         // Trigger Miniban at first
         if (class_exists('\Miniban')) {
             if (\Miniban::ban() !== true) {
@@ -201,7 +208,7 @@ final class CoreEvents
         $this->trigger($slug, $message, $level, $this->prefix_instant);
 
         // Remove session
-        remove_action('wp_logout', [ $this, 'logout' ], 0);
+        remove_action('wp_logout', [$this, 'logout'], 0);
         wp_logout();
 
         // Respond
@@ -221,9 +228,8 @@ final class CoreEvents
         exit;
     }
 
-    private function trigger( $slug, $message, $level = 'error', $prefix = '' )
+    private function trigger($slug, $message, $level = 'error', $prefix = '')
     {
-
         if ($prefix === '') {
             $prefix = $this->prefix;
         }
@@ -266,7 +272,6 @@ final class CoreEvents
 
     private function ban()
     {
-
         header('Status: 403 Forbidden');
         header('HTTP/1.1 403 Forbidden', true, 403);
         header('Connection: close');
@@ -278,7 +283,6 @@ final class CoreEvents
 
     private function fake_wplogin()
     {
-
         $username = trim($_POST['log']);
         $expire = time() + 3600;
         $token = substr(hash_hmac('sha256', (string)rand(), 'token'), 0, 43);
@@ -297,7 +301,6 @@ final class CoreEvents
 
     private function fake_xmlrpc()
     {
-
         header('Connection: close');
         header('Cache-Control: max-age=0, private, no-store, no-cache, must-revalidate');
         header('X-Robots-Tag: noindex, nofollow');
@@ -326,14 +329,13 @@ final class CoreEvents
         );
     }
 
-    private function enhanced_error_log( $message = '', $level = 'error' )
+    private function enhanced_error_log($message = '', $level = 'error')
     {
-
         // phpcs:ignore Squiz.PHP.CommentedOutCode
         /*
         // log_errors PHP directive does not actually disable logging
-        $log_enabled = ( '1' === ini_get( 'log_errors' ) );
-        if ( ! $log_enabled || '' !== $log_destination ) {
+        $log_enabled = ('1' === ini_get('log_errors'));
+        if (!$log_enabled || '' !== $log_destination) {
         */
 
         // Add entry point, correct when auto_prepend_file is empty
@@ -370,8 +372,7 @@ final class CoreEvents
 
     public function wp_404()
     {
-
-        if (! is_404()) {
+        if (!is_404()) {
             return;
         }
 
@@ -417,9 +418,8 @@ final class CoreEvents
      * @param array<string, mixed> $data
      * @return array<string, mixed> $data
      */
-    public function oembed_filter( $data )
+    public function oembed_filter($data)
     {
-
         if (isset($data['author_url'])) {
             unset($data['author_url']);
         }
@@ -432,19 +432,18 @@ final class CoreEvents
      *
      * @param \WP_HTTP_Response|\WP_Error $response
      * @param \WP_REST_Server $server
-     * @param \WP_REST_Request $request
+     * @param \WP_REST_Request<array<array-key,mixed>> $request
      * @return \WP_HTTP_Response|\WP_Error
      */
-    public function rest_filter( $response, $server, $request )
+    public function rest_filter($response, $server, $request)
     {
-
         if ($response instanceof \WP_HTTP_Response) {
             $status = $response->get_status();
             $method = $request->get_method();
             $route = $request->get_route();
             /** @var array{code:string, message:string} $data */
             $data = $response->get_data();
-            $is_user_listing = ( $server::READABLE === $method && substr($route, 0, 12) === '/wp/v2/users' );
+            $is_user_listing = ($server::READABLE === $method && substr($route, 0, 12) === '/wp/v2/users');
             // Disable any kind of unauthorized user listing
             // Authenticated REST requests must have a nonce
             if (! current_user_can('list_users') && $is_user_listing) {
@@ -469,7 +468,6 @@ final class CoreEvents
 
     public function url_hack()
     {
-
         if (substr($_SERVER['REQUEST_URI'], 0, 2) !== '//') {
             return;
         }
@@ -480,22 +478,20 @@ final class CoreEvents
     }
 
     // phpcs:ignore VariableAnalysis.CodeAnalysis.VariableAnalysis
-    public function rest_api_disabled( $enabled )
+    public function rest_api_disabled($enabled)
     {
-
         $this->trigger('w4wp_rest_api_disabled', $_SERVER['REQUEST_URI'], 'notice');
 
         return new \WP_Error(
             'rest_no_route',
             __('No route was found matching the URL and request method'),
-            [ 'status' => 404 ]
+            ['status' => 404]
         );
     }
 
-    public function rest_api_only_oembed( $null, $that, $request )
+    public function rest_api_only_oembed($null, $that, $request)
     {
-
-        // @see https://oembed.com/#section2.2
+        // https://oembed.com/#section2.2
         if ($request->get_route() === '/oembed/1.0/embed') {
             return $null;
         }
@@ -505,15 +501,14 @@ final class CoreEvents
         $response_data = [
             'code' => 'rest_no_route',
             'message' => __('No route was found matching the URL and request method'),
-            'data' => [ 'status' => 404 ],
+            'data' => ['status' => 404],
         ];
 
         return new \WP_REST_Response($response_data, 404);
     }
 
-    public function redirect( $redirect_url, $requested_url )
+    public function redirect($redirect_url, $requested_url)
     {
-
         if ($this->is_redirect === false) {
             $this->trigger('w4wp_redirect', $requested_url, 'notice');
         }
@@ -528,9 +523,8 @@ final class CoreEvents
      * @param string $username
      * @return bool
      */
-    public function banned_username( $valid, $username )
+    public function banned_username($valid, $username)
     {
-
         if (
             in_array(strtolower($username), $this->names2ban, true)
             || mb_strlen($username) < $this->min_username_length
@@ -542,9 +536,8 @@ final class CoreEvents
         return $valid;
     }
 
-    public function authentication_disabled( $user, $username )
+    public function authentication_disabled($user, $username)
     {
-
         if (in_array(strtolower($username), $this->names2ban, true)) {
             $this->trigger_instant('w4wp_login_disabled_banned_username', $username);
         }
@@ -557,15 +550,13 @@ final class CoreEvents
 
     public function disable_user_login_js()
     {
-
         print '<script type="text/javascript">setTimeout(function(){
             try{document.getElementById("wp-submit").setAttribute("disabled", "disabled");}
             catch(e){}}, 0);</script>';
     }
 
-    public function login_failed( $username )
+    public function login_failed($username)
     {
-
         $this->trigger('w4wp_auth_failed', $username);
     }
 
@@ -576,9 +567,8 @@ final class CoreEvents
      * @param string $username
      * @return \WP_User|\WP_Error|null
      */
-    public function before_login( $user, $username )
+    public function before_login($user, $username)
     {
-
         // Only act on login.
         if ($user instanceof \WP_User) {
             return $user;
@@ -602,9 +592,8 @@ final class CoreEvents
      * @param string $password
      * @return \WP_User|\WP_Error
      */
-    public function authentication_strength( $user, $password )
+    public function authentication_strength($user, $password)
     {
-
         // Do not touch previous errors.
         if (! $user instanceof \WP_User) {
             return $user;
@@ -628,7 +617,6 @@ final class CoreEvents
      */
     public function login()
     {
-
         status_header(404);
     }
 
@@ -637,18 +625,18 @@ final class CoreEvents
      *
      * @param \WP_Admin_Bar $admin_bar
      */
-    public function admin_bar( $admin_bar )
+    public function admin_bar($admin_bar)
     {
-
         $admin_bar_nodes = $admin_bar->get_nodes();
-        if (! is_array($admin_bar_nodes)) {
+        if (!is_array($admin_bar_nodes)) {
             return;
         }
 
         foreach ($admin_bar_nodes as $id => $node) {
-            if (! is_string($node->href) || strpos($node->href, '/wp-login.php') === false) {
+            if (!is_string($node->href) || strpos($node->href, '/wp-login.php') === false) {
                 continue;
             }
+
             $admin_bar->remove_menu($id);
             $node->meta['rel'] = 'nofollow';
             $admin_bar->add_menu($node);
@@ -658,9 +646,8 @@ final class CoreEvents
     /**
      * @param int $user_id
      */
-    public function after_register( $user_id )
+    public function after_register($user_id)
     {
-
         $user = get_user_by('id', $user_id);
         \assert($user instanceof \WP_User);
 
@@ -671,9 +658,8 @@ final class CoreEvents
      * @param string $username
      * @param \WP_User $user
      */
-    public function after_login( $username, $user )
+    public function after_login($username, $user)
     {
-
         if (!is_a($user, 'WP_User')) {
             return;
         }
@@ -681,9 +667,8 @@ final class CoreEvents
         $this->trigger('authenticated', $username, 'info', 'WordPress auth: ');
     }
 
-    public function logout( $user_id )
+    public function logout($user_id)
     {
-
         $user = get_user_by('id', $user_id);
         \assert($user instanceof \WP_User);
 
@@ -696,9 +681,8 @@ final class CoreEvents
      *
      * @param string $username
      */
-    public function lostpass( $username )
+    public function lostpass($username)
     {
-
         if (trim($username) === '') {
             $this->trigger('lost_pass_empty', $username, 'warn');
         }
@@ -711,7 +695,6 @@ final class CoreEvents
      */
     public function robot_403()
     {
-
         $ua = array_key_exists('HTTP_USER_AGENT', $_SERVER) ? $_SERVER['HTTP_USER_AGENT'] : '';
         $request_path = (string)parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
         $wp_dirs = sprintf('wp-admin|wp-includes|wp-content|%s', basename(WP_CONTENT_DIR));
@@ -752,13 +735,12 @@ final class CoreEvents
      * @param callable $function
      * @return callable
      */
-    public function wp_die_ajax( $function )
+    public function wp_die_ajax($function)
     {
-
         // Remember the previous handler
         $this->wp_die_ajax_handler = $function;
 
-        return [ $this, 'wp_die_ajax_handler' ];
+        return [$this, 'wp_die_ajax_handler'];
     }
 
     /**
@@ -768,15 +750,17 @@ final class CoreEvents
      * @param string|int $title
      * @param string|int|array<mixed> $args
      */
-    public function wp_die_ajax_handler( $message, $title, $args )
+    public function wp_die_ajax_handler($message, $title, $args)
     {
-
         // wp-admin/includes/ajax-actions.php returns -1 on security breach
         if (
-            ! ( is_scalar($message) || $this->is_whitelisted_error($message) )
-            || ( is_int($message) && $message < 0 )
+            !(is_scalar($message) || $this->is_whitelisted_error($message))
+            || (is_int($message) && $message < 0)
         ) {
-            $this->trigger('w4wp_wpdie_ajax', $message);
+            $this->trigger(
+                'w4wp_wpdie_ajax',
+                $message instanceof \WP_Error ? $message->get_error_message() : $message
+            );
         }
 
         // Call previous handler
@@ -790,13 +774,12 @@ final class CoreEvents
      * @param callable $function
      * @return callable
      */
-    public function wp_die_xmlrpc( $function )
+    public function wp_die_xmlrpc($function)
     {
-
         // Remember the previous handler
         $this->wp_die_xmlrpc_handler = $function;
 
-        return [ $this, 'wp_die_xmlrpc_handler' ];
+        return [$this, 'wp_die_xmlrpc_handler'];
     }
 
     /**
@@ -806,11 +789,13 @@ final class CoreEvents
      * @param string|int $title
      * @param string|int|array<mixed> $args
      */
-    public function wp_die_xmlrpc_handler( $message, $title, $args )
+    public function wp_die_xmlrpc_handler($message, $title, $args)
     {
-
-        if (! empty($message)) {
-            $this->trigger('w4wp_wpdie_xmlrpc', $message);
+        if (!empty($message)) {
+            $this->trigger(
+                'w4wp_wpdie_xmlrpc',
+                $message instanceof \WP_Error ? $message->get_error_message() : $message
+            );
         }
 
         // Call previous handler
@@ -824,13 +809,12 @@ final class CoreEvents
      * @param callable $function
      * @return callable
      */
-    public function wp_die( $function )  // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+    public function wp_die($function)  // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
     {
-
         // Remember the previous handler
         $this->wp_die_handler = $function;
 
-        return [ $this, 'wp_die_handler' ];
+        return [$this, 'wp_die_handler'];
     }
 
     /**
@@ -840,11 +824,13 @@ final class CoreEvents
      * @param string|int $title
      * @param string|int|array<mixed> $args
      */
-    public function wp_die_handler( $message, $title, $args )
+    public function wp_die_handler($message, $title, $args)
     {
-
-        if (! empty($message)) {
-            $this->trigger('w4wp_wpdie', $message);
+        if (!empty($message)) {
+            $this->trigger(
+                'w4wp_wpdie',
+                $message instanceof \WP_Error ? $message->get_error_message() : $message
+            );
         }
 
         // Call previous handler
@@ -852,7 +838,7 @@ final class CoreEvents
         call_user_func($this->wp_die_handler, $message, $title, $args);
     }
 
-    private function is_whitelisted_error( $error )
+    private function is_whitelisted_error($error)
     {
 
         if (! is_wp_error($error)) {
@@ -864,28 +850,24 @@ final class CoreEvents
             'plugins_api_failed',
             'translations_api_failed',
         ];
-        $code = $error->get_error_code();
 
-        if (in_array($code, $whitelist, true)) {
-            return true;
-        }
-
-        return false;
+        return in_array($error->get_error_code(), $whitelist, true);
     }
 
     public function hook_all_action()
     {
-
         // Don't slow down everything
         if (!isset($_REQUEST['action'])) {
             return;
         }
 
-        add_action('all', [ $this, 'unknown_action' ], 0);
+        add_action('all', [$this, 'unknown_action'], 0);
     }
 
-    public function unknown_action( $tag )
+    public function unknown_action($tag)
     {
+        global $wp_actions;
+        global $wp_filter;
 
         // Check tag first to speed things up
         if (
@@ -894,9 +876,6 @@ final class CoreEvents
         ) {
             return;
         }
-
-        global $wp_actions;
-        global $wp_filter;
 
         $whitelisted_actions = [
             'wp_ajax_nopriv_wp-remove-post-lock',
@@ -919,21 +898,18 @@ final class CoreEvents
         $this->trigger_instant('w4wp_admin_action_unknown', $tag);
     }
 
-    public function spam_hiddenfield( $text )
+    public function spam_hiddenfield($text)
     {
-
         $this->trigger_instant('w4wp_spam_hiddenfield', $text);
     }
 
-    public function spam_mx( $domain )
+    public function spam_mx($domain)
     {
-
         $this->trigger('w4wp_spam_mx', $domain, 'warn');
     }
 
-    public function nfrt_robot_trap( $message )
+    public function nfrt_robot_trap($message)
     {
-
         $this->trigger_instant('w4wp_nfrt_robot_trap', $message);
     }
 
@@ -946,15 +922,14 @@ final class CoreEvents
      * @param string $ua
      * @return bool
      */
-    private function is_robot( $ua )
+    private function is_robot($ua)
     {
-
-        return ( substr($ua, 0, 11) !== 'Mozilla/5.0' )
-            && ( substr($ua, 0, 34) !== 'Mozilla/4.0 (compatible; MSIE 8.0;' )
-            && ( substr($ua, 0, 34) !== 'Mozilla/4.0 (compatible; MSIE 7.0;' )
-            && ( substr($ua, 0, 10) !== 'Opera/9.80' );
+        return (substr($ua, 0, 11) !== 'Mozilla/5.0')
+            && (substr($ua, 0, 34) !== 'Mozilla/4.0 (compatible; MSIE 8.0;')
+            && (substr($ua, 0, 34) !== 'Mozilla/4.0 (compatible; MSIE 7.0;')
+            && (substr($ua, 0, 10) !== 'Opera/9.80');
             // phpcs:ignore Squiz.PHP.CommentedOutCode.Found
-            // && 1 !== preg_match( '#^\S+ Linux/\S+ Android/\S+ Release/\S+ Browser/AppleWebKit\S+ Chrome/\S+ Mobile Safari/\S+ System/Android \S+$#', $ua )
+            // && 1 !== preg_match('#^\S+ Linux/\S+ Android/\S+ Release/\S+ Browser/AppleWebKit\S+ Chrome/\S+ Mobile Safari/\S+ System/Android \S+$#', $ua)
     }
 
     /**
@@ -965,9 +940,8 @@ final class CoreEvents
      * @param string $ip
      * @return bool
      */
-    private function is_msnbot( $ua, $ip )
+    private function is_msnbot($ua, $ip)
     {
-
         if (strpos($ua, 'bingbot') === false && strpos($ua, 'BingPreview') === false) {
             return false;
         }
@@ -977,6 +951,7 @@ final class CoreEvents
         if ($host === false || substr($host, -15) !== '.search.msn.com') {
             return false;
         }
+
         $rev_ip = gethostbyname($host);
 
         return $rev_ip === $ip;
@@ -991,9 +966,8 @@ final class CoreEvents
      * @param string $ip
      * @return bool
      */
-    private function is_googlebot( $ua, $ip )
+    private function is_googlebot($ua, $ip)
     {
-
         if (strpos($ua, 'Googlebot') === false && strpos($ua, 'AdsBot-Google') === false) {
             return false;
         }
@@ -1002,10 +976,11 @@ final class CoreEvents
         $host = gethostbyaddr($ip);
         if (
             $host === false
-            || ( substr($host, -14) !== '.googlebot.com' && substr($host, -11) !== '.google.com' )
+            || (substr($host, -14) !== '.googlebot.com' && substr($host, -11) !== '.google.com')
         ) {
             return false;
         }
+
         $rev_ip = gethostbyname($host);
 
         return $rev_ip === $ip;
@@ -1019,9 +994,8 @@ final class CoreEvents
      * @param string $ip
      * @return bool
      */
-    private function is_yandexbot( $ua, $ip )
+    private function is_yandexbot($ua, $ip)
     {
-
         if (strpos($ua, 'Yandex') === false) {
             return false;
         }
@@ -1030,13 +1004,15 @@ final class CoreEvents
         $host = gethostbyaddr($ip);
         if (
             $host === false
-            || ( substr($host, -10) !== '.yandex.ru'
+            || (
+                substr($host, -10) !== '.yandex.ru'
                 && substr($host, -11) !== '.yandex.net'
                 && substr($host, -11) !== '.yandex.com'
             )
         ) {
             return false;
         }
+
         $rev_ip = gethostbyname($host);
 
         return $rev_ip === $ip;
@@ -1050,9 +1026,8 @@ final class CoreEvents
      * @param string $ip
      * @return bool
      */
-    private function is_google_proxy( $ua, $ip )
+    private function is_google_proxy($ua, $ip)
     {
-
         if (strpos($ua, 'via ggpht.com GoogleImageProxy') === false) {
             return false;
         }
@@ -1062,6 +1037,7 @@ final class CoreEvents
         if ($host === false || preg_match('/^google-proxy-[0-9-]+\.google\.com$/', $host) !== 1) {
             return false;
         }
+
         $rev_ip = gethostbyname($host);
 
         return $rev_ip === $ip;
@@ -1075,9 +1051,8 @@ final class CoreEvents
      * @param string $ip
      * @return bool
      */
-    private function is_seznambot( $ua, $ip )
+    private function is_seznambot($ua, $ip)
     {
-
         if (strpos($ua, 'SeznamBot') === false) {
             return false;
         }
@@ -1087,6 +1062,7 @@ final class CoreEvents
         if ($host === false || preg_match('/^seznam\.cz$/', $host) !== 1) {
             return false;
         }
+
         $rev_ip = gethostbyname($host);
 
         return $rev_ip === $ip;
@@ -1102,9 +1078,8 @@ final class CoreEvents
      * @param string $ip
      * @return bool
      */
-    private function is_contentking( $ua, $ip )
+    private function is_contentking($ua, $ip)
     {
-
         $ranges = [
             '89.149.192.96/27',
             '81.17.55.192/27',
@@ -1134,9 +1109,8 @@ final class CoreEvents
      * @param string $ua
      * @return bool
      */
-    private function is_facebookcrawler( $ua )
+    private function is_facebookcrawler($ua)
     {
-
         // facebook-crawler-ip-update.sh blocks fake Facebook crawlers.
         return strpos($ua, 'facebookexternalhit/') === 0;
     }
@@ -1162,9 +1136,8 @@ final class CoreEvents
      * @param string $ua
      * @return string|bool
      */
-    private function is_crawler( $ua )
+    private function is_crawler($ua)
     {
-
         // Humans and web crawling bots.
         if (
             defined('W4WP_MSNBOT') && W4WP_MSNBOT
@@ -1233,9 +1206,8 @@ final class CoreEvents
      * @param string $range
      * @return bool
      */
-    private function ip_in_range( $ip, $range )
+    private function ip_in_range($ip, $range)
     {
-
         if (strpos($range, '/') === false) {
             $range .= '/32';
         }
@@ -1243,12 +1215,12 @@ final class CoreEvents
         $ip_decimal = ip2long($ip);
 
         // Range is in CIDR format
-        list( $range_ip, $netmask ) = explode('/', $range, 2);
+        list($range_ip, $netmask) = explode('/', $range, 2);
         $range_decimal = ip2long($range_ip);
-        $wildcard_decimal = pow(2, ( 32 - (int)$netmask )) - 1;
+        $wildcard_decimal = pow(2, (32 - (int)$netmask)) - 1;
         $netmask_decimal = ~ $wildcard_decimal;
 
-        return ( $ip_decimal & $netmask_decimal ) === ( $range_decimal & $netmask_decimal );
+        return ($ip_decimal & $netmask_decimal) === ($range_decimal & $netmask_decimal);
     }
 
     /**
@@ -1258,9 +1230,8 @@ final class CoreEvents
      *
      * @return string
      */
-    private function esc_log( $data )
+    private function esc_log($data)
     {
-
         $escaped = json_encode($data, JSON_UNESCAPED_SLASHES);
         if ($escaped === false) {
             return ' ';
@@ -1269,7 +1240,7 @@ final class CoreEvents
         // Limit length
         $escaped = mb_substr($escaped, 0, 500, 'utf-8');
         // New lines to "|"
-        $escaped = str_replace([ "\n", "\r" ], '|', $escaped);
+        $escaped = str_replace(["\n", "\r"], '|', $escaped);
         // Replace non-printables with "¿"
         $escaped = preg_replace('/[^\P{C}]+/u', "\xC2\xBF", $escaped);
 
@@ -1283,9 +1254,8 @@ final class CoreEvents
      *
      * @return string
      */
-    private function translate_apache_level( $apache_level )
+    private function translate_apache_level($apache_level)
     {
-
         $levels = [
             'emerg' => 'emergency',
             'alert' => 'alert',
@@ -1302,7 +1272,6 @@ final class CoreEvents
 
     private function exit_with_instructions()
     {
-
         $doc_root = array_key_exists('DOCUMENT_ROOT', $_SERVER) ? $_SERVER['DOCUMENT_ROOT'] : ABSPATH;
 
         $iframe_msg = sprintf(
