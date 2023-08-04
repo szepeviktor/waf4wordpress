@@ -1,5 +1,11 @@
 # WAF for WordPress
 
+[![License][src-packagist-license]][href-license-file]
+[![PHP Version][src-php-version]][href-composer-file]
+[![Packagist stats][src-packagist-downloads]][href-packagist-stats]
+[![Latest version][src-latest-version]][href-packagist]
+[![PHPStan enabled][src-phpstan-enabled]][href-phpstan-org]
+
 Stop real-life attacks on your WordPress website and
 trigger [Fail2Ban](https://github.com/fail2ban/fail2ban).
 
@@ -166,3 +172,14 @@ if ( isset( $_SERVER['REQUEST_URI'] ) ) {
 - `/wp/`
 
 Best not to create these directories to avoid lengthy log excerpts.
+
+[href-composer-file]: https://github.com/szepeviktor/waf4wordpress/blob/master/composer.json
+[href-license-file]: https://github.com/szepeviktor/waf4wordpress/blob/master/LICENSE
+[href-packagist]: https://packagist.org/packages/szepeviktor/waf4wordpress
+[href-packagist-stats]: https://packagist.org/packages/szepeviktor/waf4wordpress/stats
+[href-phpstan-org]: https://phpstan.org/
+[src-latest-version]: https://img.shields.io/packagist/v/szepeviktor/waf4wordpress.svg
+[src-packagist-downloads]: https://img.shields.io/packagist/dt/szepeviktor/waf4wordpress.svg
+[src-packagist-license]: https://img.shields.io/packagist/l/szepeviktor/waf4wordpress
+[src-phpstan-enabled]: https://img.shields.io/badge/PHPStan-enabled-44CC11
+[src-php-version]: https://img.shields.io/packagist/dependency-v/szepeviktor/waf4wordpress/php
