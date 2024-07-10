@@ -8,3 +8,4 @@ parameters:
     ignoreErrors:
         # empty() can be useful
         - '#^Construct empty\(\) is not allowed\. Use more strict comparison\.$#'
+        - '#no (return )?type specified\.$#'

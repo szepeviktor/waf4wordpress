@@ -1091,6 +1091,7 @@ final class HttpAnalyzer
      * @param string $ua The user agent string.
      *
      * @return string    The reduced user agent string.
+     * @phpstan-ignore method.unused
      */
     private function fix_facebook_dm( $ua )
     {

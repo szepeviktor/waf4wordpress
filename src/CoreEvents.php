@@ -265,6 +265,7 @@ final class CoreEvents
             $context['_server_http_user_agent'] = $this->esc_log($_SERVER['HTTP_USER_AGENT']);
         }
         if (! class_exists('\SimpleLogger')) {
+            /** @phpstan-ignore class.notFound */
             \SimpleHistory::get_instance()->load_loggers();
         }
         \SimpleLogger()->log($simple_level, $error_msg, $context);
@@ -437,6 +438,11 @@ final class CoreEvents
      */
     public function rest_filter($response, $server, $request)
     {
+        // Detect internal REST API requests
+        if (! wp_is_json_request()) {
+            return $response;
+        }
+
         if ($response instanceof \WP_HTTP_Response) {
             $status = $response->get_status();
             $method = $request->get_method();
