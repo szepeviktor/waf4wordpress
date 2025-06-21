@@ -134,8 +134,9 @@ final class HttpAnalyzer
         'wallet.dat', // Bitcoin private key
         '{jndi:ldap:', // CVE-2021-44228 Log4j
         'remote/fgt_lang', // CVE-2018-13379 FortiOS
+        "'isAdmin': True", // PHP Object Injection
     ];
-    private $botnet_pattern = '#Firefox/1[^0-9]|Mozlila/5|bot|spider|crawl|user-agent|random|"|\\\\#i';
+    private $botnet_pattern = '#Firefox/1[^0-9]|Mozlila/5|user-agent|random|"|\\\\|bot|crawl|archiver|transcoder|spider|uptime|validator|fetcher|cron|checker|reader|extractor|monitoring|analyzer|scraper#i';
     private $relative_request_uri = '';
     private $cdn_headers = [];
     private $allow_custom_registration = false;
