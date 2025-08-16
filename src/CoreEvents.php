@@ -1077,9 +1077,9 @@ final class CoreEvents
     /**
      * Verify ContentKing crawler.
      *
-     * sed -n -e 's#.*highlighter-rouge".*>\([0-9./]\+\)<.*#\1#p'
+     * [...document.querySelector('#h_01J9VKQ42W7X3ZV4TQD82X3TDE').parentElement.nextElementSibling.querySelectorAll('li')].map(li => li.textContent.trim()).join("\n")
      *
-     * @see https://www.contentkingapp.com/support/crawl-ip-addresses/
+     * @see https://support.conductor.com/hc/en-us/articles/34171452372115-Monitoring-FAQs
      * @param string $ua
      * @param string $ip
      * @return bool
