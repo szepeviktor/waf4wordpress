@@ -733,10 +733,9 @@ final class HttpAnalyzer
 
         // Tor network exit node detection.
         if ($this->disallow_tor_login) {
-            $exitlist_tpl = '%s.80.%s.ip-port.exitlist.torproject.org';
+            $exitlist_tpl = '%s.dnsel.torproject.org';
             $remote_rev = implode('.', array_reverse(explode('.', $_SERVER['REMOTE_ADDR'])));
-            $server_rev = implode('.', array_reverse(explode('.', $_SERVER['SERVER_ADDR'])));
-            $exitlist_response = gethostbyname(sprintf($exitlist_tpl, $remote_rev, $server_rev));
+            $exitlist_response = gethostbyname(sprintf($exitlist_tpl, $remote_rev));
             if (strpos($exitlist_response, '127.0.0') !== false) {
                     return 'bad_request_login_tor';
             }
