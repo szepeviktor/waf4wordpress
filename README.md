@@ -36,12 +36,12 @@ Your WordPress - really general HTTP - security consists of the followings.
 1. Block [known hostile networks](https://github.com/szepeviktor/debian-server-tools/tree/master/security/myattackers-ipsets)
 1. Have Fail2Ban installed (controls the firewall)
 1. Maintain your website and use
-   [strict Fail2Ban filters](https://github.com/szepeviktor/debian-server-tools/tree/master/security/fail2ban-conf)
-   which ban on the first suspicious request instantly
+    [strict Fail2Ban filters](https://github.com/szepeviktor/debian-server-tools/tree/master/security/fail2ban-conf)
+    which ban on the first suspicious request instantly
 1. Deny direct access to core WordPress files, themes and plugins
 1. Install WAF for WordPress (this project)
 1. Use [Leanmail](https://github.com/szepeviktor/debian-server-tools/tree/master/security/fail2ban-leanmail)
-   for filtering Fail2Ban notification emails
+    for filtering Fail2Ban notification emails
 
 See the [Block WordPress attack vectors](https://github.com/szepeviktor/wordpress-website-lifecycle/blob/master/WordPress-security.md)
 note in my other repository for an overview of the topic.
