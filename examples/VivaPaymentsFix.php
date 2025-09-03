@@ -21,15 +21,15 @@ class VivaPaymentsFix
             return;
         }
 
-        // Fix user agent
+        // Fix headers
         $_SERVER['HTTP_USER_AGENT'] = 'VivaPayments-Webhook/1.0';
+        $_SERVER['HTTP_ACCEPT'] = '*/*';
     }
 
     /**
      * Verify Viva Payments server.
      *
      * @see https://developer.viva.com/webhooks-for-payments/#whitelist-the-viva-addresses
-     * @param string $ua
      * @param string $ip
      * @return bool
      */

@@ -449,7 +449,7 @@ final class CoreEvents
             $route = $request->get_route();
             /** @var array{code:string, message:string} $data */
             $data = $response->get_data();
-            $is_user_listing = ($server::READABLE === $method && substr($route, 0, 12) === '/wp/v2/users');
+            $is_user_listing = ($server::READABLE === $method && strtolower(substr($route, 0, 12)) === '/wp/v2/users');
             // Disable any kind of unauthorized user listing
             // Authenticated REST requests must have a nonce
             if (! current_user_can('list_users') && $is_user_listing) {
